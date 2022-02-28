@@ -1,10 +1,10 @@
 import { AfterContentInit, AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import Graph, { MultiGraph } from 'graphology';
 import * as d3 from 'd3';
-import { BaseGraphService } from '../base-graph.service';
 import louvain from 'graphology-communities-louvain';
-import forceAtlas2 from 'graphology-layout-forceatlas2';
-import forceLayout from 'graphology-layout-force';
+import { analyzeAndValidateNgModules } from '@angular/compiler';
+
+
 
 @Component({
   selector: 'app-base-graph',
@@ -13,7 +13,8 @@ import forceLayout from 'graphology-layout-force';
 })
 export class BaseGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('rootsvg', {static : false}) svg!: ElementRef;
-
+  
+  nodeGroups: Array<number> = [];
   
   constructor() { 
 
@@ -55,10 +56,7 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     });
 
     console.log(xY);
-    // console.log('x : ', xY[0].x);
-    // xY.forEach(id => {
-    //   graph.addNode(xY[id]);
-    // })
+
     for(let i=0; i<xY.length; i++){
       graph.addNode(xY[i].id);
     }
@@ -71,36 +69,25 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     
     const communities = louvain(graph);
     console.log(communities);
-    louvain.assign(graph);
 
-    // const positions = forceAtlas2(graph, {
-    //   iterations: 50,
-    //   settings: {
-    //     gravity: 10
-    //   }
-    // });
-    // console.log(positions);
+    // console.log(communities[67]); // 0 : cluster num
+    // console.log(communities[68]); // 1 : cluster num
+    // console.log(communities[1062]); // 18 : cluster num
 
-    const position = forceLayout(graph, {
-      maxIterations: 50,
-      settings: {
-        gravity: 10
-      }
-    });
-    console.log(position);
+    // louvain.assign(graph);
+
+    for(let i=0; i<19; i++){
+      this.nodeGroups[i] = i;
+    }
+
+    const a = ["#8a3eb2", "#ae3cb2","#d03ea9","#ef4494","#ff5079","#ff645b","#ff7d42","#f89b32","#e0ba2f",
+    "#c8d53b","#b3eb53","#8bf457","#5ff761","#3bf277","#24e795","#1ad4b4","#1dbbcd","#2a9fdd"]; // 색 추가
+    const color = d3.scaleOrdinal(this.nodeGroups, a);
+    console.log(color);
+    
+
 // Louvain algorithm 적용 : 클러스터링 인덱스 부여
 
-
-    
-    // const branchValue = branch
-    // let nodess = graph.nodes();
-    // graph.addNode(xY[0].id);
-    // graph.addNode(xY);
-    // console.log(nodess);
-    
-
-    // console.log('y ', y);
-    // console.log("new x y", xY);
 
     const xMin = 0;
     const yMin = 0;
@@ -121,14 +108,24 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     const xScale = d3.scaleLinear(xDomain, xRange);
     const yScale = d3.scaleLinear(yDomain, yRange);
 
+
+
+
     const mouseover = (event: any, d: any) => {
       // 콘솔 대신 툴바 띄우기
       console.log("mouseover event", event, d);
       nodes.filter((m, i) => {
         return m === d;
       })
-        .attr("fill", "blue")
-        .attr("fill-opacity", 0.8);
+        .attr("fill", d => color(d))
+        .attr("fill-opacity", 1);
+
+      nodes.filter((m, i) => {
+
+        return m !== d; // true 인 nodes만 리턴
+      })
+        .attr("fill", d => color(d))
+        .attr("fill-opacity", 0.3);
 
       edges.filter((m: any, i) => {
         return (m.from == d.id || m.to == d.id);
@@ -136,15 +133,27 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
         .attr("stroke-width", "2px")
         .attr("stroke-opacity", 1);
       // 간선과 인접한 정점도 강조할 것
+
+      edges.filter((m: any, i) => {
+        return (m.from != d.id && m.to != d.id);
+      })
+        .attr("stroke-width", "1px")
+        .attr("stroke-opacity", 0.1);
+      
+      
+
+
+      
     };
 
     const mouseout = (event: any, d: any) => {
       // console.log("mouseout event", event, d);
-      nodes.attr("fill", "black")
-        .attr("fill-opacity", 0.7);
+      nodes.attr("fill", d => color(d))
+        .attr("fill-opacity", 1);
 
       edges.attr("stroke-width", "1px")
         .attr("stroke-opacity", 0.2);
+
     }
 
     const svg = d3.select("#base-graph")
@@ -162,7 +171,7 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
       .data(branch)
       .join("path")
       .attr("d", (d: any): any => `M${xScale(x[d.from - 1])}, ${yScale(y[d.from - 1])} L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`) // path 그릴 때 수정할 예정.
-      .attr("stroke", "green")
+      .attr("stroke", "steelblue")
       .attr("fill", "none")
       .attr("stroke-opacity", 0.2);
 
@@ -175,66 +184,28 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
       // .attr("r", 3)
       .attr('width', 6)
       .attr('height', 6)
-      .attr("fill", "black")
-      .attr("fill-opacity", 0.7)
+      // .attr("fill", "black")
+      .attr("fill-opacity", 1)
       .on("mouseover", mouseover)
       .on("mouseout", mouseout);
     // console.log(data)
 
+    nodes
+    .attr('fill', d => color(d));
 
+    // const graph1 = new Graph();
+    // graph1.addNode('a');
+    // graph1.addNode('b');
+    // graph1.addNode('c');
+    // graph1.addNode('d');
 
-    const graph1 = new Graph();
-    graph1.addNode('a');
-    graph1.addNode('b');
-    graph1.addNode('c');
-    graph1.addNode('d');
-    // graph.addNode('e');
-    // graph.addNode('f');
-    // graph.addNode('g');
-    // graph.addNode('h');
-    // graph.addNode('i');
-    // graph.addNode('j');
-    // graph.addNode('k');
-    // graph.addNode('l');
-    // graph.addNode('m'); 
-    // graph.addNode('n');
-    // graph.addNode('p');
-    // graph.addNode('q');
-    // graph.addNode('r');
-    // graph.addNode('s');
-    // graph.addNode('t');
-
-
-
-    graph1.addEdge('a', 'b');
-    graph1.addEdge('a', 'c');
-    graph1.addEdge('b', 'c');
-    graph1.addEdge('c', 'd');
-    // graph.addEdge('a', 'm');
-    // graph.addEdge('b', 'k');
-    // graph.addEdge('a', 'a');
-    // graph.addEdge('a', 's');
-    // graph.addEdge('a', 'i');
-    // graph.addEdge('c', 'e');
-    // graph.addEdge('d', 'a');
-    // graph.addEdge('d', 'b');
-    // graph.addEdge('e', 'c');
-    // graph.addEdge('f', 'd');
-    // graph.addEdge('f', 'e');
-    // graph.addEdge('f', 'g');
-    // graph.addEdge('g', 'a');
-    // graph.addEdge('g', 't');
-    // graph.addEdge('h', 'r');
-    // graph.addEdge('h', 'p');
-    // graph.addEdge('k', 'a');
-    // graph.addEdge('k', 'b');
-    // graph.addEdge('m', 't');
-    // graph.addEdge('l', 'r');
-    // graph.addEdge('n', 's');
-    // graph.addEdge('l', 'e');
+    // graph1.addEdge('a', 'b');
+    // graph1.addEdge('a', 'c');
+    // graph1.addEdge('b', 'c');
+    // graph1.addEdge('c', 'd');
     
-    
-    console.log(graph1.edges());
+    // console.log(graph1.edges());
+
     // console.log('Number of nodes', graph.order);
     // console.log('Number of edges', graph.size);
 
