@@ -1,10 +1,10 @@
-import { AfterContentInit, AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import Graph, { MultiGraph } from 'graphology';
 import * as d3 from 'd3';
-import { BaseGraphService } from '../base-graph.service';
 import louvain from 'graphology-communities-louvain';
-import forceAtlas2 from 'graphology-layout-forceatlas2';
 import forceLayout from 'graphology-layout-force';
+import { Message } from '@angular/compiler/src/i18n/i18n_ast';
+import { findNode } from '@angular/compiler';
 
 @Component({
   selector: 'app-base-graph',
@@ -12,10 +12,10 @@ import forceLayout from 'graphology-layout-force';
   styleUrls: ['./base-graph.component.css']
 })
 export class BaseGraphComponent implements OnInit, AfterViewInit {
-  @ViewChild('rootsvg', {static : false}) svg!: ElementRef;
+  @ViewChild('rootsvg', { static: false }) svg!: ElementRef;
 
-  
-  constructor() { 
+
+  constructor() {
 
   }
 
@@ -31,12 +31,12 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
           })
       });
   }
-  
+
 
   render(bus: any, branch: any): void {
 
     const graph = new MultiGraph();
-    
+
     const size = {
       viewBox: { minX: 0, minY: 0, width: 1000, height: 1000 },
       margin: { left: 20, right: 40, top: 20, bottom: 40 },
@@ -59,16 +59,17 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     // xY.forEach(id => {
     //   graph.addNode(xY[id]);
     // })
-    for(let i=0; i<xY.length; i++){
+    for (let i = 0; i < xY.length; i++) {
       graph.addNode(xY[i].id);
     }
     console.log(branch);
-    for(let i=0; i<branch.length; i++){
+    for (let i = 0; i < branch.length; i++) {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
     console.log(graph);
     console.log(graph.nodes());
-    
+    // console.log(graph.edges());
+
     const communities = louvain(graph);
     console.log(communities);
     louvain.assign(graph);
@@ -88,16 +89,16 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
       }
     });
     console.log(position);
-// Louvain algorithm 적용 : 클러스터링 인덱스 부여
+    // Louvain algorithm 적용 : 클러스터링 인덱스 부여
 
 
-    
+
     // const branchValue = branch
     // let nodess = graph.nodes();
     // graph.addNode(xY[0].id);
     // graph.addNode(xY);
     // console.log(nodess);
-    
+
 
     // console.log('y ', y);
     // console.log("new x y", xY);
@@ -106,8 +107,8 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     const yMin = 0;
     const xMax = d3.max(x);
     const yMax = d3.max(y);
-    const xAdditional = xMax * 0.1;
-    const yAdditional = yMax * 0.1;
+    // const xAdditional = xMax * 0.1;
+    // const yAdditional = yMax * 0.1;
     console.log("xMax, yMax", xMax, yMax);
 
     const xDomain = [xMin, xMax];
@@ -157,11 +158,48 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     //   .attr("width", size.margin.left + size.viewBox.width - size.margin.left)
     //   .attr("height", size.margin.top + size.viewBox.height - size.margin.top);
 
+    function drawEdge(d: any): any {
+      console.log(d);
+      let k = `M${xScale(x[d.from - 1])}, ${yScale(y[d.from - 1])}`;
+      let maxX, maxY, minX, minY;
+      const xdif = xScale(x[d.to - 1]) - xScale(x[d.from - 1]);
+      const ydif = yScale(y[d.to - 1]) - yScale(y[d.from - 1]);
+      if (xdif > ydif) {
+        if(ydif>0){
+          k += `h${(d.to+d.from)%100}`;
+          k += `v${ydif % 100}`;
+          k += `h${xdif-(d.to+d.from)%100}`;
+          k += `v${ydif - ydif % 100}`;
+        }
+        else{
+          k += `h${(d.to+d.from)%100}`;
+          k += `v${(-ydif) % 100}`;
+          k += `h${xdif-(d.to+d.from)%100}`;
+          k += `v${ydif - (-ydif) % 100}`;
+        }
+      }
+      else {
+        if (xdif > 0) {
+          k += `v${(d.to+d.from)%100}`;
+          k += `h${xdif % 100}`;
+          k += `v${ydif-(d.to+d.from)%100}`;
+          k += `h${xdif - xdif % 100}`;
+        }
+        else{
+          k += `v${(d.to+d.from)%100}`;
+          k += `h${(-xdif) % 100}`;
+          k += `v${ydif-(d.to+d.from)%100}`;
+          k += `h${xdif - (-xdif) % 100}`;
+        }
+      }
+      return k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`;
+    }
+
     const edges = svg.append("g")
       .selectAll("path")
       .data(branch)
       .join("path")
-      .attr("d", (d: any): any => `M${xScale(x[d.from - 1])}, ${yScale(y[d.from - 1])} L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`) // path 그릴 때 수정할 예정.
+      .attr("d", (d: any) => drawEdge(d)) // path 그릴 때 수정할 예정.
       .attr("stroke", "green")
       .attr("fill", "none")
       .attr("stroke-opacity", 0.2);
@@ -232,8 +270,8 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     // graph.addEdge('l', 'r');
     // graph.addEdge('n', 's');
     // graph.addEdge('l', 'e');
-    
-    
+
+
     console.log(graph1.edges());
     // console.log('Number of nodes', graph.order);
     // console.log('Number of edges', graph.size);
@@ -261,16 +299,16 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     //   .attr('viewBox', `0 0 ${viewWidth} ${viewHeight}`)
     //   .attr('width', viewWidth)
     //   .attr('height', viewHeight);
-    
+
     // svgRoot.select('g.container').remove();
 
-    
+
     // const svg = svgRoot.append('g')
     //   .attr('class', 'container');
 
     // const gn = svg.append('g').attr('class', 'node-group');
     // const gl = svg.append('g').attr('class', 'link-group');
-      
+
     // const nodes = gn.selectAll('circle')
     //   .data(graph.nodes)
     //   .enter()
@@ -279,17 +317,17 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     //   .attr('fill', (d) => 'black')
     //   .attr('cx', 50)
     //   .attr('cy', 50);
-    
+
     // const links = gl.selectAll('line')
     //   .data(graph.edges)
     //   .enter()
     //   .append('line')
     //   .attr('stroke', 'black');
 
-    
 
-    
-    
+
+
+
   }
 
 }
