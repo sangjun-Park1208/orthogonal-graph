@@ -1,8 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import Graph, { MultiGraph } from 'graphology';
+import { MultiGraph } from 'graphology';
 import * as d3 from 'd3';
 import louvain from 'graphology-communities-louvain';
-import { analyzeAndValidateNgModules } from '@angular/compiler';
 
 
 
@@ -55,7 +54,8 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
       return { id: bus["bus id"][d], x: bus.x[d], y: bus.y[d] };
     });
 
-    console.log(xY);
+    console.log(x);
+    console.log(bus.x);
 
     for(let i=0; i<xY.length; i++){
       graph.addNode(xY[i].id);
@@ -94,8 +94,6 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     const yMin = 0;
     const xMax = d3.max(x);
     const yMax = d3.max(y);
-    // const xAdditional = xMax * 0.1;
-    // const yAdditional = yMax * 0.1;
     console.log("xMax, yMax", xMax, yMax);
 
     const xDomain = [xMin, xMax];
@@ -113,37 +111,44 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
 
 
     const mouseover = (event: any, d: any) => {
-      // 콘솔 대신 툴바 띄우기
-      console.log("mouseover event", event, d);
+
+      // 선택 노드
       nodes.filter((m, i) => {
         return m === d;
       })
         .attr("fill", d => color(d))
         .attr("fill-opacity", 1);
 
+      // 미선택 노드
       nodes.filter((m, i) => {
-
-        return m !== d; // true 인 nodes만 리턴
+        return m !== d;
       })
         .attr("fill", d => color(d))
         .attr("fill-opacity", 0.3);
 
+      // 나가는 edges(from) : red
       edges.filter((m: any, i) => {
-        return (m.from == d.id || m.to == d.id);
+        return m.from == d.id;
       })
+        .attr('stroke', 'red') // m == from
         .attr("stroke-width", "2px")
         .attr("stroke-opacity", 1);
-      // 간선과 인접한 정점도 강조할 것
-
+      
+      // 들어오는 edges(to) : green
       edges.filter((m: any, i) => {
-        return (m.from != d.id && m.to != d.id);
+        return m.to == d.id;
+      })  
+        .attr('stroke', 'green') // m == to
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
+
+      // 그 외 edges
+      edges.filter((m: any, i) => {
+        return (m.from != d.id && m.to != d.id); // m == nothing
       })
         .attr("stroke-width", "1px")
         .attr("stroke-opacity", 0.1);
       
-      
-
-
       
     };
 
@@ -153,6 +158,7 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
         .attr("fill-opacity", 1);
 
       edges.attr("stroke-width", "1px")
+        .attr("stroke", "steelblue")
         .attr("stroke-opacity", 0.2);
 
     }
@@ -160,144 +166,62 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     const svg = d3.select("#base-graph")
       .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
 
-    // const border = svg.append("g")
-    //   .append("rect")
-    //   .attr("fill", "none")
-    //   .attr("stroke", "black")
-    //   .attr("width", size.margin.left + size.viewBox.width - size.margin.left)
-    //   .attr("height", size.margin.top + size.viewBox.height - size.margin.top);
 
     function drawEdge(d: any): any {
-      console.log(d);
-      let k = `M${xScale(x[d.from - 1])}, ${yScale(y[d.from - 1])}`;
-      let maxX, maxY, minX, minY;
-      const xdif = xScale(x[d.to - 1]) - xScale(x[d.from - 1]);
-      const ydif = yScale(y[d.to - 1]) - yScale(y[d.from - 1]);
-      if (xdif > ydif) {
-        if(ydif>0){
-          k += `h${(d.to+d.from)%100}`;
-          k += `v${ydif % 100}`;
-          k += `h${xdif-(d.to+d.from)%100}`;
-          k += `v${ydif - ydif % 100}`;
-        }
-        else{
-          k += `h${(d.to+d.from)%100}`;
-          k += `v${(-ydif) % 100}`;
-          k += `h${xdif-(d.to+d.from)%100}`;
-          k += `v${ydif - (-ydif) % 100}`;
-        }
+
+      let k = `M${xScale(x[d.from-1])}, ${yScale(y[d.from-1])}`; // path 시작 지점
+      let xdif = x[d.to-1] - x[d.from-1]; // x좌표 차이
+      let ydif = y[d.to-1] - y[d.from-1]; // y좌표 차이
+      let abs_xdif = Math.abs(xdif); // |x좌표 차이| 
+      let abs_ydif = Math.abs(ydif); // |y좌표 차이|
+
+      let xhalf = xScale((x[d.to-1] + x[d.from-1]) /2);
+      let yhalf = yScale((y[d.to-1] + y[d.from-1]) /2);
+
+      if(abs_xdif > abs_ydif) {
+        k += `L${xScale(x[d.from-1])}, ${yhalf}`;
+        k += `L${xScale(x[d.to - 1])}, ${yhalf}`;
+        k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`;
       }
       else {
-        if (xdif > 0) {
-          k += `v${(d.to+d.from)%100}`;
-          k += `h${xdif % 100}`;
-          k += `v${ydif-(d.to+d.from)%100}`;
-          k += `h${xdif - xdif % 100}`;
-        }
-        else{
-          k += `v${(d.to+d.from)%100}`;
-          k += `h${(-xdif) % 100}`;
-          k += `v${ydif-(d.to+d.from)%100}`;
-          k += `h${xdif - (-xdif) % 100}`;
-        }
+        k += `L${xhalf}, ${yScale(y[d.from-1])}`;
+        k += `L${xhalf}, ${yScale(y[d.to - 1])}`;
+        k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`; 
       }
-      return k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`;
+      return k;
     }
 
     const edges = svg.append("g")
       .selectAll("path")
       .data(branch)
       .join("path")
-      .attr("d", (d: any): any => drawEdge(d)) // path 그릴 때 수정할 예정.
+      .attr("d", (d: any): any => drawEdge(d))
       .attr("stroke", "steelblue")
       .attr("fill", "none")
-      .attr("stroke-opacity", 0.2);
+      .attr("stroke-opacity", 0.2)
+
 
     const nodes = svg.append("g")
       .selectAll("rect")
       .data(xY)
       .join("rect")
-      .attr("x", (d: any) => (xScale(d.x)))
-      .attr("y", (d: any) => (yScale(d.y)))
-      // .attr("r", 3)
+      .attr("x", (d: any) => (xScale(d.x)) -3)
+      .attr("y", (d: any) => (yScale(d.y)) -3)
+      // .attr('r', 3)
       .attr('width', 6)
       .attr('height', 6)
-      // .attr("fill", "black")
       .attr("fill-opacity", 1)
       .on("mouseover", mouseover)
       .on("mouseout", mouseout);
-    // console.log(data)
 
     nodes
     .attr('fill', d => color(d));
 
-    // const graph1 = new Graph();
-    // graph1.addNode('a');
-    // graph1.addNode('b');
-    // graph1.addNode('c');
-    // graph1.addNode('d');
-
-    // graph1.addEdge('a', 'b');
-    // graph1.addEdge('a', 'c');
-    // graph1.addEdge('b', 'c');
-    // graph1.addEdge('c', 'd');
-    
-    // console.log(graph1.edges());
-
-    // console.log('Number of nodes', graph.order);
-    // console.log('Number of edges', graph.size);
-
-    // graph.forEachNode(node => {
-    //   // console.log(typeof(node)); // string
-    //   console.log(node); // 'John', 'Martha'
-    //   // console.log(graph.nodes());
-    // });
-
-    // graph.forEachEdge(edge => {
-    //   console.log(edge);
-    // })
-    // // console.log(graph.edge)
-    // // const directedGraph = toDirected(graph)
-    // const communities = louvain(graph);
-    // console.log(communities);
-
-    // louvain.assign(graph);
-
-
-    // const viewWidth = 900;
-    // const viewHeight = 900;
-    // const svgRoot = d3.select(this.svg.nativeElement)
-    //   .attr('viewBox', `0 0 ${viewWidth} ${viewHeight}`)
-    //   .attr('width', viewWidth)
-    //   .attr('height', viewHeight);
-
-    // svgRoot.select('g.container').remove();
-
-
-    // const svg = svgRoot.append('g')
-    //   .attr('class', 'container');
-
-    // const gn = svg.append('g').attr('class', 'node-group');
-    // const gl = svg.append('g').attr('class', 'link-group');
-
-    // const nodes = gn.selectAll('circle')
-    //   .data(graph.nodes)
-    //   .enter()
-    //   .append('circle')
-    //   .attr('r', 3)
-    //   .attr('fill', (d) => 'black')
-    //   .attr('cx', 50)
-    //   .attr('cy', 50);
-
-    // const links = gl.selectAll('line')
-    //   .data(graph.edges)
-    //   .enter()
-    //   .append('line')
-    //   .attr('stroke', 'black');
-
-
-
-
+    nodes // add tooltip
+    .append('title') 
+    .text((d:any) => (`id : ${d.id}\n` + `x : ${d.x}\n` + `y : ${d.y}`))
+    .style("top", (d: any) => d.y)
+    .style("left", (d: any) => d.x);
 
   }
 
