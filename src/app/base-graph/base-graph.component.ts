@@ -78,21 +78,14 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     // console.log(communities[68]); // 1 : cluster num
     // console.log(communities[1062]); // 18 : cluster num
 
-    // louvain.assign(graph);
-
     for(let i=0; i<19; i++){
       this.nodeGroups[i] = i;
     }
-    // console.log(this.nodeGroups)
 
-    // const a = ["#8a3eb2", "#ae3cb2","#d03ea9","#ef4494","#ff5079","#ff645b","#ff7d42","#f89b32","#e0ba2f",
-    // "#c8d53b","#b3eb53","#8bf457","#5ff761","#3bf277","#24e795","#1ad4b4","#1dbbcd","#2a9fdd"]; // 색 추가
     const a = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c',
      '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'];
     const color = d3.scaleOrdinal(this.nodeGroups, a);
    
-    
-
 // Louvain algorithm 적용 : 클러스터링 인덱스 부여
 
 
@@ -114,6 +107,23 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     const yScale = d3.scaleLinear(yDomain, yRange);
 
 
+    const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // linkedNodes_from.push() 하는 함수 따로, return하는 함수 따로 -> // for문 내에서 return하는 함수 반복 호출
+      edges.filter((s: any, j: any) => {
+        return +s.from === +d.id;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.to);
+        return h.to;
+      });
+    } // 함수 따로 빼서 호출하는 방식으로 여러 리턴값 처리
+
+    const colorLinkedNodes_to = (d: any, linkedNodes: number[]) => { // linkedNodes_to.push() 하는 함수 따로, return하는 함수 따로 -> // for문 내에서 return하는 함수 반복 호출
+      edges.filter((s: any, j: any) => {
+        return +s.to === +d.id;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.from);
+        return h.from;
+      });
+    } // 함수 따로 빼서 호출하는 방식으로 여러 리턴값 처리
 
 
     const mouseover = (event: any, d: any) => {
@@ -138,6 +148,34 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
         .attr("fill", d => color(d.id % 19))
         .attr("fill-opacity", 0.1);
 
+      // d.id (마우스오버된 노드의 id) 가, s.from 과 같은 값을 가질 때, 그 때의 s.to를 id로 갖는 노드를 색칠
+      let linkedNodes_from: number[] = [];
+      let countNum = 0;
+      colorLinkedNodes_from(d, linkedNodes_from);
+      for(; countNum<linkedNodes_from.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id === linkedNodes_from[countNum];
+        })
+          .attr('fill', 'red')
+          .attr("fill-opacity", 1);
+      }
+
+
+      // d.id (마우스오버된 노드의 id) 가, s.to 과 같은 값을 가질 때, 그 때의 s.from을 id로 갖는 노드를 색칠
+      let linkedNodes_to: number[] = [];
+      countNum = 0;
+      colorLinkedNodes_to(d, linkedNodes_to);
+      for(; countNum<linkedNodes_to.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id === linkedNodes_to[countNum];
+        })
+          .attr('fill', 'green')
+          .attr("fill-opacity", 1);
+      }
+      
+
+
+      
       // 나가는 edges(from) : red
       edges.filter((m: any, i) => {
         return m.from == d.id;
