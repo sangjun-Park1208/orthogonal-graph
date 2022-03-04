@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka&display=swap');
+.base-graph {
+    height: 90%;
+}
+
+
+input {
+    text-align: center;
+    background-color:beige;
+    width: 200px;
+    height: 20px;
+    /* font-weight: bold; */
+    font-family: 'Fredoka', sans-serif;
+}

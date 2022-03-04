@@ -4,7 +4,6 @@ import * as d3 from 'd3';
 import louvain from 'graphology-communities-louvain';
 
 
-
 @Component({
   selector: 'app-base-graph',
   templateUrl: './base-graph.component.html',
@@ -14,7 +13,11 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('rootsvg', {static : false}) svg!: ElementRef;
   
   nodeGroups: Array<number> = [];
-  
+  id: number = 0;
+  x: number = 0;
+  y: number = 0;
+  clusterNum : number = 0;
+
   constructor() { 
 
   }
@@ -80,11 +83,14 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     for(let i=0; i<19; i++){
       this.nodeGroups[i] = i;
     }
+    // console.log(this.nodeGroups)
 
-    const a = ["#8a3eb2", "#ae3cb2","#d03ea9","#ef4494","#ff5079","#ff645b","#ff7d42","#f89b32","#e0ba2f",
-    "#c8d53b","#b3eb53","#8bf457","#5ff761","#3bf277","#24e795","#1ad4b4","#1dbbcd","#2a9fdd"]; // 색 추가
+    // const a = ["#8a3eb2", "#ae3cb2","#d03ea9","#ef4494","#ff5079","#ff645b","#ff7d42","#f89b32","#e0ba2f",
+    // "#c8d53b","#b3eb53","#8bf457","#5ff761","#3bf277","#24e795","#1ad4b4","#1dbbcd","#2a9fdd"]; // 색 추가
+    const a = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c',
+     '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'];
     const color = d3.scaleOrdinal(this.nodeGroups, a);
-    console.log(color);
+   
     
 
 // Louvain algorithm 적용 : 클러스터링 인덱스 부여
@@ -111,20 +117,26 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
 
 
     const mouseover = (event: any, d: any) => {
+      console.log('id : ' + d.id);
+      this.id = d.id;
+      this.x = d.x;
+      this.y = d.y;
+      this.clusterNum = communities[d.id];
 
       // 선택 노드
       nodes.filter((m, i) => {
         return m === d;
       })
-        .attr("fill", d => color(d))
+        // .attr("fill", d => color(d.id % 19))
+        .attr('fill', 'blue')
         .attr("fill-opacity", 1);
 
       // 미선택 노드
       nodes.filter((m, i) => {
         return m !== d;
       })
-        .attr("fill", d => color(d))
-        .attr("fill-opacity", 0.3);
+        .attr("fill", d => color(d.id % 19))
+        .attr("fill-opacity", 0.1);
 
       // 나가는 edges(from) : red
       edges.filter((m: any, i) => {
@@ -147,14 +159,14 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
         return (m.from != d.id && m.to != d.id); // m == nothing
       })
         .attr("stroke-width", "1px")
-        .attr("stroke-opacity", 0.1);
+        .attr("stroke-opacity", 0.05);
       
       
     };
 
     const mouseout = (event: any, d: any) => {
       // console.log("mouseout event", event, d);
-      nodes.attr("fill", d => color(d))
+      nodes.attr("fill", d => color(communities[d.id]))
         .attr("fill-opacity", 1);
 
       edges.attr("stroke-width", "1px")
@@ -205,21 +217,21 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
       .selectAll("rect")
       .data(xY)
       .join("rect")
-      .attr("x", (d: any) => (xScale(d.x)) -3)
-      .attr("y", (d: any) => (yScale(d.y)) -3)
+      .attr("x", (d: any) => (xScale(d.x)) -4)
+      .attr("y", (d: any) => (yScale(d.y)) -4)
       // .attr('r', 3)
-      .attr('width', 6)
-      .attr('height', 6)
+      .attr('width', 8)
+      .attr('height', 8)
       .attr("fill-opacity", 1)
       .on("mouseover", mouseover)
       .on("mouseout", mouseout);
 
     nodes
-    .attr('fill', d => color(d));
+    .attr('fill', d => color(d.id));
 
     nodes // add tooltip
     .append('title') 
-    .text((d:any) => (`id : ${d.id}\n` + `x : ${d.x}\n` + `y : ${d.y}`))
+    .text((d:any) => (`id : ${d.id}\n` + `x : ${d.x}\n` + `y : ${d.y}\n` + `cluster num : ${communities[d.id]}`))
     .style("top", (d: any) => d.y)
     .style("left", (d: any) => d.x);
 
