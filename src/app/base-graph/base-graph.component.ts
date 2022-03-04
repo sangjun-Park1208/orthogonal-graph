@@ -126,7 +126,8 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
         return m !== d;
       })
         .attr("fill", d => color(d.id % 19))
-        .attr("fill-opacity", 0.1);
+        .attr("fill-opacity", 0.1)
+        .attr('stroke-opacity', 0.2);
 
       // Highlight 'red' nodes : starts from selected node(mouse-overed node).
       let linkedNodes_from: number[] = [];
@@ -180,7 +181,8 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
 
     const mouseout = (event: any, d: any) => { // same with first state.
       nodes.attr("fill", d => color(communities[d.id]))
-        .attr("fill-opacity", 1);
+        .attr("fill-opacity", 1)
+        .attr('stroke-opacity', 1);
 
       edges.attr("stroke-width", "1px")
         .attr("stroke", "steelblue")
@@ -233,6 +235,7 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
       .attr('width', 8)
       .attr('height', 8)
       .attr("fill-opacity", 1)
+      .attr('stroke', 'black')
       .on("mouseover", mouseover)
       .on("mouseout", mouseout);
 
