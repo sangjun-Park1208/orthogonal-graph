@@ -1,7 +1,11 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { MultiGraph } from 'graphology';
 import * as d3 from "d3"
-import louvain from 'graphology-communities-louvain';
+import louvain, { LouvainOptions } from 'graphology-communities-louvain';
+import * as rpm from 'src/shared/modules/random-position/random-position.module';
+import * as tm from 'src/shared/modules/treemap/treemap.module';
+import { ITabularData } from 'src/shared/interfaces/itabular-data';
+import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data'
 
 @Component({
   selector: 'app-treemap',
@@ -11,14 +15,6 @@ import louvain from 'graphology-communities-louvain';
 
 export class TreemapComponent implements OnInit {
   @ViewChild('rootSvg', {static : false}) rootSvg!: ElementRef;
-  
-  size = {
-    viewBox: { minX: 0, minY: 0, width: 1000, height: 1000 },
-    margin: { left: 20, right: 20, top: 20, bottom: 20 },
-    padding: { left: 20, right: 20, top: 20, bottom: 20 }
-  };
-
-  constructor() { }
 
   ngOnInit(): void {
   }
@@ -28,34 +24,32 @@ export class TreemapComponent implements OnInit {
       .then(bus => {
         d3.csv('./assets/data/branch-1062.csv')
           .then(branch => {
-            this.render(bus, branch);
+            console.log("bus, branch", bus, branch);
+            this.renderTreemap(bus, branch);
           })
       });
   } // 콜백헬 프로미스로 해결하기
 
-  render(bus: any, branch: any) : void{ // bus, branch별 매개변수
+  renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
+    const size = rpm.getSize();
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
+    // prototype 1 코드
+    const x = rpm.setX(bus);
+    const y = rpm.setY(bus);
+    const xY = rpm.setXY(bus);
+    console.log("x, y, xY", x, y, xY);
 
-    const x = Object.keys(bus.x).map((d): any => { // x
-      return bus.x[d];
-    });
-    const y = Object.keys(bus.y).map((d): any => { // y
-      return bus.y[d];
-    });
-    const xY = Object.keys(bus.x).map((d): any => { // Object mapping
-      return { id: bus["bus id"][d], x: bus.x[d], y: bus.y[d] };
-    });
     const xMin = 0;
     const yMin = 0;
     const xMax = d3.max(x);
     const yMax = d3.max(y);
     console.log("xMax, yMax", xMax, yMax);
 
-    const xDomain = [xMin, xMax];
-    const yDomain = [yMin, yMax];
+    const xDomain = [xMin, xMax as number];
+    const yDomain = [yMin, yMax as number];
 
-    const xRange = [this.size.margin.left + this.size.padding.left, this.size.margin.left + this.size.padding.left + this.size.viewBox.width - this.size.margin.right - this.size.padding.right];
-    const yRange = [this.size.margin.top + this.size.padding.top, this.size.margin.top + this.size.padding.top + this.size.viewBox.height - this.size.margin.bottom - this.size.padding.bottom];
+    const xRange = [0, size.viewBox.width - size.margin.right];
+    const yRange = [0, size.viewBox.height - size.margin.bottom];
     console.log("xDomain xRange", xDomain, xRange);
     console.log("yDomain yRange", yDomain, yRange);
 
@@ -71,83 +65,43 @@ export class TreemapComponent implements OnInit {
     for (let i = 0; i < branch.length; i++) {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
-    //
-    
+
     const communities = louvain(graph); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
+    //
 
-    const clusterCount = d3.max(Object.keys(communities).map(d => {
-      return communities[d];
-    })) as number + 1;
+    const clusterCount = tm.setClusterCount(communities);
     console.log("clusterCount", clusterCount);
     
-    let tabularData: any[] = [];
-    tabularData = Object.keys(communities).map(d => {
-      return {id: +d + clusterCount, parentId: communities[d] + 1};
-    });
-    
-    tabularData.push({id: 0})
-    for (let i = 0; i < clusterCount; i++){
-      tabularData.push({id: i + 1, parentId: 0});
-    }
+    let tabularData: ITabularData[] = tm.setTabularData(communities, clusterCount);
     console.log("tabularData", tabularData);
 
-    const root = d3.stratify()  // tabularData 인터페이스 지정할 것
-      (tabularData);
-    root.count();
+    const root = tm.setRoot(tabularData);
+    root.sort((a: any, b: any) => { // 랜덤성 없애기 시도 (무시해도됨)
+      return +b.id - +a.id;
+    })
     console.log("d3 hierachy node data", root);
 
-    const treemapLayout = d3.treemap()
-      .tile(d3.treemapBinary)
-      .size([this.size.viewBox.width - this.size.margin.left - this.size.margin.right, this.size.viewBox.height - this.size.margin.bottom - this.size.margin.top])
-      .paddingInner(this.size.padding.left)
-      .paddingOuter(this.size.padding.left)
-      .paddingLeft(this.size.padding.left)
-      .paddingBottom(this.size.padding.bottom)
-      .paddingRight(this.size.padding.right)
-      .paddingTop(this.size.padding.top)
-      .round(true)(root);
+    // treemap 형태 지정 알고리즘 선택: treemap.tile(d3.타일링메소드명) (https://github.com/d3/d3-hierarchy/blob/v3.1.1/README.md#treemap-tiling)
+    // cluster 내부 정점 여백 조정이나 클러스터간 여백 조정: treemap.padding[Inner, Outer, ...]
+    // treemap 크기 조정: treemap.size([width, height])
+    // 가로세로 값 반올림: treemap.round(boolean)
+
+    const treemapLayout = tm.setTreemapLayout(size)(root); // default treemap 레이아웃 가져오기
+    console.log("treemapLayout", treemapLayout);
     console.log("d3 treemapping data", root);
 
     const leaves = root.leaves();
     console.log("leaves", leaves);
 
+    const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: (d.x0 + d.x1) / 2, y: (d.y0 + d.y1) / 2} as IBusObjectData});
+    nodeXY.sort((a: IBusObjectData, b: IBusObjectData) => {
+      return (+a.id - +b.id);
+    })
+    console.log("nodeXY", nodeXY);
+
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("width", this.size.viewBox.width)
-      .attr("height", this.size.viewBox.height);
-
-    const tooltip = svg.append("g")
-      .attr("id", "tooltip")
-      .attr("opacity", 0);
-    tooltip.append("rect")
-      .attr("width", 80)
-      .attr("height", 30)
-      .attr("fill", "white")
-      .attr("stroke", "black");
-
-    const tooltipText = tooltip.append("text")
-      .attr("font-size", 10)
-      .attr("x", 5)
-      .attr("y", 12);
-    tooltipText.append("tspan")
-      .attr("id", "id");
-    tooltipText.append("tspan")
-      .attr("x", 5)
-      .attr("dy", 12)
-      .attr("id", "parentId");
-    const tooltipOn = (event: any, d: any) => {
-      tooltip.attr("opacity", 1)
-        .attr("transform", `translate(${d.x0 + 5}, ${d.y0 + 5})`);
-      tooltip.select("#id")
-        .html(`id: ${+d.data.id - clusterCount}`);
-        // treemap layout 초기화 후에는 root내 연결된 모든 노드에 대해 id 값 재변경하기
-      tooltip.select("#parentId")
-        .html(`cluster: ${+d.data.parentId}`);
-    }
-
-    const tooltipOff = (event: any, d: any) => {
-      tooltip.attr("opacity", 0);
-    }
+      .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
 
     // // 상준형 코드 edge, node highlight
     // const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
@@ -250,6 +204,8 @@ export class TreemapComponent implements OnInit {
     //     .attr("stroke-opacity", 0.2);
     // }
     // //
+    const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
+    console.log("edges", edges);
 
     const nodes = svg.append("g")
       .attr("id", "nodes")
@@ -257,34 +213,74 @@ export class TreemapComponent implements OnInit {
       .data(leaves)
       .join("rect")
       .attr("id", (d:any) => {
-        return +d.data.id - clusterCount;
+        return (+d.data.id - clusterCount);
       })
       .attr("width", (d:any) => {
-        return (d.x1 - d.x0 > 5) ? d.x1 - d.x0 : 5;
+        return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
       })
       .attr("height", (d:any) => {
-        return (d.y1 - d.y0 > 5) ? d.y1 - d.y0 : 5;
+        return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
       })
       // .attr("width", 5)
       // .attr("height", 5)
       .attr("x", (d:any) => {
-        return d.x0;
+        return xScale(d.x0);
       })
       .attr("y", (d:any) => {
-        return d.y0;
+        return yScale(d.y0);
       })
       .attr("fill", (d:any) => {
         return colorZ(+d.data.parentId / clusterCount);
       })
+      .attr("fill-opacity", 0.6)
       .on("mouseover", (event, d) => {
+        console.log("mouseover", event, d);
+        nodes.call(rpm.nodesHighlightOn, d);
+        rpm.edgesHighlightOn(edges, d, clusterCount);
         tooltipOn(event, d);
         // showHighlight(event, d);
       })
       .on("mouseout", (event, d) => {
+        console.log("mouseout", event, d);
+        nodes.call(rpm.nodesHighlightOff);
+        rpm.edgesHighlightOff(edges);
         tooltipOff(event, d);
         // hideHighlight(event, d);
       });
     console.log("nodes", nodes); 
+
+    const tooltip = svg.append("g")
+      .attr("id", "tooltip")
+      .attr("opacity", 0);
+    tooltip.append("rect")
+      .attr("width", 80)
+      .attr("height", 30)
+      .attr("fill", "white")
+      .attr("stroke", "black");
+
+    const tooltipText = tooltip.append("text")
+      .attr("font-size", 10)
+      .attr("x", 5)
+      .attr("y", 12);
+    tooltipText.append("tspan")
+      .attr("id", "id");
+    tooltipText.append("tspan")
+      .attr("x", 5)
+      .attr("dy", 12)
+      .attr("id", "parentId");
+
+    const tooltipOn = (event: any, d: any) => {
+      tooltip.attr("opacity", 1)
+        .attr("transform", `translate(${xScale(d.x0 + 5)}, ${yScale(d.y0 + 5)})`);
+      tooltip.select("#id")
+        .html(`id: ${+d.data.id - clusterCount}`);
+      tooltip.select("#parentId")
+        .html(`cluster: ${+d.data.parentId}`);
+    }
+
+    const tooltipOff = (event: any, d: any) => {
+      tooltip.attr("opacity", 0);
+    }
     
     // // 상준형 drawEdge 코드
     // function drawEdge(d: any): any {
@@ -321,9 +317,10 @@ export class TreemapComponent implements OnInit {
     //   .attr("stroke-opacity", 0.2)
     // //
 
-    svg.append("use")
-      .attr("xlink:href", "#nodes");
-    svg.append("use")
-      .attr("xlink:href", "#tooltip");
+    // // tooltip >>> nodes >>> edges 순으로 배치하기
+    // svg.append("use")
+    //   .attr("xlink:href", "#nodes");
+    // svg.append("use")
+    //   .attr("xlink:href", "#tooltip");
   }
 }
