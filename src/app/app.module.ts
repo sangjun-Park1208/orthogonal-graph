@@ -5,12 +5,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BaseGraphComponent } from './base-graph/base-graph.component';
 import { WorkspaceComponent } from './workspace/workspace.component';
+import { TreemapComponent } from './treemap/treemap.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     BaseGraphComponent,
-    WorkspaceComponent
+    WorkspaceComponent,
+    TreemapComponent
   ],
   imports: [
     BrowserModule,

@@ -37,8 +37,8 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
 
     const size = {
       viewBox: { minX: 0, minY: 0, width: 1000, height: 1000 },
-      margin: { left: 20, right: 40, top: 20, bottom: 40 },
-      padding: { left: 20, right: 40, top: 20, bottom: 40 }
+      margin: { left: 20, right: 20, top: 20, bottom: 20 },
+      padding: { left: 20, right: 20, top: 20, bottom: 20 }
     };
 
     console.log("bus property", bus.x, bus.y)
@@ -61,7 +61,7 @@ export class BaseGraphComponent implements OnInit, AfterViewInit {
     }
 
     const communities = louvain(graph); // assign Louvain Algorithm
-    console.log(communities); // data type : number[]
+    console.log("communities", communities); // data type : number[]
 
     for(let i=0; i<19; i++){
       this.nodeGroups[i] = i; // [0, 1, ... , 18]
