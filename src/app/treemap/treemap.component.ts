@@ -57,6 +57,12 @@ export class TreemapComponent implements OnInit {
     const yScale = d3.scaleLinear(yDomain, yRange);
     const colorZ = d3.interpolateSinebow;
 
+    const opacity = {
+      node: 0.25,
+      edge: 0.15,
+      cluster: 0.3
+    }
+
     // 상준형 graphology 코드
     for(let i=0; i<xY.length; i++){
       graph.addNode(xY[i].id);
@@ -91,10 +97,24 @@ export class TreemapComponent implements OnInit {
     console.log("treemapLayout", treemapLayout);
     console.log("d3 treemapping data", root);
 
-    const leaves = root.leaves();
+    const children = root.children as d3.HierarchyNode<any>[];
+    console.log("children", children);
+
+    const leaves = root.leaves(); //2차원 배열로 수정
     console.log("leaves", leaves);
 
-    const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: (d.x0 + d.x1) / 2, y: (d.y0 + d.y1) / 2} as IBusObjectData});
+    let clustersWithNodes: any[] = [];
+    for (let i = 0; i < clusterCount; i++){
+      const clusterData = {
+        data: children.find(d => d.data.id == i + 1),
+        children: leaves.filter(d => (i + 1 == d.data.parentId))
+      };
+      
+      clustersWithNodes.push(clusterData);
+    }
+    console.log("cluster with nodes", clustersWithNodes);
+
+    const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: (d.x1 - d.x0 > 5) ? (d.x0 + d.x1) / 2 : d.x0 + 2.5, y: (d.y1 - d.y0 > 5) ? (d.y0 + d.y1) / 2 : d.y0 + 2.5} as IBusObjectData});
     nodeXY.sort((a: IBusObjectData, b: IBusObjectData) => {
       return (+a.id - +b.id);
     })
@@ -207,10 +227,62 @@ export class TreemapComponent implements OnInit {
     const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
     console.log("edges", edges);
 
-    const nodes = svg.append("g")
-      .attr("id", "nodes")
+    // const clusters = svg.append("g")
+    //   .attr("id", "clusters")
+    //   .selectAll("rect")
+    //   .data(children)
+    //   .join("g")
+    //   .attr("id", (d:any) => ("cluster " + (d.data.id - clusterCount)))
+    //   .append("rect")
+    //   .attr("opacity", opacity.cluster)
+    //   .attr("stroke", "black")
+    //   .attr("fill", "none")
+    //   .attr("stroke-width", 3)
+    //   .attr("width", (d:any) => {
+    //     return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
+    //   })
+    //   .attr("height", (d:any) => {
+    //     return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
+    //   })
+    //   .attr("x", (d:any) => {
+    //     return xScale(d.x0);
+    //   })
+    //   .attr("y", (d:any) => {
+    //     return yScale(d.y0);
+    //   })
+
+    const clusters = svg.append("g")
+      .attr("id", "cluster and nodes")
+      .selectAll("g")
+      .data(clustersWithNodes)
+      .join("g")
+      .attr("id", (d:any) => ("cluster " + (d.data.data.id)));
+    clusters.append("rect")
+      .attr("opacity", opacity.cluster)
+      .attr("stroke", "black")
+      .attr("fill", "none")
+      .attr("stroke-width", 3)
+      .attr("width", (d:any) => {
+        let m = d.data;
+        return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) : xScale(5);
+      })
+      .attr("height", (d:any) => {
+        let m = d.data;
+        return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0) : yScale(5);
+      })
+      .attr("x", (d:any) => {
+        let m = d.data;
+        return xScale(m.x0);
+      })
+      .attr("y", (d:any) => {
+        let m = d.data;
+        return yScale(m.y0);
+      });
+      
+    const nodes = clusters.append("g")
+      .attr("id", d => "cluster " + d.data.id + " nodes")
       .selectAll("rect")
-      .data(leaves)
+      .data(d => d.children)
       .join("rect")
       .attr("id", (d:any) => {
         return (+d.data.id - clusterCount);
@@ -232,7 +304,7 @@ export class TreemapComponent implements OnInit {
       .attr("fill", (d:any) => {
         return colorZ(+d.data.parentId / clusterCount);
       })
-      .attr("fill-opacity", 0.6)
+      .attr("fill-opacity", opacity.node)
       .on("mouseover", (event, d) => {
         console.log("mouseover", event, d);
         nodes.call(rpm.nodesHighlightOn, d);
@@ -270,8 +342,11 @@ export class TreemapComponent implements OnInit {
       .attr("id", "parentId");
 
     const tooltipOn = (event: any, d: any) => {
-      tooltip.attr("opacity", 1)
-        .attr("transform", `translate(${xScale(d.x0 + 5)}, ${yScale(d.y0 + 5)})`);
+      tooltip.attr("transform", `translate(${xScale(d.x0 + 5)}, ${yScale(d.y0 + 5)})`)
+        .attr("opacity", 1)
+        .select("rect")
+        .attr("width", 80)
+        .attr("height", 30);
       tooltip.select("#id")
         .html(`id: ${+d.data.id - clusterCount}`);
       tooltip.select("#parentId")
@@ -279,7 +354,10 @@ export class TreemapComponent implements OnInit {
     }
 
     const tooltipOff = (event: any, d: any) => {
-      tooltip.attr("opacity", 0);
+      tooltip.attr("opacity", 0)
+        .select("rect")
+        .attr("width", 0)
+        .attr("height", 0);
     }
     
     // // 상준형 drawEdge 코드

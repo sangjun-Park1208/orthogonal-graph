@@ -14,6 +14,12 @@ let size : ISize = {
   padding: {left: 20, right: 20, top: 20, bottom: 20}
 };
 
+let opacity = {
+  node: 0.25,
+  edge: 0.15,
+  cluster: 0.3
+}
+
 export function getSize(){
   return size;
 }
@@ -59,7 +65,7 @@ export function setEdges(selection: d3.Selection<any, unknown, null, undefined>,
       .attr("d", d => `M${xScale(xY[+d.from-1].x)}, ${yScale(xY[+d.from-1].y)} L${xScale(xY[+d.to-1].x)}, ${yScale(xY[+d.to-1].y)}`)
       .attr("stroke", "black")
       .attr("fill", "none")
-      .attr("stroke-opacity", 0.2);
+      .attr("stroke-opacity", opacity.edge);
   }
 
 export function setNodes(selection: d3.Selection<any, unknown, null, undefined>, // default nodes selection 객체 리턴
@@ -74,7 +80,7 @@ export function setNodes(selection: d3.Selection<any, unknown, null, undefined>,
       .attr("cy", d => (yScale(d.y)))
       .attr("r", 5)
       .attr("fill", "black")
-      .attr("fill-opacity", 0.4);
+      .attr("fill-opacity", opacity.node);
   }
 
 export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
@@ -95,9 +101,9 @@ export function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: an
 
 export function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
   edges.attr("stroke-width", "1px")
-    .attr("stroke-opacity", 0.2);
+    .attr("stroke-opacity", opacity.edge);
 }
 
 export function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
-  nodes.attr("fill-opacity", 0.6);
+  nodes.attr("fill-opacity", opacity.node);
 }
