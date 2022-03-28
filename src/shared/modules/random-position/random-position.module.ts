@@ -59,6 +59,7 @@ export function setEdges(selection: d3.Selection<any, unknown, null, undefined>,
     yScale: ScaleLinear<any, any, any>,
     xY: Array<IBusObjectData>) {
     return selection.append("g")
+      .attr("id", "edges")
       .selectAll("path")
       .data(branch)
       .join("path")

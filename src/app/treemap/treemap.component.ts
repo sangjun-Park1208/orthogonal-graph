@@ -6,6 +6,7 @@ import * as rpm from 'src/shared/modules/random-position/random-position.module'
 import * as tm from 'src/shared/modules/treemap/treemap.module';
 import { ITabularData } from 'src/shared/interfaces/itabular-data';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data'
+import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 
 @Component({
   selector: 'app-treemap',
@@ -256,11 +257,21 @@ export class TreemapComponent implements OnInit {
       .selectAll("g")
       .data(clustersWithNodes)
       .join("g")
-      .attr("id", (d:any) => ("cluster " + (d.data.data.id)));
+      .attr("id", (d:any) => ("cluster_" + (d.data.data.id)))
+      .on("mouseover", (event, d) => {
+        clusterStrokeHighlightOn(event, d);
+        clusterNodesHighlightOn(event, d);
+        clusterNumberOn(event, d);
+      })
+      .on("mouseout", (event, d) => {
+        clusterStrokeHighlightOff(event, d);
+        clusterNodesHighlightOff(event, d);
+        clusterNumberOff(event, d);
+      });
     clusters.append("rect")
       .attr("opacity", opacity.cluster)
       .attr("stroke", "black")
-      .attr("fill", "none")
+      .attr("fill", "white")
       .attr("stroke-width", 3)
       .attr("width", (d:any) => {
         let m = d.data;
@@ -278,9 +289,18 @@ export class TreemapComponent implements OnInit {
         let m = d.data;
         return yScale(m.y0);
       });
+    clusters.append("text")
+      .attr("opacity", 0)
+      .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2))
+      .attr("dy", d => yScale(d.data.y0 + 14))
+      .attr("font-size", 10)
+      .attr("text-anchor", "middle")
+      .html(d => `Cluster ${d.data.id}`)
+      
+    console.log("clusters", clusters);
       
     const nodes = clusters.append("g")
-      .attr("id", d => "cluster " + d.data.id + " nodes")
+      .attr("id", d => "cluster_" + d.data.id + "_nodes")
       .selectAll("rect")
       .data(d => d.children)
       .join("rect")
@@ -302,7 +322,9 @@ export class TreemapComponent implements OnInit {
         return yScale(d.y0);
       })
       .attr("fill", (d:any) => {
-        return colorZ(+d.data.parentId / clusterCount);
+        const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+        // console.log("hsl convertion", hsl);
+        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       })
       .attr("fill-opacity", opacity.node)
       .on("mouseover", (event, d) => {
@@ -342,7 +364,7 @@ export class TreemapComponent implements OnInit {
       .attr("id", "parentId");
 
     const tooltipOn = (event: any, d: any) => {
-      tooltip.attr("transform", `translate(${xScale(d.x0 + 5)}, ${yScale(d.y0 + 5)})`)
+      tooltip.attr("transform", `translate(${xScale(d.x0 + 10)}, ${yScale(d.y0 + 10)})`)
         .attr("opacity", 1)
         .select("rect")
         .attr("width", 80)
@@ -358,6 +380,77 @@ export class TreemapComponent implements OnInit {
         .select("rect")
         .attr("width", 0)
         .attr("height", 0);
+      tooltip.select("#id")
+        .html("");
+      tooltip.select("#parentId")
+        .html("");
+    }
+
+    const clusterNodesHighlightOn = (event: any, d:any) => {
+      const clusterNodesSelection = d3.select(`#cluster_${d.data.id}_nodes`)
+        .selectAll("rect")
+        .attr("fill", (d: any) => colorZ(+d.data.parentId / clusterCount));
+
+      // console.log("clusterNodesSelection", clusterNodesSelection);
+    }
+
+    const clusterNodesHighlightOff = (event: any, d:any) => {
+      const clusterNodesSelection = d3.select(`#cluster_${d.data.id}_nodes`)
+        .selectAll("rect")
+        .attr("fill", (d:any) => {
+          const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+          // console.log("hsl convertion", hsl);
+          return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+        });
+
+      // console.log("clusterNodesSelection", clusterNodesSelection);
+    }
+
+    const clusterStrokeHighlightOn = (event: any, d: any) => {
+      d3.select(`#cluster_${d.data.id}`)
+        .select("rect")
+        .attr("stroke-width", 4)
+        .attr("opacity", opacity.cluster + 0.2);
+    }
+
+    const clusterStrokeHighlightOff = (event: any, d: any) => {
+      d3.select(`#cluster_${d.data.id}`)
+        .select("rect")
+        .attr("stroke-width", 3)
+        .attr("opacity", opacity.cluster);
+      // clusters.
+    }
+
+    const clusterNumberOn = (event: any, d: any) => {
+      d3.select(`#cluster_${d.data.id}`)
+        .select("text")
+        .attr("opacity", 1);
+    }
+
+    const clusterNumberOff = (event: any, d: any) => {
+      d3.select(`#cluster_${d.data.id}`)
+        .select("text")
+        .attr("opacity", 0);
+    }
+
+    // random-position module method temporary revision
+    const edgesHighlightOn = (event: any, d: any) => {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+      // clusterCount를 d3.select로 가져오든 뭐든 해당 리스너에서 자체적으로 가져올 수 있게 해야함. 외부변수에서 가져오면 이벤트리스너 규격 못지킴
+      d3.select("#edges")
+        .filter((m: any, i) => {
+        return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
+      })
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
+      // 간선과 인접한 정점도 강조할 것
+    };
+
+    const nodesHighlightOn = (event: any, d: any) => {
+      d3.select(`#cluster_${d.id}_nodes`)
+        .filter((m, i) => {
+        return m === d;
+      })
+        .attr("fill-opacity", 1);
     }
     
     // // 상준형 drawEdge 코드
