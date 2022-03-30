@@ -32,7 +32,7 @@ export class TreemapComponent implements OnInit {
   } // 콜백헬 프로미스로 해결하기
 
   renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
-    const size = rpm.getSize();
+    const size = rpm.getSize(); // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
     // prototype 1 코드
     const x = rpm.setX(bus);
@@ -58,7 +58,7 @@ export class TreemapComponent implements OnInit {
     const yScale = d3.scaleLinear(yDomain, yRange);
     const colorZ = d3.interpolateSinebow;
 
-    const opacity = {
+    const opacity = { // 투명도 수치 저장 변수 (모듈화 예정)
       node: 0.35,
       edge: 0.20,
       cluster: 0.4
@@ -84,9 +84,6 @@ export class TreemapComponent implements OnInit {
     console.log("tabularData", tabularData);
 
     const root = tm.setRoot(tabularData);
-    root.sort((a: any, b: any) => { // 랜덤성 없애기 시도 (무시해도됨)
-      return +b.id - +a.id;
-    })
     console.log("d3 hierachy node data", root);
 
     // treemap 형태 지정 알고리즘 선택: treemap.tile(d3.타일링메소드명) (https://github.com/d3/d3-hierarchy/blob/v3.1.1/README.md#treemap-tiling)
@@ -101,10 +98,13 @@ export class TreemapComponent implements OnInit {
     const children = root.children as d3.HierarchyNode<any>[];
     console.log("children", children);
 
-    const leaves = root.leaves(); //2차원 배열로 수정
+    const leaves = root.leaves(); 
+    leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
+      return (+a.data.id - +b.data.id);
+    });
     console.log("leaves", leaves);
 
-    let clustersWithNodes: any[] = [];
+    let clustersWithNodes: any[] = [];  // 각 cluster에 해당하는 nodes 데이터가 있도록 구조 변경
     for (let i = 0; i < clusterCount; i++){
       const clusterData = {
         data: children.find(d => d.data.id == i + 1),
@@ -115,10 +115,10 @@ export class TreemapComponent implements OnInit {
     }
     console.log("cluster with nodes", clustersWithNodes);
 
-    const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: (d.x1 - d.x0 > 5) ? (d.x0 + d.x1) / 2 : d.x0 + 2.5, y: (d.y1 - d.y0 > 5) ? (d.y0 + d.y1) / 2 : d.y0 + 2.5} as IBusObjectData});
-    nodeXY.sort((a: IBusObjectData, b: IBusObjectData) => {
-      return (+a.id - +b.id);
-    })
+    const nodeXY = leaves.map((d:any) => (
+      {id: +d.id - clusterCount, 
+        x: (d.x1 - d.x0 > 5) ? (d.x0 + d.x1) / 2 : d.x0 + 2.5, 
+        y: (d.y1 - d.y0 > 5) ? (d.y0 + d.y1) / 2 : d.y0 + 2.5} as IBusObjectData));
     console.log("nodeXY", nodeXY);
 
     const svg = d3.select(this.rootSvg.nativeElement)
@@ -127,6 +127,7 @@ export class TreemapComponent implements OnInit {
     const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
     console.log("edges", edges);
 
+    // nodes를 각 cluster에 속해있는 형태로 구조 변경
     const clusters = svg.append("g")
       .attr("id", "cluster and nodes")
       .selectAll("g")
@@ -220,6 +221,7 @@ export class TreemapComponent implements OnInit {
       });
     console.log("nodes", nodes); 
 
+    // 규한형 tooltip 참고해서 다듬는 중...
     const tooltip = svg.append("g")
       .attr("id", "tooltip")
       .attr("opacity", 0);
@@ -263,6 +265,7 @@ export class TreemapComponent implements OnInit {
         .html("");
     }
 
+    // cluster mouseover, mouseout event listener
     const clusterNodesHighlightOn = (event: any, d:any) => {
       const clusterNodesSelection = d3.select(`#cluster_${d.data.id}_nodes`)
         .selectAll("rect")
