@@ -9,15 +9,15 @@ import { cluster, ScaleContinuousNumeric, ScaleLinear, ValueFn } from 'd3';
 
 // oriented from prototype 1 code
 let size : ISize = {
-  viewBox: {minX: 0, minY: 0, width: 1000, height: 1000},
+  viewBox: {minX: 0, minY: 0, width: 550, height: 550},
   margin: {left: 20, right: 20, top: 20, bottom: 20},
   padding: {left: 20, right: 20, top: 20, bottom: 20}
 };
 
 let opacity = {
-  node: 0.25,
-  edge: 0.15,
-  cluster: 0.3
+  node: 0.35,
+  edge: 0.20,
+  cluster: 0.4
 }
 
 export function getSize(){
@@ -64,6 +64,8 @@ export function setEdges(selection: d3.Selection<any, unknown, null, undefined>,
       .data(branch)
       .join("path")
       .attr("d", d => `M${xScale(xY[+d.from-1].x)}, ${yScale(xY[+d.from-1].y)} L${xScale(xY[+d.to-1].x)}, ${yScale(xY[+d.to-1].y)}`)
+      .attr("stroke-width", 1)
+      .attr("stroke-linecap", "round")
       .attr("stroke", "black")
       .attr("fill", "none")
       .attr("stroke-opacity", opacity.edge);
@@ -88,7 +90,7 @@ export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: an
   edges.filter((m, i) => {
     return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
   })
-    .attr("stroke-width", "2px")
+    .attr("stroke-width", 2)
     .attr("stroke-opacity", 1);
   // 간선과 인접한 정점도 강조할 것
 };
@@ -101,7 +103,7 @@ export function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: an
 }
 
 export function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
-  edges.attr("stroke-width", "1px")
+  edges.attr("stroke-width", 1)
     .attr("stroke-opacity", opacity.edge);
 }
 

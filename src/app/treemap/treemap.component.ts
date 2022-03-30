@@ -59,9 +59,9 @@ export class TreemapComponent implements OnInit {
     const colorZ = d3.interpolateSinebow;
 
     const opacity = {
-      node: 0.25,
-      edge: 0.15,
-      cluster: 0.3
+      node: 0.35,
+      edge: 0.20,
+      cluster: 0.4
     }
 
     // 상준형 graphology 코드
@@ -73,7 +73,7 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    const communities = louvain(graph); // assign Louvain Algorithm
+    const communities = louvain(graph, {randomWalk: false}); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
     //
 
@@ -124,133 +124,8 @@ export class TreemapComponent implements OnInit {
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
 
-    // // 상준형 코드 edge, node highlight
-    // const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
-    //   edges.filter((s: any, j: any) => {
-    //     return +s.from === +d.id;
-    //   }).filter((h: any, k: any) => {
-    //     linkedNodes.push(+h.to);
-    //     return h.to;
-    //   });
-    // }
-
-    // const colorLinkedNodes_to = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
-    //   edges.filter((s: any, j: any) => {
-    //     return +s.to === +d.id;
-    //   }).filter((h: any, k: any) => {
-    //     linkedNodes.push(+h.from);
-    //     return h.from;
-    //   });
-    // }
-
-    // const showHighlight = (event: any, d: any) => {
-    //   console.log('id : ' + d.id);
-    //   // this.id = d.id;
-    //   // this.x = d.x;
-    //   // this.y = d.y;
-    //   // this.clusterNum = communities[d.id]; // for input box in html file.
-
-    //   // selected node
-    //   nodes.filter((m, i) => {
-    //     return m === d;
-    //   })
-    //     .attr('fill', 'blue')
-    //     .attr("fill-opacity", 1);
-
-    //   // other nodes
-    //   nodes.filter((m, i) => {
-    //     return m !== d;
-    //   })
-    //     .attr("fill", (d:any) => colorZ(d.id % 19))
-    //     .attr("fill-opacity", 0.1)
-    //     .attr('stroke-opacity', 0.2);
-
-    //   // Highlight 'red' nodes : starts from selected node(mouse-overed node).
-    //   let linkedNodes_from: number[] = [];
-    //   let countNum = 0;
-    //   colorLinkedNodes_from(d, linkedNodes_from);
-    //   for(; countNum<linkedNodes_from.length; countNum++){
-    //     nodes.filter((m: any, i: any) => {
-    //       return +m.id === linkedNodes_from[countNum];
-    //     })
-    //       .attr('fill', 'red')
-    //       .attr("fill-opacity", 1);
-    //   }
-
-    //   // Highlight 'green' nodes : ends at selected node.
-    //   let linkedNodes_to: number[] = [];
-    //   countNum = 0;
-    //   colorLinkedNodes_to(d, linkedNodes_to);
-    //   for(; countNum<linkedNodes_to.length; countNum++){
-    //     nodes.filter((m: any, i: any) => {
-    //       return +m.id === linkedNodes_to[countNum];
-    //     })
-    //       .attr('fill', 'green')
-    //       .attr("fill-opacity", 1);
-    //   }
-
-    //   // edges(from) : red.
-    //   // starts from selected node.
-    //   edges.filter((m: any, i) => {
-    //     return m.from == d.id;
-    //   })
-    //     .attr('stroke', 'red') // m == from
-    //     .attr("stroke-width", "2px")
-    //     .attr("stroke-opacity", 1);
-      
-    //   // edges(to) : green.
-    //   // ends at selected node.
-    //   edges.filter((m: any, i) => {
-    //     return m.to == d.id;
-    //   })  
-    //     .attr('stroke', 'green') // m == to
-    //     .attr("stroke-width", "2px")
-    //     .attr("stroke-opacity", 1);
-
-    //   // other edges (no relevance).
-    //   edges.filter((m: any, i) => {
-    //     return (m.from != d.id && m.to != d.id); // m == nothing
-    //   })
-    //     .attr("stroke-width", "1px")
-    //     .attr("stroke-opacity", 0.05);
-    // };
-
-    // const hideHighlight = (event: any, d: any) => { // same with first state.
-    //   nodes.attr("fill", (d:any) => colorZ(+d.data.parentId / clusterCount))
-    //     .attr("fill-opacity", 1)
-    //     .attr('stroke-opacity', 1);
-
-    //   edges.attr("stroke-width", "1px")
-    //     .attr("stroke", "steelblue")
-    //     .attr("stroke-opacity", 0.2);
-    // }
-    // //
     const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
     console.log("edges", edges);
-
-    // const clusters = svg.append("g")
-    //   .attr("id", "clusters")
-    //   .selectAll("rect")
-    //   .data(children)
-    //   .join("g")
-    //   .attr("id", (d:any) => ("cluster " + (d.data.id - clusterCount)))
-    //   .append("rect")
-    //   .attr("opacity", opacity.cluster)
-    //   .attr("stroke", "black")
-    //   .attr("fill", "none")
-    //   .attr("stroke-width", 3)
-    //   .attr("width", (d:any) => {
-    //     return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
-    //   })
-    //   .attr("height", (d:any) => {
-    //     return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
-    //   })
-    //   .attr("x", (d:any) => {
-    //     return xScale(d.x0);
-    //   })
-    //   .attr("y", (d:any) => {
-    //     return yScale(d.y0);
-    //   })
 
     const clusters = svg.append("g")
       .attr("id", "cluster and nodes")
@@ -268,11 +143,12 @@ export class TreemapComponent implements OnInit {
         clusterNodesHighlightOff(event, d);
         clusterNumberOff(event, d);
       });
+
     clusters.append("rect")
       .attr("opacity", opacity.cluster)
       .attr("stroke", "black")
       .attr("fill", "white")
-      .attr("stroke-width", 3)
+      .attr("stroke-width", 2)
       .attr("width", (d:any) => {
         let m = d.data;
         return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) : xScale(5);
@@ -289,11 +165,12 @@ export class TreemapComponent implements OnInit {
         let m = d.data;
         return yScale(m.y0);
       });
+
     clusters.append("text")
       .attr("opacity", 0)
       .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2))
-      .attr("dy", d => yScale(d.data.y0 + 14))
-      .attr("font-size", 10)
+      .attr("dy", d => yScale(d.data.y0 + 12))
+      .attr("font-size", 4)
       .attr("text-anchor", "middle")
       .html(d => `Cluster ${d.data.id}`)
       
@@ -347,28 +224,28 @@ export class TreemapComponent implements OnInit {
       .attr("id", "tooltip")
       .attr("opacity", 0);
     tooltip.append("rect")
-      .attr("width", 80)
-      .attr("height", 30)
+      .attr("width", 40)
+      .attr("height", 18)
       .attr("fill", "white")
       .attr("stroke", "black");
 
     const tooltipText = tooltip.append("text")
-      .attr("font-size", 10)
+      .attr("font-size", 5)
       .attr("x", 5)
-      .attr("y", 12);
+      .attr("y", 7);
     tooltipText.append("tspan")
       .attr("id", "id");
     tooltipText.append("tspan")
       .attr("x", 5)
-      .attr("dy", 12)
+      .attr("dy", 7)
       .attr("id", "parentId");
 
     const tooltipOn = (event: any, d: any) => {
       tooltip.attr("transform", `translate(${xScale(d.x0 + 10)}, ${yScale(d.y0 + 10)})`)
         .attr("opacity", 1)
         .select("rect")
-        .attr("width", 80)
-        .attr("height", 30);
+        .attr("width", 40)
+        .attr("height", 18);
       tooltip.select("#id")
         .html(`id: ${+d.data.id - clusterCount}`);
       tooltip.select("#parentId")
@@ -409,14 +286,14 @@ export class TreemapComponent implements OnInit {
     const clusterStrokeHighlightOn = (event: any, d: any) => {
       d3.select(`#cluster_${d.data.id}`)
         .select("rect")
-        .attr("stroke-width", 4)
+        .attr("stroke-width", 3)
         .attr("opacity", opacity.cluster + 0.2);
     }
 
     const clusterStrokeHighlightOff = (event: any, d: any) => {
       d3.select(`#cluster_${d.data.id}`)
         .select("rect")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 2)
         .attr("opacity", opacity.cluster);
       // clusters.
     }
@@ -452,44 +329,8 @@ export class TreemapComponent implements OnInit {
       })
         .attr("fill-opacity", 1);
     }
-    
-    // // 상준형 drawEdge 코드
-    // function drawEdge(d: any): any {
 
-    //   let k = `M${xScale(x[d.from-1])}, ${yScale(y[d.from-1])}`; // 'path' starting point
-    //   let xdif = x[d.to-1] - x[d.from-1]; // x diff
-    //   let ydif = y[d.to-1] - y[d.from-1]; // y diff
-    //   let abs_xdif = Math.abs(xdif); // |x diff|
-    //   let abs_ydif = Math.abs(ydif); // |y diff|
-
-    //   let xhalf = xScale((x[d.to-1] + x[d.from-1]) /2); // x's half point between source & target.
-    //   let yhalf = yScale((y[d.to-1] + y[d.from-1]) /2); // y's half point between source & target.
-
-    //   if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-    //     k += `L${xScale(x[d.from-1])}, ${yhalf}`; // starts drawing : Vertical.
-    //     k += `L${xScale(x[d.to - 1])}, ${yhalf}`;
-    //     k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`;
-    //   }
-    //   else { // if |x diff| <= |y diff|
-    //     k += `L${xhalf}, ${yScale(y[d.from-1])}`; // starts drawing : Horizontal.
-    //     k += `L${xhalf}, ${yScale(y[d.to - 1])}`;
-    //     k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`; 
-    //   }
-    //   return k;
-    // }
-
-    // const edges = svg.append("g")
-    //   .selectAll("path")
-    //   .data(branch)
-    //   .join("path")
-    //   .attr("d", (d: any): any => drawEdge(d))
-    //   .attr("stroke", "steelblue")
-    //   .attr("fill", "none")
-    //   .attr("stroke-opacity", 0.2)
-    // //
-
-    // // tooltip >>> nodes >>> edges 순으로 배치하기
-    // svg.append("use")
+     // svg.append("use")
     //   .attr("xlink:href", "#nodes");
     // svg.append("use")
     //   .attr("xlink:href", "#tooltip");
