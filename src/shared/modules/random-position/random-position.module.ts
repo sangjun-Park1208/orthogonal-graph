@@ -9,10 +9,16 @@ import { cluster, ScaleContinuousNumeric, ScaleLinear, ValueFn } from 'd3';
 
 // oriented from prototype 1 code
 let size : ISize = {
-  viewBox: {minX: 0, minY: 0, width: 1000, height: 1000},
+  viewBox: {minX: 0, minY: 0, width: 550, height: 550},
   margin: {left: 20, right: 20, top: 20, bottom: 20},
   padding: {left: 20, right: 20, top: 20, bottom: 20}
 };
+
+let opacity = {
+  node: 0.35,
+  edge: 0.20,
+  cluster: 0.4
+}
 
 export function getSize(){
   return size;
@@ -53,13 +59,16 @@ export function setEdges(selection: d3.Selection<any, unknown, null, undefined>,
     yScale: ScaleLinear<any, any, any>,
     xY: Array<IBusObjectData>) {
     return selection.append("g")
+      .attr("id", "edges")
       .selectAll("path")
       .data(branch)
       .join("path")
       .attr("d", d => `M${xScale(xY[+d.from-1].x)}, ${yScale(xY[+d.from-1].y)} L${xScale(xY[+d.to-1].x)}, ${yScale(xY[+d.to-1].y)}`)
+      .attr("stroke-width", 1)
+      .attr("stroke-linecap", "round")
       .attr("stroke", "black")
       .attr("fill", "none")
-      .attr("stroke-opacity", 0.2);
+      .attr("stroke-opacity", opacity.edge);
   }
 
 export function setNodes(selection: d3.Selection<any, unknown, null, undefined>, // default nodes selection 객체 리턴
@@ -74,17 +83,18 @@ export function setNodes(selection: d3.Selection<any, unknown, null, undefined>,
       .attr("cy", d => (yScale(d.y)))
       .attr("r", 5)
       .attr("fill", "black")
-      .attr("fill-opacity", 0.4);
+      .attr("fill-opacity", opacity.node);
   }
 
-// export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
-//   edges.filter((m, i) => {
-//     return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
-//   })
-//     .attr("stroke-width", "2px")
-//     .attr("stroke-opacity", 1);
-//   // 간선과 인접한 정점도 강조할 것
-// };
+
+export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+  edges.filter((m, i) => {
+    return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
+  })
+    .attr("stroke-width", 2)
+    .attr("stroke-opacity", 1);
+  // 간선과 인접한 정점도 강조할 것
+};
 
 // export function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: any) {
 //   nodes.filter((m, i) => {
@@ -92,12 +102,11 @@ export function setNodes(selection: d3.Selection<any, unknown, null, undefined>,
 //   })
 //     .attr("fill-opacity", 1);
 // }
+export function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
+  edges.attr("stroke-width", 1)
+    .attr("stroke-opacity", opacity.edge);
+}
 
-// export function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
-//   edges.attr("stroke-width", "1px")
-//     .attr("stroke-opacity", 0.2);
-// }
-
-// export function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
-//   nodes.attr("fill-opacity", 0.6);
-// }
+export function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
+  nodes.attr("fill-opacity", opacity.node);
+}
