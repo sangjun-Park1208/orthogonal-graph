@@ -9,7 +9,7 @@ import { cluster, ScaleContinuousNumeric, ScaleLinear, ValueFn } from 'd3';
 
 // oriented from prototype 1 code
 let size : ISize = {
-  viewBox: {minX: 0, minY: 0, width: 550, height: 550},
+  viewBox: {minX: 0, minY: 0, width: 1000, height: 1000},
   margin: {left: 20, right: 20, top: 20, bottom: 20},
   padding: {left: 20, right: 20, top: 20, bottom: 20}
 };
@@ -91,7 +91,7 @@ export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: an
   edges.filter((m, i) => {
     return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
   })
-    .attr("stroke-width", 2)
+    .attr("stroke-width", 1.2)
     .attr("stroke-opacity", 1);
   // 간선과 인접한 정점도 강조할 것
 };

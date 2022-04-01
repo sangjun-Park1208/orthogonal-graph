@@ -64,6 +64,8 @@ export class TreemapComponent implements OnInit {
       edge: 0.20,
       cluster: 0.4
     }
+
+    const nodeSize = 8;
     
     // 상준형 graphology 코드
     for(let i=0; i<xY.length; i++){
@@ -122,12 +124,14 @@ export class TreemapComponent implements OnInit {
 
     const nodeXY = leaves.map((d:any) => (
       {id: +d.id - clusterCount, 
-        x: (d.x1 - d.x0 > 5) ? (d.x0 + d.x1) / 2 : d.x0 + 2.5, 
-        y: (d.y1 - d.y0 > 5) ? (d.y0 + d.y1) / 2 : d.y0 + 2.5} as IBusObjectData));
+        x: d.x0 + nodeSize / 2, 
+        y: d.y0 + nodeSize / 2} as IBusObjectData));
     console.log("nodeXY", nodeXY);
 
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
+      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`)
+      .attr("width", size.viewBox.width)
+      .attr("height", size.viewBox.height);
 
     // // 상준형 코드 edge, node highlight
     const colorLinkedNodes_from1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
@@ -244,8 +248,8 @@ export class TreemapComponent implements OnInit {
       })
       .on("mouseout", (event, d) => {
         console.log("mouseout", event, d);
-        nodes.call(nodesHighlightOff);
-        edgesHighlightOff(edges);
+        // nodes.call(nodesHighlightOff);
+        // edgesHighlightOff(edges);
         tooltipOff(event, d);
         // hideHighlight(event, d);
       });
