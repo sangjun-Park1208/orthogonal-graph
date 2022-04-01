@@ -16,6 +16,8 @@ import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data'
 export class TreemapComponent implements OnInit {
   @ViewChild('rootSvg', {static : false}) rootSvg!: ElementRef;
 
+  nodeGroups: Array<number> = [];
+
   ngOnInit(): void {
   }
 
@@ -29,8 +31,22 @@ export class TreemapComponent implements OnInit {
           })
       });
   } // 콜백헬 프로미스로 해결하기
-
   renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
+
+///////////////////////////////////////////////////////////
+
+
+    for(let i=0; i<19; i++){
+      this.nodeGroups[i] = i; // [0, 1, ... , 18]
+    }
+    const a = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c',
+    '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'];
+   const color = d3.scaleOrdinal(this.nodeGroups, a);
+
+
+
+///////////////////////////////////////////////////////////
+
     const size = rpm.getSize();
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
     // prototype 1 코드
@@ -57,6 +73,26 @@ export class TreemapComponent implements OnInit {
     const yScale = d3.scaleLinear(yDomain, yRange);
     const colorZ = d3.interpolateSinebow;
 
+    const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
+      edges.filter((s: any, j: any) => {
+        return +s.from === +d.id;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.to);
+        return h.to;
+      });
+    }
+
+    const colorLinkedNodes_to = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
+      edges.filter((s: any, j: any) => {
+        return +s.to === +d.id;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.from);
+        return h.from;
+      });
+    }
+
+
+    
     // 상준형 graphology 코드
     for(let i=0; i<xY.length; i++){
       graph.addNode(xY[i].id);
@@ -104,108 +140,120 @@ export class TreemapComponent implements OnInit {
       .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
 
     // // 상준형 코드 edge, node highlight
-    // const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
-    //   edges.filter((s: any, j: any) => {
-    //     return +s.from === +d.id;
-    //   }).filter((h: any, k: any) => {
-    //     linkedNodes.push(+h.to);
-    //     return h.to;
-    //   });
-    // }
+    const colorLinkedNodes_from1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
+      edges.filter((s: any, j: any) => {
+        return +s.from === +d.id;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.to);
+        return h.to;
+      });
+    }
 
-    // const colorLinkedNodes_to = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
-    //   edges.filter((s: any, j: any) => {
-    //     return +s.to === +d.id;
-    //   }).filter((h: any, k: any) => {
-    //     linkedNodes.push(+h.from);
-    //     return h.from;
-    //   });
-    // }
+    const colorLinkedNodes_to1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
+      edges.filter((s: any, j: any) => {
+        return +s.to === +d.id;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.from);
+        return h.from;
+      });
+    }
 
-    // const showHighlight = (event: any, d: any) => {
-    //   console.log('id : ' + d.id);
-    //   // this.id = d.id;
-    //   // this.x = d.x;
-    //   // this.y = d.y;
-    //   // this.clusterNum = communities[d.id]; // for input box in html file.
+    const showHighlight = (event: any, d: any) => {
+      console.log('id : ' + d.id);
+      // this.id = d.id;
+      // this.x = d.x;
+      // this.y = d.y;
+      // this.clusterNum = communities[d.id]; // for input box in html file.
 
-    //   // selected node
-    //   nodes.filter((m, i) => {
-    //     return m === d;
-    //   })
-    //     .attr('fill', 'blue')
-    //     .attr("fill-opacity", 1);
+      // selected node
+      nodes.filter((m, i) => {
+        return m === d;
+      })
+        .attr('fill', 'blue')
+        .attr("fill-opacity", 1);
 
-    //   // other nodes
-    //   nodes.filter((m, i) => {
-    //     return m !== d;
-    //   })
-    //     .attr("fill", (d:any) => colorZ(d.id % 19))
-    //     .attr("fill-opacity", 0.1)
-    //     .attr('stroke-opacity', 0.2);
+      // other nodes
+      nodes.filter((m, i) => {
+        return m !== d;
+      })
+        .attr("fill", (d:any) => colorZ(d.id % 19))
+        .attr("fill-opacity", 0.1)
+        .attr('stroke-opacity', 0.2);
 
-    //   // Highlight 'red' nodes : starts from selected node(mouse-overed node).
-    //   let linkedNodes_from: number[] = [];
-    //   let countNum = 0;
-    //   colorLinkedNodes_from(d, linkedNodes_from);
-    //   for(; countNum<linkedNodes_from.length; countNum++){
-    //     nodes.filter((m: any, i: any) => {
-    //       return +m.id === linkedNodes_from[countNum];
-    //     })
-    //       .attr('fill', 'red')
-    //       .attr("fill-opacity", 1);
-    //   }
+      // Highlight 'red' nodes : starts from selected node(mouse-overed node).
+      let linkedNodes_from: number[] = [];
+      let countNum = 0;
+      colorLinkedNodes_from(d, linkedNodes_from);
+      for(; countNum<linkedNodes_from.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id === linkedNodes_from[countNum];
+        })
+          .attr('fill', 'red')
+          .attr("fill-opacity", 1);
+      }
 
-    //   // Highlight 'green' nodes : ends at selected node.
-    //   let linkedNodes_to: number[] = [];
-    //   countNum = 0;
-    //   colorLinkedNodes_to(d, linkedNodes_to);
-    //   for(; countNum<linkedNodes_to.length; countNum++){
-    //     nodes.filter((m: any, i: any) => {
-    //       return +m.id === linkedNodes_to[countNum];
-    //     })
-    //       .attr('fill', 'green')
-    //       .attr("fill-opacity", 1);
-    //   }
+      // Highlight 'green' nodes : ends at selected node.
+      let linkedNodes_to: number[] = [];
+      countNum = 0;
+      colorLinkedNodes_to(d, linkedNodes_to);
+      for(; countNum<linkedNodes_to.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id === linkedNodes_to[countNum];
+        })
+          .attr('fill', 'green')
+          .attr("fill-opacity", 1);
+      }
 
-    //   // edges(from) : red.
-    //   // starts from selected node.
-    //   edges.filter((m: any, i) => {
-    //     return m.from == d.id;
-    //   })
-    //     .attr('stroke', 'red') // m == from
-    //     .attr("stroke-width", "2px")
-    //     .attr("stroke-opacity", 1);
+      // edges(from) : red.
+      // starts from selected node.
+      edges.filter((m: any, i) => {
+        return m.from == d.id;
+      })
+        .attr('stroke', 'red') // m == from
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
       
-    //   // edges(to) : green.
-    //   // ends at selected node.
-    //   edges.filter((m: any, i) => {
-    //     return m.to == d.id;
-    //   })  
-    //     .attr('stroke', 'green') // m == to
-    //     .attr("stroke-width", "2px")
-    //     .attr("stroke-opacity", 1);
+      // edges(to) : green.
+      // ends at selected node.
+      edges.filter((m: any, i) => {
+        return m.to == d.id;
+      })  
+        .attr('stroke', 'green') // m == to
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
 
-    //   // other edges (no relevance).
-    //   edges.filter((m: any, i) => {
-    //     return (m.from != d.id && m.to != d.id); // m == nothing
-    //   })
-    //     .attr("stroke-width", "1px")
-    //     .attr("stroke-opacity", 0.05);
-    // };
+      // other edges (no relevance).
+      edges.filter((m: any, i) => {
+        return (m.from != d.id && m.to != d.id); // m == nothing
+      })
+        .attr("stroke-width", "1px")
+        .attr("stroke-opacity", 0.05);
+    };
 
-    // const hideHighlight = (event: any, d: any) => { // same with first state.
-    //   nodes.attr("fill", (d:any) => colorZ(+d.data.parentId / clusterCount))
-    //     .attr("fill-opacity", 1)
-    //     .attr('stroke-opacity', 1);
+    const hideHighlight = (event: any, d: any) => { // same with first state.
+      nodes.attr("fill", (d:any) => colorZ(+d.data.parentId / clusterCount))
+        .attr("fill-opacity", 1)
+        .attr('stroke-opacity', 1);
 
-    //   edges.attr("stroke-width", "1px")
-    //     .attr("stroke", "steelblue")
-    //     .attr("stroke-opacity", 0.2);
-    // }
-    // //
-    const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
-    console.log("edges", edges);
+      edges.attr("stroke-width", "1px")
+        .attr("stroke", "steelblue")
+        .attr("stroke-opacity", 0.2);
+    }
+    //
+
+
+
+    // const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
+    // console.log("edges", edges);
+
+    const edges = svg.append("g")
+      .selectAll("path")
+      .data(branch)
+      .join("path")
+      .attr("d", (d: any): any => drawEdge(d))
+      .attr("stroke", "steelblue")
+      .attr("fill", "none")
+      .attr("stroke-opacity", 0.2);
 
     const nodes = svg.append("g")
       .attr("id", "nodes")
@@ -215,35 +263,32 @@ export class TreemapComponent implements OnInit {
       .attr("id", (d:any) => {
         return (+d.data.id - clusterCount);
       })
-      .attr("width", (d:any) => {
-        return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
-      })
-      .attr("height", (d:any) => {
-        return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
-      })
-      // .attr("width", 5)
-      // .attr("height", 5)
-      .attr("x", (d:any) => {
-        return xScale(d.x0);
-      })
-      .attr("y", (d:any) => {
-        return yScale(d.y0);
-      })
+      // .attr("width", (d:any) => {
+      //   return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
+      // })
+      // .attr("height", (d:any) => {
+      //   return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
+      // })
+      .attr("width", 8)
+      .attr("height", 8)
+      .attr("x", (d:any) =>  (xScale(d.x0)))
+      .attr("y", (d:any) =>  (xScale(d.y0)))
+
       .attr("fill", (d:any) => {
         return colorZ(+d.data.parentId / clusterCount);
       })
       .attr("fill-opacity", 0.6)
       .on("mouseover", (event, d) => {
         console.log("mouseover", event, d);
-        nodes.call(rpm.nodesHighlightOn, d);
-        rpm.edgesHighlightOn(edges, d, clusterCount);
+        nodes.call(nodesHighlightOn, d);
+        edgesHighlightOn(edges, d, clusterCount);
         tooltipOn(event, d);
         // showHighlight(event, d);
       })
       .on("mouseout", (event, d) => {
         console.log("mouseout", event, d);
-        nodes.call(rpm.nodesHighlightOff);
-        rpm.edgesHighlightOff(edges);
+        nodes.call(nodesHighlightOff);
+        edgesHighlightOff(edges);
         tooltipOff(event, d);
         // hideHighlight(event, d);
       });
@@ -283,29 +328,123 @@ export class TreemapComponent implements OnInit {
     }
     
     // // 상준형 drawEdge 코드
-    // function drawEdge(d: any): any {
+    function drawEdge(d: any): any {
 
-    //   let k = `M${xScale(x[d.from-1])}, ${yScale(y[d.from-1])}`; // 'path' starting point
-    //   let xdif = x[d.to-1] - x[d.from-1]; // x diff
-    //   let ydif = y[d.to-1] - y[d.from-1]; // y diff
-    //   let abs_xdif = Math.abs(xdif); // |x diff|
-    //   let abs_ydif = Math.abs(ydif); // |y diff|
+      let k = `M${xScale(nodeXY[d.from-1].x)}, ${yScale(nodeXY[d.from-1].y)}`; // 'path' starting point
+      let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
+      let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
+      let abs_xdif = Math.abs(xdif); // |x diff|
+      let abs_ydif = Math.abs(ydif); // |y diff|
 
-    //   let xhalf = xScale((x[d.to-1] + x[d.from-1]) /2); // x's half point between source & target.
-    //   let yhalf = yScale((y[d.to-1] + y[d.from-1]) /2); // y's half point between source & target.
+      let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
+      let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
 
-    //   if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-    //     k += `L${xScale(x[d.from-1])}, ${yhalf}`; // starts drawing : Vertical.
-    //     k += `L${xScale(x[d.to - 1])}, ${yhalf}`;
-    //     k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`;
-    //   }
-    //   else { // if |x diff| <= |y diff|
-    //     k += `L${xhalf}, ${yScale(y[d.from-1])}`; // starts drawing : Horizontal.
-    //     k += `L${xhalf}, ${yScale(y[d.to - 1])}`;
-    //     k += `L${xScale(x[d.to - 1])}, ${yScale(y[d.to - 1])}`; 
-    //   }
-    //   return k;
-    // }
+      if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
+        k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+      }
+      else { // if |x diff| <= |y diff|
+        k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
+        k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`; 
+      }
+      return k;
+    }
+
+    function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+      // edges.filter((m, i) => {
+      //   return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
+      // })
+      //   .attr("stroke-width", "2px")
+      //   .attr("stroke-opacity", 1);
+      // // 간선과 인접한 정점도 강조할 것
+      edges.filter((m: any, i) => {
+        return m.from == d.id;
+      })
+        .attr('stroke', 'red') // m == from
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
+      
+      // edges(to) : green.
+      // ends at selected node.
+      edges.filter((m: any, i) => {
+        return m.to == d.id;
+      })  
+        .attr('stroke', 'green') // m == to
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
+  
+      // other edges (no relevance).
+      edges.filter((m: any, i) => {
+        return (m.from != d.id && m.to != d.id); // m == nothing
+      })
+        .attr("stroke-width", "1px")
+        .attr("stroke-opacity", 0.05);
+    };
+    
+    function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: any) {
+      // nodes.filter((m, i) => {
+      //   return m === d;
+      // })
+      //   .attr("fill-opacity", 1);
+  
+  
+      nodes.filter((m, i) => {
+        return m === d;
+      })
+        .attr('fill', 'blue')
+        .attr("fill-opacity", 1);
+  
+      // other nodes
+      nodes.filter((m, i) => {
+        return m !== d;
+      })
+        .attr("fill", d => color(d.id % 19))
+        .attr("fill-opacity", 0.1)
+        .attr('stroke-opacity', 0.2);
+  
+      // Highlight 'red' nodes : starts from selected node(mouse-overed node).
+      let linkedNodes_from: number[] = [];
+      let countNum = 0;
+      colorLinkedNodes_from1(d, linkedNodes_from);
+      for(; countNum<linkedNodes_from.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id === linkedNodes_from[countNum];
+        })
+          .attr('fill', 'red')
+          .attr("fill-opacity", 1);
+      }
+  
+      // Highlight 'green' nodes : ends at selected node.
+      let linkedNodes_to: number[] = [];
+      countNum = 0;
+      colorLinkedNodes_to1(d, linkedNodes_to);
+      for(; countNum<linkedNodes_to.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id === linkedNodes_to[countNum];
+        })
+          .attr('fill', 'green')
+          .attr("fill-opacity", 1);
+      }
+    }
+    
+    function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
+      edges.attr("stroke-width", "1px")
+        .attr("stroke-opacity", 0.2);
+    }
+    
+    function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
+      nodes.attr("fill-opacity", 0.6);
+    }
+
+
+
+
+
+
+
+
 
     // const edges = svg.append("g")
     //   .selectAll("path")
@@ -323,4 +462,23 @@ export class TreemapComponent implements OnInit {
     // svg.append("use")
     //   .attr("xlink:href", "#tooltip");
   }
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
