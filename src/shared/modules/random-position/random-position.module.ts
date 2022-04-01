@@ -9,7 +9,9 @@ import { cluster, ScaleContinuousNumeric, ScaleLinear, ValueFn } from 'd3';
 
 // oriented from prototype 1 code
 let size : ISize = {
-  viewBox: {minX: 0, minY: 0, width: 550, height: 550},
+  width: 960,
+  height: 960,
+  viewBox: {minX: 20, minY: 20, width: 1000, height: 1000},
   margin: {left: 20, right: 20, top: 20, bottom: 20},
   padding: {left: 20, right: 20, top: 20, bottom: 20}
 };

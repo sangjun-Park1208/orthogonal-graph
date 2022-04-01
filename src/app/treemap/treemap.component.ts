@@ -34,6 +34,13 @@ export class TreemapComponent implements OnInit {
   } // 콜백헬 프로미스로 해결하기
   renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
     const size = rpm.getSize(); // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
+    const opacity = { // 투명도 수치 저장 변수 (모듈화 예정)
+      node: 0.35,
+      edge: 0.20,
+      cluster: 0.4
+    };
+    const strokeWidth = 2;
+    const nodeSize = 8;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
     // prototype 1 코드
     const x = rpm.setX(bus);
@@ -50,20 +57,14 @@ export class TreemapComponent implements OnInit {
     const xDomain = [xMin, xMax as number];
     const yDomain = [yMin, yMax as number];
 
-    const xRange = [0, size.viewBox.width - size.margin.right];
-    const yRange = [0, size.viewBox.height - size.margin.bottom];
+    const xRange = [0, size.width];
+    const yRange = [0, size.height];
     console.log("xDomain xRange", xDomain, xRange);
     console.log("yDomain yRange", yDomain, yRange);
 
     const xScale = d3.scaleLinear(xDomain, xRange);
     const yScale = d3.scaleLinear(yDomain, yRange);
     const colorZ = d3.interpolateSinebow;
-
-    const opacity = { // 투명도 수치 저장 변수 (모듈화 예정)
-      node: 0.35,
-      edge: 0.20,
-      cluster: 0.4
-    }
     
     // 상준형 graphology 코드
     for(let i=0; i<xY.length; i++){
@@ -127,7 +128,9 @@ export class TreemapComponent implements OnInit {
     console.log("nodeXY", nodeXY);
 
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
+      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`)
+      .attr("width", size.width)
+      .attr("height", size.height);
 
     // // 상준형 코드 edge, node highlight
     const colorLinkedNodes_from1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
@@ -149,6 +152,7 @@ export class TreemapComponent implements OnInit {
     }
 
     const edges = svg.append("g")
+      .attr("id", "edges")
       .selectAll("path")
       .data(branch)
       .join("path")
@@ -399,17 +403,17 @@ export class TreemapComponent implements OnInit {
     }
 
     // tmp nodes, edges mouseout event listener
-//     function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
-//       edges.attr("stroke", "steelblue")
-//         .attr("stroke-width", "1px")
-//         .attr("stroke-opacity", 0.2);
-//     }
+    function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
+      edges.attr("stroke", "steelblue")
+        .attr("stroke-width", "1px")
+        .attr("stroke-opacity", 0.2);
+    }
     
-//     function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
-//       nodes.attr("fill", m => colorZ(m.data.parentId / clusterCount))
-//         .attr("fill-opacity", 0.6)
-//         .attr('stroke-opacity', 0.2);
-//     }
+    function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
+      nodes.attr("fill", m => colorZ(m.data.parentId / clusterCount))
+        .attr("fill-opacity", 0.6)
+        .attr('stroke-opacity', 0.2);
+    }
 
 
 
