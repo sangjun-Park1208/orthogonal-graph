@@ -86,6 +86,7 @@ export function setNodes(selection: d3.Selection<any, unknown, null, undefined>,
       .attr("fill-opacity", opacity.node);
   }
 
+
 export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
   edges.filter((m, i) => {
     return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
@@ -95,13 +96,12 @@ export function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: an
   // 간선과 인접한 정점도 강조할 것
 };
 
-export function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: any) {
-  nodes.filter((m, i) => {
-    return m === d;
-  })
-    .attr("fill-opacity", 1);
-}
-
+// export function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: any) {
+//   nodes.filter((m, i) => {
+//     return m === d;
+//   })
+//     .attr("fill-opacity", 1);
+// }
 export function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
   edges.attr("stroke-width", 1)
     .attr("stroke-opacity", opacity.edge);

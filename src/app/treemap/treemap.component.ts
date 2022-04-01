@@ -17,6 +17,8 @@ import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 export class TreemapComponent implements OnInit {
   @ViewChild('rootSvg', {static : false}) rootSvg!: ElementRef;
 
+  nodeGroups: Array<number> = [];
+
   ngOnInit(): void {
   }
 
@@ -30,7 +32,6 @@ export class TreemapComponent implements OnInit {
           })
       });
   } // 콜백헬 프로미스로 해결하기
-
   renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
     const size = rpm.getSize(); // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
@@ -63,7 +64,7 @@ export class TreemapComponent implements OnInit {
       edge: 0.20,
       cluster: 0.4
     }
-
+    
     // 상준형 graphology 코드
     for(let i=0; i<xY.length; i++){
       graph.addNode(xY[i].id);
@@ -99,10 +100,14 @@ export class TreemapComponent implements OnInit {
     console.log("children", children);
 
     const leaves = root.leaves(); 
+
     leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
       return (+a.data.id - +b.data.id);
     });
     console.log("leaves", leaves);
+
+//      tmp
+//     const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: d.x0 + 4, y: d.y0 + 4} as IBusObjectData});
 
     let clustersWithNodes: any[] = [];  // 각 cluster에 해당하는 nodes 데이터가 있도록 구조 변경
     for (let i = 0; i < clusterCount; i++){
@@ -124,8 +129,36 @@ export class TreemapComponent implements OnInit {
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${size.viewBox.minX}, ${size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`);
 
-    const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
-    console.log("edges", edges);
+    // // 상준형 코드 edge, node highlight
+    const colorLinkedNodes_from1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
+      edges.filter((s: any, j: any) => {
+        return +s.from === +d.id - clusterCount;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.to);
+        return h.to;
+      });
+    }
+
+    const colorLinkedNodes_to1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
+      edges.filter((s: any, j: any) => {
+        return +s.to === +d.id - clusterCount;
+      }).filter((h: any, k: any) => {
+        linkedNodes.push(+h.from);
+        return h.from;
+      });
+    }
+
+    const edges = svg.append("g")
+      .selectAll("path")
+      .data(branch)
+      .join("path")
+      .attr("d", (d: any) => drawEdge(d))
+      .attr("stroke", "steelblue")
+      .attr("fill", "none")
+      .attr("stroke-opacity", 0.2);
+  // straight edges
+//     const edges = rpm.setEdges(svg, branch, xScale, yScale, nodeXY);
+//     console.log("edges", edges);
 
     // nodes를 각 cluster에 속해있는 형태로 구조 변경
     const clusters = svg.append("g")
@@ -185,20 +218,17 @@ export class TreemapComponent implements OnInit {
       .attr("id", (d:any) => {
         return (+d.data.id - clusterCount);
       })
-      .attr("width", (d:any) => {
-        return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
-      })
-      .attr("height", (d:any) => {
-        return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
-      })
-      // .attr("width", 5)
-      // .attr("height", 5)
-      .attr("x", (d:any) => {
-        return xScale(d.x0);
-      })
-      .attr("y", (d:any) => {
-        return yScale(d.y0);
-      })
+      // .attr("width", (d:any) => {
+      //   return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
+      // })
+      // .attr("height", (d:any) => {
+      //   return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
+      // })
+      .attr("width", 8)
+      .attr("height", 8)
+      .attr("x", (d:any) =>  (xScale(d.x0)))
+      .attr("y", (d:any) =>  (xScale(d.y0)))
+
       .attr("fill", (d:any) => {
         const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
         // console.log("hsl convertion", hsl);
@@ -207,15 +237,15 @@ export class TreemapComponent implements OnInit {
       .attr("fill-opacity", opacity.node)
       .on("mouseover", (event, d) => {
         console.log("mouseover", event, d);
-        nodes.call(rpm.nodesHighlightOn, d);
-        rpm.edgesHighlightOn(edges, d, clusterCount);
+        nodes.call(nodesHighlightOn, d);
+        edgesHighlightOn(edges, d, clusterCount);
         tooltipOn(event, d);
         // showHighlight(event, d);
       })
       .on("mouseout", (event, d) => {
         console.log("mouseout", event, d);
-        nodes.call(rpm.nodesHighlightOff);
-        rpm.edgesHighlightOff(edges);
+        nodes.call(nodesHighlightOff);
+        edgesHighlightOff(edges);
         tooltipOff(event, d);
         // hideHighlight(event, d);
       });
@@ -264,6 +294,143 @@ export class TreemapComponent implements OnInit {
       tooltip.select("#parentId")
         .html("");
     }
+    
+    // // 상준형 drawEdge 코드
+    function drawEdge(d: any): any {
+
+      let k = `M${xScale(nodeXY[d.from-1].x)}, ${yScale(nodeXY[d.from-1].y)}`; // 'path' starting point
+      let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
+      let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
+      let abs_xdif = Math.abs(xdif); // |x diff|
+      let abs_ydif = Math.abs(ydif); // |y diff|
+
+      let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
+      let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
+
+      if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
+        k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+      }
+      else { // if |x diff| <= |y diff|
+        k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
+        k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`; 
+      }
+      return k;
+    }
+
+    function edgesHighlightOn (edges: d3.Selection<any, any, any, any>, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+      // edges.filter((m, i) => {
+      //   return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
+      // })
+      //   .attr("stroke-width", "2px")
+      //   .attr("stroke-opacity", 1);
+      // // 간선과 인접한 정점도 강조할 것
+      edges.filter((m: any, i) => {
+        return m.from == +d.id - clusterCount;
+      })
+        .attr('stroke', 'red') // m == from
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
+      
+      // edges(to) : green.
+      // ends at selected node.
+      edges.filter((m: any, i) => {
+        return m.to == +d.id - clusterCount;
+      })  
+        .attr('stroke', 'green') // m == to
+        .attr("stroke-width", "2px")
+        .attr("stroke-opacity", 1);
+  
+      // other edges (no relevance).
+      edges.filter((m: any, i) => {
+        return (m.from != +d.id - clusterCount && m.to != +d.id - clusterCount); // m == nothing
+      })
+        .attr("stroke-width", "1px")
+        .attr("stroke-opacity", 0.05);
+    };
+    
+    function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: any) {
+      // nodes.filter((m, i) => {
+      //   return m === d;
+      // })
+      //   .attr("fill-opacity", 1);
+      console.log("d parentId", d.data.parentId);
+  
+      nodes.filter((m, i) => {
+        return m === d;
+      })
+        .attr('fill', 'blue')
+        .attr("fill-opacity", 1);
+  
+      // other nodes
+      nodes.filter((m, i) => {
+        return m !== d;
+      })
+        .attr("fill", m => colorZ(m.data.parentId / clusterCount))
+        .attr("fill-opacity", 0.1)
+        .attr('stroke-opacity', 0.2);
+  
+      // Highlight 'red' nodes : starts from selected node(mouse-overed node).
+      let linkedNodes_from: number[] = [];
+      let countNum = 0;
+      colorLinkedNodes_from1(d, linkedNodes_from);
+      for(; countNum<linkedNodes_from.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id - clusterCount === linkedNodes_from[countNum];
+        })
+          .attr('fill', 'red')
+          .attr("fill-opacity", 1);
+      }
+  
+      // Highlight 'green' nodes : ends at selected node.
+      let linkedNodes_to: number[] = [];
+      countNum = 0;
+      colorLinkedNodes_to1(d, linkedNodes_to);
+      for(; countNum<linkedNodes_to.length; countNum++){
+        nodes.filter((m: any, i: any) => {
+          return +m.id - clusterCount === linkedNodes_to[countNum];
+        })
+          .attr('fill', 'green')
+          .attr("fill-opacity", 1);
+      }
+      // console.log("linkedNodes from, to", linkedNodes_from, linkedNodes_to)
+    }
+
+    // tmp nodes, edges mouseout event listener
+//     function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
+//       edges.attr("stroke", "steelblue")
+//         .attr("stroke-width", "1px")
+//         .attr("stroke-opacity", 0.2);
+//     }
+    
+//     function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
+//       nodes.attr("fill", m => colorZ(m.data.parentId / clusterCount))
+//         .attr("fill-opacity", 0.6)
+//         .attr('stroke-opacity', 0.2);
+//     }
+
+
+
+
+
+
+
+
+
+    // const edges = svg.append("g")
+    //   .selectAll("path")
+    //   .data(branch)
+    //   .join("path")
+    //   .attr("d", (d: any): any => drawEdge(d))
+    //   .attr("stroke", "steelblue")
+    //   .attr("fill", "none")
+    //   .attr("stroke-opacity", 0.2)
+    // //
+
+    // // tooltip >>> nodes >>> edges 순으로 배치하기
+    // svg.append("use")
 
     // cluster mouseover, mouseout event listener
     const clusterNodesHighlightOn = (event: any, d:any) => {
@@ -313,27 +480,28 @@ export class TreemapComponent implements OnInit {
         .attr("opacity", 0);
     }
 
-    // random-position module method temporary revision
-    const edgesHighlightOn = (event: any, d: any) => {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
-      // clusterCount를 d3.select로 가져오든 뭐든 해당 리스너에서 자체적으로 가져올 수 있게 해야함. 외부변수에서 가져오면 이벤트리스너 규격 못지킴
-      d3.select("#edges")
-        .filter((m: any, i) => {
-        return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
-      })
-        .attr("stroke-width", "2px")
-        .attr("stroke-opacity", 1);
-      // 간선과 인접한 정점도 강조할 것
-    };
+    // rpm edges, nodes mouseover event listener
+//     const edgesHighlightOn = (event: any, d: any) => {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+//       // clusterCount를 d3.select로 가져오든 뭐든 해당 리스너에서 자체적으로 가져올 수 있게 해야함. 외부변수에서 가져오면 이벤트리스너 규격 못지킴
+//       d3.select("#edges")
+//         .filter((m: any, i) => {
+//         return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
+//       })
+//         .attr("stroke-width", "2px")
+//         .attr("stroke-opacity", 1);
+//       // 간선과 인접한 정점도 강조할 것
+//     };
 
-    const nodesHighlightOn = (event: any, d: any) => {
-      d3.select(`#cluster_${d.id}_nodes`)
-        .filter((m, i) => {
-        return m === d;
-      })
-        .attr("fill-opacity", 1);
-    }
+//     const nodesHighlightOn = (event: any, d: any) => {
+//       d3.select(`#cluster_${d.id}_nodes`)
+//         .filter((m, i) => {
+//         return m === d;
+//       })
+//         .attr("fill-opacity", 1);
+//     }
 
      // svg.append("use")
+
     //   .attr("xlink:href", "#nodes");
     // svg.append("use")
     //   .attr("xlink:href", "#tooltip");
