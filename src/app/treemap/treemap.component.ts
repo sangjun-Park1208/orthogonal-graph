@@ -34,14 +34,14 @@ export class TreemapComponent implements OnInit {
   renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
 
 ///////////////////////////////////////////////////////////
+// 색깔
 
-
-    for(let i=0; i<19; i++){
-      this.nodeGroups[i] = i; // [0, 1, ... , 18]
-    }
-    const a = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c',
-    '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'];
-   const color = d3.scaleOrdinal(this.nodeGroups, a);
+  //   for(let i=0; i<19; i++){
+  //     this.nodeGroups[i] = i; // [0, 1, ... , 18]
+  //   }
+  //   const a = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c',
+  //   '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'];
+  //  const color = d3.scaleOrdinal(this.nodeGroups, a);
 
 
 
@@ -73,23 +73,24 @@ export class TreemapComponent implements OnInit {
     const yScale = d3.scaleLinear(yDomain, yRange);
     const colorZ = d3.interpolateSinebow;
 
-    const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
-      edges.filter((s: any, j: any) => {
-        return +s.from === +d.id;
-      }).filter((h: any, k: any) => {
-        linkedNodes.push(+h.to);
-        return h.to;
-      });
-    }
+    // // 선택한 정점과 인접한 간선 모두 배열에 push
+    // const colorLinkedNodes_from = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
+    //   edges.filter((s: any, j: any) => {
+    //     return +s.from === +d.id;
+    //   }).filter((h: any, k: any) => {
+    //     linkedNodes.push(+h.to);
+    //     return h.to;
+    //   });
+    // }
 
-    const colorLinkedNodes_to = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
-      edges.filter((s: any, j: any) => {
-        return +s.to === +d.id;
-      }).filter((h: any, k: any) => {
-        linkedNodes.push(+h.from);
-        return h.from;
-      });
-    }
+    // const colorLinkedNodes_to = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
+    //   edges.filter((s: any, j: any) => {
+    //     return +s.to === +d.id;
+    //   }).filter((h: any, k: any) => {
+    //     linkedNodes.push(+h.from);
+    //     return h.from;
+    //   });
+    // }
 
 
     
@@ -102,7 +103,7 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    const communities = louvain(graph); // assign Louvain Algorithm
+    const communities = louvain(graph, {randomWalk: false}); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
     //
 
@@ -128,12 +129,12 @@ export class TreemapComponent implements OnInit {
     console.log("d3 treemapping data", root);
 
     const leaves = root.leaves();
+    leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
+      return (+a.data.id - +b.data.id);
+    });
     console.log("leaves", leaves);
 
-    const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: (d.x0 + d.x1) / 2, y: (d.y0 + d.y1) / 2} as IBusObjectData});
-    nodeXY.sort((a: IBusObjectData, b: IBusObjectData) => {
-      return (+a.id - +b.id);
-    })
+    const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: d.x0 + 4, y: d.y0 + 4} as IBusObjectData});
     console.log("nodeXY", nodeXY);
 
     const svg = d3.select(this.rootSvg.nativeElement)
@@ -142,7 +143,7 @@ export class TreemapComponent implements OnInit {
     // // 상준형 코드 edge, node highlight
     const colorLinkedNodes_from1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_from.push()
       edges.filter((s: any, j: any) => {
-        return +s.from === +d.id;
+        return +s.from === +d.id - clusterCount;
       }).filter((h: any, k: any) => {
         linkedNodes.push(+h.to);
         return h.to;
@@ -151,94 +152,94 @@ export class TreemapComponent implements OnInit {
 
     const colorLinkedNodes_to1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
       edges.filter((s: any, j: any) => {
-        return +s.to === +d.id;
+        return +s.to === +d.id - clusterCount;
       }).filter((h: any, k: any) => {
         linkedNodes.push(+h.from);
         return h.from;
       });
     }
 
-    const showHighlight = (event: any, d: any) => {
-      console.log('id : ' + d.id);
-      // this.id = d.id;
-      // this.x = d.x;
-      // this.y = d.y;
-      // this.clusterNum = communities[d.id]; // for input box in html file.
+    // const showHighlight = (event: any, d: any) => {
+    //   console.log('id : ' + d.id);
+    //   // this.id = d.id;
+    //   // this.x = d.x;
+    //   // this.y = d.y;
+    //   // this.clusterNum = communities[d.id]; // for input box in html file.
 
-      // selected node
-      nodes.filter((m, i) => {
-        return m === d;
-      })
-        .attr('fill', 'blue')
-        .attr("fill-opacity", 1);
+    //   // selected node
+    //   nodes.filter((m, i) => {
+    //     return m === d;
+    //   })
+    //     .attr('fill', 'blue')
+    //     .attr("fill-opacity", 1);
 
-      // other nodes
-      nodes.filter((m, i) => {
-        return m !== d;
-      })
-        .attr("fill", (d:any) => colorZ(d.id % 19))
-        .attr("fill-opacity", 0.1)
-        .attr('stroke-opacity', 0.2);
+    //   // other nodes
+    //   nodes.filter((m, i) => {
+    //     return m !== d;
+    //   })
+    //     .attr("fill", (d:any) => colorZ(d.id % 19))
+    //     .attr("fill-opacity", 0.1)
+    //     .attr('stroke-opacity', 0.2);
 
-      // Highlight 'red' nodes : starts from selected node(mouse-overed node).
-      let linkedNodes_from: number[] = [];
-      let countNum = 0;
-      colorLinkedNodes_from(d, linkedNodes_from);
-      for(; countNum<linkedNodes_from.length; countNum++){
-        nodes.filter((m: any, i: any) => {
-          return +m.id === linkedNodes_from[countNum];
-        })
-          .attr('fill', 'red')
-          .attr("fill-opacity", 1);
-      }
+    //   // Highlight 'red' nodes : starts from selected node(mouse-overed node).
+    //   let linkedNodes_from: number[] = [];
+    //   let countNum = 0;
+    //   colorLinkedNodes_from(d, linkedNodes_from);
+    //   for(; countNum<linkedNodes_from.length; countNum++){
+    //     nodes.filter((m: any, i: any) => {
+    //       return +m.id === linkedNodes_from[countNum];
+    //     })
+    //       .attr('fill', 'red')
+    //       .attr("fill-opacity", 1);
+    //   }
 
-      // Highlight 'green' nodes : ends at selected node.
-      let linkedNodes_to: number[] = [];
-      countNum = 0;
-      colorLinkedNodes_to(d, linkedNodes_to);
-      for(; countNum<linkedNodes_to.length; countNum++){
-        nodes.filter((m: any, i: any) => {
-          return +m.id === linkedNodes_to[countNum];
-        })
-          .attr('fill', 'green')
-          .attr("fill-opacity", 1);
-      }
+    //   // Highlight 'green' nodes : ends at selected node.
+    //   let linkedNodes_to: number[] = [];
+    //   countNum = 0;
+    //   colorLinkedNodes_to(d, linkedNodes_to);
+    //   for(; countNum<linkedNodes_to.length; countNum++){
+    //     nodes.filter((m: any, i: any) => {
+    //       return +m.id === linkedNodes_to[countNum];
+    //     })
+    //       .attr('fill', 'green')
+    //       .attr("fill-opacity", 1);
+    //   }
 
-      // edges(from) : red.
-      // starts from selected node.
-      edges.filter((m: any, i) => {
-        return m.from == d.id;
-      })
-        .attr('stroke', 'red') // m == from
-        .attr("stroke-width", "2px")
-        .attr("stroke-opacity", 1);
+    //   // edges(from) : red.
+    //   // starts from selected node.
+    //   edges.filter((m: any, i) => {
+    //     return m.from == d.id;
+    //   })
+    //     .attr('stroke', 'red') // m == from
+    //     .attr("stroke-width", "2px")
+    //     .attr("stroke-opacity", 1);
       
-      // edges(to) : green.
-      // ends at selected node.
-      edges.filter((m: any, i) => {
-        return m.to == d.id;
-      })  
-        .attr('stroke', 'green') // m == to
-        .attr("stroke-width", "2px")
-        .attr("stroke-opacity", 1);
+    //   // edges(to) : green.
+    //   // ends at selected node.
+    //   edges.filter((m: any, i) => {
+    //     return m.to == d.id;
+    //   })  
+    //     .attr('stroke', 'green') // m == to
+    //     .attr("stroke-width", "2px")
+    //     .attr("stroke-opacity", 1);
 
-      // other edges (no relevance).
-      edges.filter((m: any, i) => {
-        return (m.from != d.id && m.to != d.id); // m == nothing
-      })
-        .attr("stroke-width", "1px")
-        .attr("stroke-opacity", 0.05);
-    };
+    //   // other edges (no relevance).
+    //   edges.filter((m: any, i) => {
+    //     return (m.from != d.id && m.to != d.id); // m == nothing
+    //   })
+    //     .attr("stroke-width", "1px")
+    //     .attr("stroke-opacity", 0.05);
+    // };
 
-    const hideHighlight = (event: any, d: any) => { // same with first state.
-      nodes.attr("fill", (d:any) => colorZ(+d.data.parentId / clusterCount))
-        .attr("fill-opacity", 1)
-        .attr('stroke-opacity', 1);
+    // const hideHighlight = (event: any, d: any) => { // same with first state.
+    //   nodes.attr("fill", (d:any) => colorZ(+d.data.parentId / clusterCount))
+    //     .attr("fill-opacity", 1)
+    //     .attr('stroke-opacity', 1);
 
-      edges.attr("stroke-width", "1px")
-        .attr("stroke", "steelblue")
-        .attr("stroke-opacity", 0.2);
-    }
+    //   edges.attr("stroke-width", "1px")
+    //     .attr("stroke", "steelblue")
+    //     .attr("stroke-opacity", 0.2);
+    // }
     //
 
 
@@ -250,7 +251,7 @@ export class TreemapComponent implements OnInit {
       .selectAll("path")
       .data(branch)
       .join("path")
-      .attr("d", (d: any): any => drawEdge(d))
+      .attr("d", (d: any) => drawEdge(d))
       .attr("stroke", "steelblue")
       .attr("fill", "none")
       .attr("stroke-opacity", 0.2);
@@ -360,7 +361,7 @@ export class TreemapComponent implements OnInit {
       //   .attr("stroke-opacity", 1);
       // // 간선과 인접한 정점도 강조할 것
       edges.filter((m: any, i) => {
-        return m.from == d.id;
+        return m.from == +d.id - clusterCount;
       })
         .attr('stroke', 'red') // m == from
         .attr("stroke-width", "2px")
@@ -369,7 +370,7 @@ export class TreemapComponent implements OnInit {
       // edges(to) : green.
       // ends at selected node.
       edges.filter((m: any, i) => {
-        return m.to == d.id;
+        return m.to == +d.id - clusterCount;
       })  
         .attr('stroke', 'green') // m == to
         .attr("stroke-width", "2px")
@@ -377,7 +378,7 @@ export class TreemapComponent implements OnInit {
   
       // other edges (no relevance).
       edges.filter((m: any, i) => {
-        return (m.from != d.id && m.to != d.id); // m == nothing
+        return (m.from != +d.id - clusterCount && m.to != +d.id - clusterCount); // m == nothing
       })
         .attr("stroke-width", "1px")
         .attr("stroke-opacity", 0.05);
@@ -388,7 +389,7 @@ export class TreemapComponent implements OnInit {
       //   return m === d;
       // })
       //   .attr("fill-opacity", 1);
-  
+      console.log("d parentId", d.data.parentId);
   
       nodes.filter((m, i) => {
         return m === d;
@@ -400,7 +401,7 @@ export class TreemapComponent implements OnInit {
       nodes.filter((m, i) => {
         return m !== d;
       })
-        .attr("fill", d => color(d.id % 19))
+        .attr("fill", m => colorZ(m.data.parentId / clusterCount))
         .attr("fill-opacity", 0.1)
         .attr('stroke-opacity', 0.2);
   
@@ -410,7 +411,7 @@ export class TreemapComponent implements OnInit {
       colorLinkedNodes_from1(d, linkedNodes_from);
       for(; countNum<linkedNodes_from.length; countNum++){
         nodes.filter((m: any, i: any) => {
-          return +m.id === linkedNodes_from[countNum];
+          return +m.id - clusterCount === linkedNodes_from[countNum];
         })
           .attr('fill', 'red')
           .attr("fill-opacity", 1);
@@ -422,20 +423,24 @@ export class TreemapComponent implements OnInit {
       colorLinkedNodes_to1(d, linkedNodes_to);
       for(; countNum<linkedNodes_to.length; countNum++){
         nodes.filter((m: any, i: any) => {
-          return +m.id === linkedNodes_to[countNum];
+          return +m.id - clusterCount === linkedNodes_to[countNum];
         })
           .attr('fill', 'green')
           .attr("fill-opacity", 1);
       }
+      // console.log("linkedNodes from, to", linkedNodes_from, linkedNodes_to)
     }
     
     function edgesHighlightOff (edges: d3.Selection<any, any, any, any>) {
-      edges.attr("stroke-width", "1px")
+      edges.attr("stroke", "steelblue")
+        .attr("stroke-width", "1px")
         .attr("stroke-opacity", 0.2);
     }
     
     function nodesHighlightOff (nodes: d3.Selection<any, any, any, any>) {
-      nodes.attr("fill-opacity", 0.6);
+      nodes.attr("fill", m => colorZ(m.data.parentId / clusterCount))
+        .attr("fill-opacity", 0.6)
+        .attr('stroke-opacity', 0.2);
     }
 
 
@@ -462,23 +467,4 @@ export class TreemapComponent implements OnInit {
     // svg.append("use")
     //   .attr("xlink:href", "#tooltip");
   }
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
