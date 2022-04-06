@@ -16,6 +16,7 @@ import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 
 export class TreemapComponent implements OnInit {
   @ViewChild('rootSvg', {static : false}) rootSvg!: ElementRef;
+  @ViewChild('tooltip', {static : false}) tooltip!: ElementRef;
 
   nodeGroups: Array<number> = [];
 
@@ -35,15 +36,16 @@ export class TreemapComponent implements OnInit {
   renderTreemap(bus: any, branch: any) : void{ // bus, branch별 매개변수
     const size = rpm.getSize(); // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
     const opacity = { // 투명도 수치 저장 변수 (모듈화 예정)
-      node: 0.35,
-      edge: 0.20,
-      cluster: 0.4
+      node: 0.45,
+      edge: 0.30,
+      cluster: 0.5
     };
     const strokeWidth = {
+      nodes: 1.5,
       cluster: 2,
       edge: 2
     };
-    const nodeSize = 8;
+    const nodeSize = 9.5;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
     // prototype 1 코드
     const x = rpm.setX(bus);
@@ -81,7 +83,6 @@ export class TreemapComponent implements OnInit {
     const communities = louvain(graph, {randomWalk: false}); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
     //
-
     const clusterCount = tm.setClusterCount(communities);
     console.log("clusterCount", clusterCount);
     
@@ -131,7 +132,7 @@ export class TreemapComponent implements OnInit {
     console.log("nodeXY", nodeXY);
 
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`)
+      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width-100}, ${size.viewBox.height-100}`)
       .attr("width", size.width)
       .attr("height", size.height);
 
@@ -171,11 +172,9 @@ export class TreemapComponent implements OnInit {
       });
 
     clusters.append("rect")
-      .attr("stroke-opacity", opacity.cluster)
-      .attr("stroke", "black")
-      .attr("fill", "white")
+      .attr("fill", (d: any) => colorZ(+d.data.data.id / clusterCount))
+      // .attr("fill", "hsl(0, 0%, 70%)")
       .attr("fill-opacity", 0.2)
-      .attr("stroke-width", strokeWidth.cluster)
       .attr("width", (d:any) => {
         let m = d.data;
         return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) : xScale(5);
@@ -197,9 +196,9 @@ export class TreemapComponent implements OnInit {
       .attr("opacity", 0)
       .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2))
       .attr("dy", d => yScale(d.data.y0 + 12))
-      .attr("font-size", 4)
+      .attr("font-size", nodeSize*1.2)
       .attr("text-anchor", "middle")
-      .html(d => `Cluster ${d.data.id}`)
+      .html(d => `Cluster ${d.data.id}`);
       
     console.log("clusters", clusters);
       
@@ -243,16 +242,28 @@ export class TreemapComponent implements OnInit {
     console.log("nodes", nodes); 
 
     // 규한형 tooltip 참고해서 다듬는 중...
-    const tooltip = svg.append("g")
-      .attr("id", "tooltip")
-      .attr("opacity", 0);
-    tooltip.append("rect")
-      .attr("width", 40)
-      .attr("height", 18)
-      .attr("fill", "white")
-      .attr("stroke", "black");
+    const toolTip = d3.select(this.tooltip.nativeElement)
+      .style('opacity', 0)
+      .style('background-color', 'black')
+      .style('border-radius', '5px')
+      .style('padding', '10px')
+      .style('color', 'white')
 
-    const tooltipText = tooltip.append("text")
+      .style('position', 'fixed')
+      .style('z-index', '1000')
+      .style('display', 'block');
+    //   .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width}, ${size.viewBox.height}`)
+    //   .attr("width", size.width)
+    //   .attr("height", size.height)
+    //   .append("g")
+    //   .attr("opacity", 0);
+    // toolTip.append("rect")
+    //   .attr("width", 40)
+    //   .attr("height", 18)
+    //   .attr("fill", "white")
+    //   .attr("stroke", "black");
+
+    const tooltipText = toolTip.append("text")
       .attr("font-size", 5)
       .attr("x", 5)
       .attr("y", 7);
@@ -329,6 +340,8 @@ export class TreemapComponent implements OnInit {
       nodes.filter((m, i) => {
         return m === d;
       })
+        .attr("stroke", "black")
+        .attr("stroke-width", strokeWidth.nodes)
         .attr("fill-opacity", 1);
   
       // other nodes
@@ -377,7 +390,8 @@ export class TreemapComponent implements OnInit {
       let nodesSelection = d3.select(`#cluster_${d.data.parentId}_nodes`)
         .selectAll("rect")
         .attr("fill", (d: any) => colorZ(+d.data.parentId / clusterCount))
-        .attr("fill-opacity", opacity.node);
+        .attr("fill-opacity", opacity.node)
+        .attr("stroke", "none");
 
       nodesSelection = d3.select("#clusters_and_nodes")
         .selectChildren()
@@ -475,26 +489,33 @@ export class TreemapComponent implements OnInit {
     }
 
     const tooltipOn = (event: any, d: any) => {
-      tooltip.attr("transform", `translate(${xScale(d.x0 + 10)}, ${yScale(d.y0 + 10)})`)
-        .attr("opacity", 1)
-        .select("rect")
-        .attr("width", 40)
-        .attr("height", 18);
-      tooltip.select("#id")
-        .html(`id: ${+d.data.id - clusterCount}`);
-      tooltip.select("#parentId")
-        .html(`cluster: ${+d.data.parentId}`);
+      toolTip
+        .style('opacity', 1)
+        .html('id: ' + (+d.id - clusterCount))
+        .style('left', +event.x + 15 + 'px')
+        .style('top', +event.y + 15 + 'px')
+        .style('display', 'block');
+      // toolTip.attr("transform", `translate(${xScale(d.x0 + 10)}, ${yScale(d.y0 + 10)})`)
+      //   .attr("opacity", 1)
+      //   .select("rect")
+      //   .attr("width", 40)
+      //   .attr("height", 18);
+      // toolTip.select("#id")
+      //   .html(`id: ${+d.data.id - clusterCount}`);
+      // toolTip.select("#parentId")
+      //   .html(`cluster: ${+d.data.parentId}`);
     }
 
     const tooltipOff = (event: any, d: any) => {
-      tooltip.attr("opacity", 0)
-        .select("rect")
-        .attr("width", 0)
-        .attr("height", 0);
-      tooltip.select("#id")
-        .html("");
-      tooltip.select("#parentId")
-        .html("");
+      toolTip.style('opacity', 0).style('display', 'none');
+      // toolTip.attr("opacity", 0)
+      //   .select("rect")
+      //   .attr("width", 0)
+      //   .attr("height", 0);
+      // toolTip.select("#id")
+      //   .html("");
+      // toolTip.select("#parentId")
+      //   .html("");
     }
 
     // rpm edges, nodes mouseover event listener
