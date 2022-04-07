@@ -70,7 +70,65 @@ export class TreemapComponent implements OnInit {
     const xScale = d3.scaleLinear(xDomain, xRange);
     const yScale = d3.scaleLinear(yDomain, yRange);
     const colorZ = d3.interpolateSinebow;
-    
+
+    class Edge_info {
+      private e_case: number;
+      public e_type: number[] = [1, 2, 1];//h,w,h
+      public xy: number[][] = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+
+      constructor(e_case: number) {
+        this.e_case = e_case;
+      }
+
+      public init(x1: number, x2: number, y1: number, y2: number) {
+        if (this.e_case == 1) {
+          this.xy[0][0] = x1;
+          this.xy[0][1] = y1;
+          this.xy[0][2] = x1;
+          this.xy[0][3] = (y1 + y2) / 2;
+          this.xy[1][0] = x1;
+          this.xy[1][1] = (y1 + y2) / 2;
+          this.xy[1][2] = x2;
+          this.xy[1][3] = (y1 + y2) / 2;
+          this.xy[2][0] = x2;
+          this.xy[2][1] = (y1 + y2) / 2;
+          this.xy[2][2] = x2;
+          this.xy[2][3] = y2;
+        }
+        else if (this.e_case == 2) {
+          this.e_type[0] = 2, this.e_type[1] = 1, this.e_type[2] = 2;
+          this.xy[0][0] = x1;
+          this.xy[0][1] = y1;
+          this.xy[0][2] = (x1 + x2) / 2;
+          this.xy[0][3] = y1;
+          this.xy[1][0] = (x1 + x2) / 2;
+          this.xy[1][1] = y1;
+          this.xy[1][2] = (x1 + x2) / 2;
+          this.xy[1][3] = y2;
+          this.xy[2][0] = (x1 + x2) / 2;
+          this.xy[2][1] = y2;
+          this.xy[2][2] = x2;
+          this.xy[2][3] = y2;
+        }
+      }
+      public e_sort() {
+        for (let i = 0; i < 3; i++) {//좌표 크기대로 정렬
+          if (this.xy[i][0] > this.xy[i][2] || this.xy[i][1] > this.xy[i][3]) {
+            let temp = this.xy[i][0];
+            this.xy[i][0] = this.xy[i][2];
+            this.xy[i][2] = temp;
+            temp = this.xy[i][1];
+            this.xy[i][1] = this.xy[i][3];
+            this.xy[i][3] = temp;
+          }
+        }
+      }
+    }
+
+    const Edge_list: Edge_info[] = new Array<Edge_info>();
+    let edge_cross_count = 0;
+    let total_length = 0;
+
     // 상준형 graphology 코드
     for(let i=0; i<xY.length; i++){
       graph.addNode(xY[i].id);
@@ -85,7 +143,7 @@ export class TreemapComponent implements OnInit {
     //
     const clusterCount = tm.setClusterCount(communities);
     console.log("clusterCount", clusterCount);
-    
+
     let tabularData: ITabularData[] = tm.setTabularData(communities, clusterCount);
     console.log("tabularData", tabularData);
 
@@ -104,7 +162,7 @@ export class TreemapComponent implements OnInit {
     const children = root.children as d3.HierarchyNode<any>[];
     console.log("children", children);
 
-    const leaves = root.leaves(); 
+    const leaves = root.leaves();
 
     leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
       return (+a.data.id - +b.data.id);
@@ -120,14 +178,14 @@ export class TreemapComponent implements OnInit {
         data: children.find(d => d.data.id == i + 1),
         children: leaves.filter(d => (i + 1 == d.data.parentId))
       };
-      
+
       clustersWithNodes.push(clusterData);
     }
     console.log("cluster with nodes", clustersWithNodes);
 
     const nodeXY = leaves.map((d:any) => (
-      {id: +d.id - clusterCount, 
-        x: d.x0 + nodeSize / 2, 
+      {id: +d.id - clusterCount,
+        x: d.x0 + nodeSize / 2,
         y: d.y0 + nodeSize / 2} as IBusObjectData));
     console.log("nodeXY", nodeXY);
 
@@ -199,9 +257,9 @@ export class TreemapComponent implements OnInit {
       .attr("font-size", nodeSize*1.2)
       .attr("text-anchor", "middle")
       .html(d => `Cluster ${d.data.id}`);
-      
+
     console.log("clusters", clusters);
-      
+
     const nodes = clusters.append("g")
       .attr("id", d => "cluster_" + d.data.id + "_nodes")
       .selectAll("rect")
@@ -239,7 +297,7 @@ export class TreemapComponent implements OnInit {
         tooltipOff(event, d);
         // hideHighlight(event, d);
       });
-    console.log("nodes", nodes); 
+    console.log("nodes", nodes);
 
     // 규한형 tooltip 참고해서 다듬는 중...
     const toolTip = d3.select(this.tooltip.nativeElement)
@@ -273,7 +331,7 @@ export class TreemapComponent implements OnInit {
       .attr("x", 5)
       .attr("dy", 7)
       .attr("id", "parentId");
-    
+
     // // 상준형 drawEdge 코드
     function drawEdge(d: any): any {
 
@@ -290,12 +348,17 @@ export class TreemapComponent implements OnInit {
         k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
         k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
         k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+        Edge_list.push(new Edge_info(1))//e_case,to_cluster,from_cluster
+        Edge_list[Edge_list.length - 1].init(x[d.from - 1], x[d.to - 1], y[d.from - 1], y[d.to - 1])
       }
       else { // if |x diff| <= |y diff|
         k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
         k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
-        k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`; 
+        k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+        Edge_list.push(new Edge_info(2))//e_case,to_cluster,from_cluster
+        Edge_list[Edge_list.length - 1].init(x[d.from - 1], x[d.to - 1], y[d.from - 1], y[d.to - 1])
       }
+      total_length += abs_xdif + abs_ydif;
       return k;
     }
 
@@ -312,16 +375,16 @@ export class TreemapComponent implements OnInit {
         .attr('stroke', 'red') // m == from
         .attr("stroke-width", strokeWidth.edge*1.1)
         .attr("stroke-opacity", 1);
-      
+
       // edges(to) : green.
       // ends at selected node.
       edges.filter((m: any, i) => {
         return m.to == +d.id - clusterCount;
-      })  
+      })
         .attr('stroke', 'green') // m == to
         .attr("stroke-width", strokeWidth.edge*1.1)
         .attr("stroke-opacity", 1);
-  
+
       // other edges (no relevance).
       // edges.filter((m: any, i) => {
       //   return (m.from != +d.id - clusterCount && m.to != +d.id - clusterCount); // m == nothing
@@ -329,21 +392,21 @@ export class TreemapComponent implements OnInit {
       //   .attr("stroke-width", strokeWidth.edge)
       //   .attr("stroke-opacity", opacity.edge);
     };
-    
+
     function adjacentNodesHighlightOn (event: MouseEvent, d: any) {
       // nodes.filter((m, i) => {
       //   return m === d;
       // })
       //   .attr("fill-opacity", 1);
       console.log("d parentId", d.data.parentId);
-  
+
       nodes.filter((m, i) => {
         return m === d;
       })
         .attr("stroke", "black")
         .attr("stroke-width", strokeWidth.nodes)
         .attr("fill-opacity", 1);
-  
+
       // other nodes
       // nodes.filter((m, i) => {
       //   return m !== d;
@@ -351,7 +414,7 @@ export class TreemapComponent implements OnInit {
       //   .attr("fill", m => colorZ(m.data.parentId / clusterCount))
       //   .attr("fill-opacity", 0.1)
       //   .attr('stroke-opacity', 0.2);
-  
+
       // Highlight 'red' nodes : starts from selected node(mouse-overed node).
       let linkedNodes_from: number[] = [];
       let countNum = 0;
@@ -363,7 +426,7 @@ export class TreemapComponent implements OnInit {
           .attr('fill', 'red')
           .attr("fill-opacity", 1);
       }
-  
+
       // Highlight 'green' nodes : ends at selected node.
       let linkedNodes_to: number[] = [];
       countNum = 0;
@@ -384,7 +447,7 @@ export class TreemapComponent implements OnInit {
         .attr("stroke-width", strokeWidth.edge)
         .attr("stroke-opacity", opacity.edge);
     }
-    
+
     function adjacentNodesHighlightOff (event: MouseEvent, d: any) {
       // console.log("node data", d);
       let nodesSelection = d3.select(`#cluster_${d.data.parentId}_nodes`)
@@ -396,7 +459,7 @@ export class TreemapComponent implements OnInit {
       nodesSelection = d3.select("#clusters_and_nodes")
         .selectChildren()
         .filter((m: any) => {
-          return d.data.parentId != m.data.data.id; 
+          return d.data.parentId != m.data.data.id;
         })
         .select("g")
         .selectAll("rect")
@@ -405,7 +468,7 @@ export class TreemapComponent implements OnInit {
           return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
         })
         .attr("fill-opacity", opacity.node)
-      
+
       console.log("nodesSelection", nodesSelection);
     }
 
@@ -418,7 +481,7 @@ export class TreemapComponent implements OnInit {
       });
     };
 
-    const colorLinkedNodes_to1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push() 
+    const colorLinkedNodes_to1 = (d: any, linkedNodes: number[]) => { // for linkedNodes_to.push()
       edges.filter((s: any, j: any) => {
         return +s.to === +d.id - clusterCount;
       }).filter((h: any, k: any) => {
@@ -543,5 +606,80 @@ export class TreemapComponent implements OnInit {
     //   .attr("xlink:href", "#nodes");
     // svg.append("use")
     //   .attr("xlink:href", "#tooltip");
+
+    let same_count: number[] = [];
+    function Edge_cross(i: number, j: number) {
+      let temp = 0;
+      for (let k = 0; k < i; k++) {
+        temp += k;
+      }
+      for (let m = 0; m < 3; m++) {
+        for (let n = 0; n < 3; n++) {
+          if (Edge_list[i].e_type[m] != Edge_list[j].e_type[n]) {
+            if (Edge_list[i].e_type[m] == 1) {
+              //wh
+              if (Edge_list[j].xy[n][0] <= Edge_list[i].xy[m][0] && Edge_list[i].xy[m][0] <= Edge_list[j].xy[n][2]
+                && Edge_list[i].xy[m][1] <= Edge_list[j].xy[n][1] && Edge_list[j].xy[n][1] <= Edge_list[i].xy[m][3]) {
+                same_count[temp + j]++;
+                if (same_count[temp + j] == 1) break;
+              }
+            }
+            //hw
+            else if (Edge_list[j].xy[n][1] <= Edge_list[i].xy[m][1] && Edge_list[i].xy[m][1] <= Edge_list[j].xy[n][3]
+              && Edge_list[i].xy[m][0] <= Edge_list[j].xy[n][0] && Edge_list[j].xy[n][0] <= Edge_list[i].xy[m][2]) {
+              same_count[temp + j]++;
+              if (same_count[temp + j] == 1) break;
+            }
+          }
+          else if (Edge_list[i].e_type[m] == 2) {//ww
+            if (Edge_list[i].xy[m][1] == Edge_list[j].xy[n][1] && !(Edge_list[i].xy[m][2] < Edge_list[j].xy[n][0]
+              || Edge_list[j].xy[n][2] < Edge_list[i].xy[m][0])) {
+              same_count[temp + j]++;
+              if (same_count[temp + j] == 1) break;
+            }
+          }
+          else if (Edge_list[i].e_type[m] == 1) {//hh
+            if (Edge_list[i].xy[m][0] == Edge_list[j].xy[n][0] && !(Edge_list[i].xy[m][3] < Edge_list[j].xy[n][1]
+              || Edge_list[j].xy[n][3] < Edge_list[i].xy[m][1])) {
+              same_count[temp + j]++;
+              if (same_count[temp + j] == 1) break;
+            }
+          }
+        }
+        if (same_count[temp + j] == 1) {
+          edge_cross_count++;
+          break;
+        }
+      }
+    }
+
+    // let test=0;
+    for (let i = 0; i < branch.length; i++) {
+      let temp = 0;
+      for (let k = 0; k < i; k++) {
+        temp += k;
+      }
+      for (let j = 0; j < i; j++) {
+        same_count.push(0);
+        if ((Edge_list[i].xy[0][0] == Edge_list[j].xy[0][0] && Edge_list[i].xy[0][1] == Edge_list[j].xy[0][1])
+          || (Edge_list[i].xy[0][0] == Edge_list[j].xy[2][2] && Edge_list[i].xy[0][1] == Edge_list[j].xy[2][3])
+          || (Edge_list[i].xy[2][2] == Edge_list[j].xy[0][0] && Edge_list[i].xy[2][3] == Edge_list[j].xy[0][1])
+          || (Edge_list[i].xy[2][2] == Edge_list[j].xy[2][2] && Edge_list[i].xy[2][3] == Edge_list[j].xy[2][3])){
+          same_count[temp + j]--;
+        }
+      }
+    }
+
+    for (let i = 0; i < branch.length; i++) {//branch.length  까지
+      Edge_list[i].e_sort();
+      for (let j = 0; j < i; j++) {
+        if (i == j) continue;
+        Edge_cross(i, j);
+      }
+    }
+
+    console.log("total_length : " + total_length);
+    console.log("edge_crossing : " + edge_cross_count);
+
   }
 }
