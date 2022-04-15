@@ -1,5 +1,10 @@
 export interface IBusData {
-    "bus id": Array<number>,
-    x: Array<number>,
-    y: Array<number>
+    id: number,
+    type: number,
+    pd: number,
+    qd: number,
+    bs: number,
+    area: number,
+    vang: number,
+    vmag: number
 }

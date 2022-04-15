@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as d3 from "d3";
-import { IBusData } from 'src/shared/interfaces/ibus-data';
+import { IRandomBusData } from 'src/shared/interfaces/irandom-bus-data';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 import { ISize } from 'src/shared/interfaces/isize';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
@@ -26,19 +26,19 @@ export function getSize(){
   return size;
 }
 
-export function setX(bus: IBusData) : Array<number> {
+export function setX(bus: IRandomBusData) : Array<number> {
     return Object.keys(bus.x).map((d: string) => {
       return bus.x[+d];
     });
   }
 
-export function setY(bus: IBusData) : Array<number> { 
+export function setY(bus: IRandomBusData) : Array<number> { 
     return Object.keys(bus.x).map((d:string) => {
       return bus.y[+d];
     });
   }
 
-export function setXY(bus: IBusData) : Array<IBusObjectData> {
+export function setXY(bus: IRandomBusData) : Array<IBusObjectData> {
     return Object.keys(bus.x).map((d:string) => {
       return {id: bus["bus id"][+d], x: bus.x[+d], y: bus.y[+d]};
     })
@@ -89,26 +89,31 @@ export function setNodes(selection: d3.Selection<any, unknown, null, undefined>,
   }
 
 
-export function edgesHighlightOn (event: Event, d: any, clusterCount: number) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
-  // edges.filter((m, i) => {
-  //   return (+m.from == +d.id - clusterCount || +m.to == +d.id - clusterCount);
-  // })
-  //   .attr("stroke-width", 2)
-  //   .attr("stroke-opacity", 1);
+export function edgesHighlightOn (event: Event, d: any) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+  d3.select("#edges")
+    .filter((m: any, i: number) => {
+    return (+m.from == +d.id || +m.to == +d.id);
+  })
+    .attr("stroke-width", 2)
+    .attr("stroke-opacity", 1);
   // 간선과 인접한 정점도 강조할 것
 };
 
-// export function nodesHighlightOn (nodes: d3.Selection<any, any, any, any>, d: any) {
-//   nodes.filter((m, i) => {
-//     return m === d;
-//   })
-//     .attr("fill-opacity", 1);
-// }
+export function nodesHighlightOn (event: Event, d: any) {
+  d3.select("#nodes")
+    .filter((m, i) => {
+    return m === d;
+  })
+    .attr("fill-opacity", 1);
+}
+
 export function edgesHighlightOff (event: Event, d: any) {
-  // edges.attr("stroke-width", 1)
-  //   .attr("stroke-opacity", opacity.edge);
+  d3.select("#edges")
+    .attr("stroke-width", 1)
+    .attr("stroke-opacity", opacity.edge);
 }
 
 export function nodesHighlightOff (event: Event, d: any) {
-  // nodes.attr("fill-opacity", opacity.node);
+  d3.select("#nodes")
+    .attr("fill-opacity", opacity.node);
 }
