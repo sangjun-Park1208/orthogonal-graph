@@ -5,14 +5,6 @@ import * as d3 from 'd3';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 
-
-
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule
-  ]
-})
 export class TreemapSelectionsModule { 
   private treemapData: TreemapDataModule;
   private svg: d3.Selection<any, unknown, null, undefined>;
@@ -23,6 +15,8 @@ export class TreemapSelectionsModule {
   constructor (treemapData: TreemapDataModule, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
     this.svg = svg;
+    const colorZ = treemapData.colorZ;
+    const clusterCount = treemapData.getClusterCount();
 
     this.edges = this.svg.append("g")
       .attr("id", "edges")
@@ -46,7 +40,11 @@ export class TreemapSelectionsModule {
       .attr("id", (d:any) => ("cluster_" + (d.data.data.id)));
   
     this.clusters.append("rect")
-      .attr("fill", (d: any) => this.treemapData.colorZ(+d.data.data.id / this.treemapData.getClusterCount()))
+      .attr("fill", (d:any) => {
+        const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+        // console.log("hsl convertion", hsl);
+        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+      })
       // .attr("fill", "hsl(0, 0%, 70%)")
       .attr("fill-opacity", 0.2)
       .attr("width", (d:any) => {

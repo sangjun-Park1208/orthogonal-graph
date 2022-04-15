@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { Inject, Injectable, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as d3 from "d3";
 import { ISize } from "src/shared/interfaces/isize";
@@ -9,12 +9,6 @@ import { IConstant } from 'src/shared/interfaces/iconstant';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule
-  ]
-})
 export class TreemapDataModule { 
   _bus: IBusData[];
   _branch: IBranchData[];
@@ -71,6 +65,9 @@ export class TreemapDataModule {
 
     this.children = root.children as d3.HierarchyNode<any>[];
     this.leaves = root.leaves();
+    this.leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
+      return (+a.data.id - +b.data.id);
+    });
 
     const size = this.size;
     d3.treemap()
@@ -188,7 +185,7 @@ export class TreemapDataModule {
   }
 
   public get opacity() {
-    return this.opacity;
+    return this._opacity;
   }
 
   public set xScale(_xScale: d3.ScaleLinear<number, number, never>) {

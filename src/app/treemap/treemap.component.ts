@@ -40,7 +40,13 @@ export class TreemapComponent implements OnInit {
       });
   } // 콜백헬 프로미스로 해결하기
   renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{ // bus, branch별 매개변수
-    const size = rpm.getSize(); // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
+    const size = {
+      width: 960,
+      height: 960,
+      viewBox: {minX: 20, minY: 20, width: 1000, height: 1000},
+      margin: {left: 20, right: 20, top: 20, bottom: 20},
+      padding: {left: 20, right: 20, top: 20, bottom: 20}
+    }; // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
     const opacity = { // 투명도 수치 저장 변수 (모듈화 예정)
       node: 0.45, // property 값이 number인 프로퍼티가 유동적으로 여러개 받을 수 있는 타이핑 찾기
       edge: 0.30,
@@ -70,7 +76,7 @@ export class TreemapComponent implements OnInit {
     //
 
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width-100}, ${size.viewBox.height-100}`)
+      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
       .attr("width", size.width)
       .attr("height", size.height);
 
@@ -83,67 +89,71 @@ export class TreemapComponent implements OnInit {
     const nodes = treemapSelections.getNodes();
 
     clusters.on("mouseenter", (event, d) => {
-      treemapEventListeners.clusterStrokeHighlightOn(event, d);
+      console.log("mouseenter", event, d);
+      // treemapEventListeners.clusterStrokeHighlightOn(event, d);
       treemapEventListeners.clusterNodesHighlightOn(event, d);
       treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
-      treemapEventListeners.clusterStrokeHighlightOff(event, d);
+      console.log("mouseleave", event, d);
+      // treemapEventListeners.clusterStrokeHighlightOff(event, d);
       treemapEventListeners.clusterNodesHighlightOff(event, d);
       treemapEventListeners.clusterNumberOff(event, d);
     })
 
     nodes.on("mouseover", (event, d) => {
+      console.log("mouseover", event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
       tooltipOn(event, d);
     })
     .on("mouseout", (event, d) => {
+      console.log("mouseout", event, d);
       treemapEventListeners.adjacentNodesHighlightOff(event, d);
       treemapEventListeners.attachedEdgesHighlightOff(event, d);
       tooltipOff(event, d);
     })
-//     const clusterCount = treemapData.getClusterCount();
-//     console.log("clusterCount", clusterCount);
+    // const clusterCount = treemapData.getClusterCount();
+    // console.log("clusterCount", clusterCount);
     
-//     let tabularData: ITabularData[] = tm.setTabularData(communities, clusterCount);
-//     console.log("tabularData", tabularData);
+    // let tabularData: ITabularData[] = tm.setTabularData(communities, clusterCount);
+    // console.log("tabularData", tabularData);
 
-//     const root = tm.setRoot(tabularData);
-//     console.log("d3 hierachy node data", root);
+    // const root = tm.setRoot(tabularData);
+    // console.log("d3 hierachy node data", root);
 
-//     // treemap 형태 지정 알고리즘 선택: treemap.tile(d3.타일링메소드명) (https://github.com/d3/d3-hierarchy/blob/v3.1.1/README.md#treemap-tiling)
-//     // cluster 내부 정점 여백 조정이나 클러스터간 여백 조정: treemap.padding[Inner, Outer, ...]
-//     // treemap 크기 조정: treemap.size([width, height])
-//     // 가로세로 값 반올림: treemap.round(boolean)
+    // treemap 형태 지정 알고리즘 선택: treemap.tile(d3.타일링메소드명) (https://github.com/d3/d3-hierarchy/blob/v3.1.1/README.md#treemap-tiling)
+    // cluster 내부 정점 여백 조정이나 클러스터간 여백 조정: treemap.padding[Inner, Outer, ...]
+    // treemap 크기 조정: treemap.size([width, height])
+    // 가로세로 값 반올림: treemap.round(boolean)
 
-//     const treemapLayout = tm.setTreemapLayout(size)(root); // default treemap 레이아웃 가져오기
-//     console.log("treemapLayout", treemapLayout);
-//     console.log("d3 treemapping data", root);
+    // const treemapLayout = tm.setTreemapLayout(size)(root); // default treemap 레이아웃 가져오기
+    // console.log("treemapLayout", treemapLayout);
+    // console.log("d3 treemapping data", root);
 
-//     const children = root.children as d3.HierarchyNode<any>[];
-//     console.log("children", children);
+    // const children = root.children as d3.HierarchyNode<any>[];
+    // console.log("children", children);
 
-//     const leaves = root.leaves(); 
+    // const leaves = root.leaves(); 
 
-//     leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
-//       return (+a.data.id - +b.data.id);
-//     });
-//     console.log("leaves", leaves);
+    // leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
+    //   return (+a.data.id - +b.data.id);
+    // });
+    // console.log("leaves", leaves);
 
 // //      tmp
 // //     const nodeXY = leaves.map((d:any) => {return {id: +d.id - clusterCount, x: d.x0 + 4, y: d.y0 + 4} as IBusObjectData});
 
-//     let clustersWithNodes: IClusterData[] = [];  // 각 cluster에 해당하는 nodes 데이터가 있도록 구조 변경
-//     for (let i = 0; i < clusterCount; i++){
-//       const clusterData = {
-//         data: children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>,
-//         children: leaves.filter(d => (i + 1 == d.data.parentId) ) as d3.HierarchyRectangularNode<any>[]
-//       };
+    // let clustersWithNodes: IClusterData[] = [];  // 각 cluster에 해당하는 nodes 데이터가 있도록 구조 변경
+    // for (let i = 0; i < clusterCount; i++){
+    //   const clusterData = {
+    //     data: children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>,
+    //     children: leaves.filter(d => (i + 1 == d.data.parentId) ) as d3.HierarchyRectangularNode<any>[]
+    //   };
       
-//       clustersWithNodes.push(clusterData);
-//     }
-//     console.log("cluster with nodes", clustersWithNodes);
+    //   clustersWithNodes.push(clusterData);
+    // }
+    // console.log("cluster with nodes", clustersWithNodes);
 
 //     const nodeXY = leaves.map((d:any) => (
 //       {id: +d.id - clusterCount, 
