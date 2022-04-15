@@ -1,5 +1,3 @@
-import { Inject, Injectable, NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import * as d3 from "d3";
 import { ISize } from "src/shared/interfaces/isize";
 import { ITabularData } from "src/shared/interfaces/itabular-data";

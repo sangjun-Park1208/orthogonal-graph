@@ -1,5 +1,3 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TreemapDataModule } from '../datas/treemap-data.module';
 import * as d3 from 'd3';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';

@@ -1,17 +1,7 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import * as d3 from 'd3';
 import { TreemapSelectionsModule } from '../selections/treemap-selections.module';
 import { TreemapDataModule } from '../datas/treemap-data.module';
 
-
-
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule
-  ]
-})
 export class TreemapEventListenersModule { 
   private treemapData: TreemapDataModule;
   private treemapSelections: TreemapSelectionsModule;
@@ -61,14 +51,7 @@ export class TreemapEventListenersModule {
     const strokeWidth = this.treemapData.strokeWidth;
     const clusterCount = this.treemapData.getClusterCount();
     const colorZ = this.treemapData.colorZ;
-    // nodes.filter((m, i) => {
-    //   return m === d;
-    // })
-    //   .attr("fill-opacity", 1);
 
-    // console.log("d parentId", d.data.parentId);
-
-    // let nodes = d3.select("#clusters_and_nodes").selectChildren().selectAll("g").selectAll("rect");
     const nodes = this.treemapSelections.getNodes();
     // console.log("nodes", nodes);
 
@@ -79,14 +62,6 @@ export class TreemapEventListenersModule {
       .attr("stroke-width", strokeWidth.nodes)
       .attr("fill", (d: any) => colorZ(+d.data.parentId / clusterCount))
       .attr("fill-opacity", 1);
-
-    // other nodes
-    // nodes.filter((m, i) => {
-    //   return m !== d;
-    // })
-    //   .attr("fill", m => colorZ(m.data.parentId / clusterCount))
-    //   .attr("fill-opacity", 0.1)
-    //   .attr('stroke-opacity', 0.2);
 
     // Highlight 'red' nodes : starts from selected node(mouse-overed node).
     let linkedNodes_from: number[] = [];
@@ -125,9 +100,6 @@ export class TreemapEventListenersModule {
       .filter(m => {
         return d.data.parentId == m.data.data.id;
       });
-      // select(`#cluster_${d.data.parentId}_nodes`);
-    // console.log("clusterNOdes", clusterNodes);
-    // let clustersAndNodes = d3.select("#clusters_and_nodes");
 
     let nodesSelection = clusterNodes
       .select("g")
