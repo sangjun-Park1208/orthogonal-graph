@@ -1,16 +1,17 @@
-import { TreemapDataModule } from '../datas/treemap-data.module';
+import { TreemapData } from '../datas/treemap-data.module';
 import * as d3 from 'd3';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 
-export class TreemapSelectionsModule { 
-  private treemapData: TreemapDataModule;
+export class TreemapSelections { 
+  private treemapData: TreemapData;
   private svg: d3.Selection<any, unknown, null, undefined>;
+
   private edges: d3.Selection<d3.BaseType | SVGPathElement, IBranchData, SVGGElement, unknown>;
   private clusters: d3.Selection<d3.BaseType | SVGGElement, IClusterData, SVGGElement, unknown>;
   private nodes: d3.Selection<d3.BaseType | SVGRectElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
   
-  constructor (treemapData: TreemapDataModule, svg: d3.Selection<any, unknown, null, undefined>){
+  constructor (treemapData: TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
     this.svg = svg;
     const colorZ = treemapData.colorZ;
@@ -26,6 +27,7 @@ export class TreemapSelectionsModule {
       .attr("stroke-width", this.treemapData.strokeWidth.edge)
       .attr("fill", "none")
       .attr("stroke-opacity", this.treemapData.opacity.edge);
+    console.log("edges", this.edges);
 
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
@@ -44,7 +46,7 @@ export class TreemapSelectionsModule {
         return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       })
       // .attr("fill", "hsl(0, 0%, 70%)")
-      .attr("fill-opacity", 0.2)
+      .attr("fill-opacity", this.treemapData.opacity.cluster)
       .attr("width", (d:any) => {
         let m = d.data;
         return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) : xScale(5);
@@ -69,6 +71,7 @@ export class TreemapSelectionsModule {
       .attr("font-size", this.treemapData.nodeSize*1.2)
       .attr("text-anchor", "middle")
       .html(d => `Cluster ${d.data.id}`);
+    console.log("clusters", this.clusters);
     
     this.nodes = this.clusters.append("g")
       .attr("id", d => "cluster_" + d.data.id + "_nodes")
@@ -93,6 +96,7 @@ export class TreemapSelectionsModule {
         return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       })
       .attr("fill-opacity", this.treemapData.opacity.node);
+    console.log("nodes", this.nodes);
   }
 
   drawEdge(d: any): any {

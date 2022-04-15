@@ -7,16 +7,15 @@ import { IConstant } from 'src/shared/interfaces/iconstant';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 
-export class TreemapDataModule { 
+export class TreemapData { 
   _bus: IBusData[];
   _branch: IBranchData[];
   _communities: IConstant;
 
   _size: ISize;
-  
   _nodeSize: number;
-  _strokeWidth: IConstant; // 인터페이스 IStrokeWidth 만들기
-  _opacity: IConstant; // 인터페이스 IOpacity
+  _strokeWidth: IConstant;
+  _opacity: IConstant; 
   _colorZ: any;
 
   _xScale: d3.ScaleLinear<number, number, never>;
@@ -24,8 +23,9 @@ export class TreemapDataModule {
 
   private clusterCount: number;
   private tabularData: ITabularData[];
+  private root: d3.HierarchyNode<any>;
   private nodeXY: IBusObjectData[];
-  private clustersWithNodes: IClusterData[]; // 인터페이스 IClusterData 만들기
+  private clustersWithNodes: IClusterData[];
   private leaves: d3.HierarchyNode<any>[];
   private children: d3.HierarchyNode<any>[];
 
@@ -41,8 +41,6 @@ export class TreemapDataModule {
     
     this.clusterCount = d3.max(Object.keys(_communities).map(d => _communities[d])) as number + 1;
     this._colorZ = d3.interpolateSinebow;
-    // this._xScale = xScale;
-    // this._yScale = yScale;
 
     let tabularData: ITabularData[] = [];
     let clusterCount = this.clusterCount;
@@ -93,6 +91,8 @@ export class TreemapDataModule {
       let m = d as d3.HierarchyRectangularNode<any>;
       y.push([m.y0, m.y1]);
     });
+    this.root = root;
+
     const yMin = d3.min(y, d => d[0]);
     const yMax = d3.max(y, d => d[1]);
 

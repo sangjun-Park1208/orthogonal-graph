@@ -4,9 +4,9 @@ import * as d3 from "d3"
 import louvain from 'graphology-communities-louvain';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IBusData } from 'src/shared/interfaces/ibus-data';
-import { TreemapDataModule } from 'src/shared/modules/treemap-vis/datas/treemap-data.module';
-import { TreemapSelectionsModule } from 'src/shared/modules/treemap-vis/selections/treemap-selections.module';
-import { TreemapEventListenersModule } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners.module';
+import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data.module';
+import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections.module';
+import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners.module';
 
 @Component({
   selector: 'app-treemap',
@@ -32,19 +32,20 @@ export class TreemapComponent implements OnInit {
             this.renderTreemap(bus, branch);
           })
       });
-  } // 콜백헬 프로미스로 해결하기
-  renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{ // bus, branch별 매개변수
+  }
+  
+  renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{ 
     const size = {
       width: 960,
       height: 960,
       viewBox: {minX: 20, minY: 20, width: 1000, height: 1000},
       margin: {left: 20, right: 20, top: 20, bottom: 20},
       padding: {left: 20, right: 20, top: 20, bottom: 20}
-    }; // viewBox, padding, margin 등 주요 수치 저장 (모듈화 예정)
-    const opacity = { // 투명도 수치 저장 변수 (모듈화 예정)
-      node: 0.45, // property 값이 number인 프로퍼티가 유동적으로 여러개 받을 수 있는 타이핑 찾기
+    }; 
+    const opacity = { 
+      node: 0.45, 
       edge: 0.30,
-      cluster: 0.5
+      cluster: 0.2
     };
     const strokeWidth = {
       nodes: 1.5,
@@ -54,9 +55,6 @@ export class TreemapComponent implements OnInit {
     const nodeSize = 9.5;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
     
-    const colorZ = d3.interpolateSinebow;
-    
-    // 상준형 graphology 코드
     for(let i=0; i<bus.length; i++){
       graph.addNode(bus[i].id);
     }
@@ -74,9 +72,9 @@ export class TreemapComponent implements OnInit {
       .attr("width", size.width)
       .attr("height", size.height);
 
-    let treemapData = new TreemapDataModule(bus, branch, communities, size, nodeSize, strokeWidth, opacity)
-    let treemapSelections = new TreemapSelectionsModule(treemapData, svg);
-    let treemapEventListeners = new TreemapEventListenersModule(treemapData, treemapSelections);
+    let treemapData = new TreemapData(bus, branch, communities, size, nodeSize, strokeWidth, opacity)
+    let treemapSelections = new TreemapSelections(treemapData, svg);
+    let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();
@@ -85,13 +83,13 @@ export class TreemapComponent implements OnInit {
     clusters.on("mouseenter", (event, d) => {
       console.log("mouseenter", event, d);
       // treemapEventListeners.clusterStrokeHighlightOn(event, d);
-      treemapEventListeners.clusterNodesHighlightOn(event, d);
+      treemapEventListeners.clusterHighlightOn(event, d);
       treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
       console.log("mouseleave", event, d);
       // treemapEventListeners.clusterStrokeHighlightOff(event, d);
-      treemapEventListeners.clusterNodesHighlightOff(event, d);
+      treemapEventListeners.clusterHighlightOff(event, d);
       treemapEventListeners.clusterNumberOff(event, d);
     })
 

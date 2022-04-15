@@ -1,17 +1,17 @@
 import * as d3 from 'd3';
-import { TreemapSelectionsModule } from '../selections/treemap-selections.module';
-import { TreemapDataModule } from '../datas/treemap-data.module';
+import { TreemapSelections } from '../selections/treemap-selections.module';
+import { TreemapData } from '../datas/treemap-data.module';
 
-export class TreemapEventListenersModule { 
-  private treemapData: TreemapDataModule;
-  private treemapSelections: TreemapSelectionsModule;
+export class TreemapEventListeners { 
+  private treemapData: TreemapData;
+  private treemapSelections: TreemapSelections;
 
-  constructor (treemapData: TreemapDataModule, treemapSelections: TreemapSelectionsModule){
+  constructor (treemapData: TreemapData, treemapSelections: TreemapSelections){
     this.treemapData = treemapData;
     this.treemapSelections = treemapSelections;
   }
 
-  attachedEdgesHighlightOn (event: MouseEvent, d: any) {  // d3 이벤트 리스너의 매개변수 event형 찾아야함 any 최소화해야한다..
+  attachedEdgesHighlightOn (event: MouseEvent, d: any) {
     const clusterCount = this.treemapData.getClusterCount();
     const strokeWidth = this.treemapData.strokeWidth;
 
@@ -37,7 +37,7 @@ export class TreemapEventListenersModule {
   };
 
   // tmp nodes, edges mouseout event listener
-  attachedEdgesHighlightOff (event: Event, d: any) {
+  attachedEdgesHighlightOff (event: MouseEvent, d: any) {
     const strokeWidth = this.treemapData.strokeWidth;
     const opacity = this.treemapData.opacity;
     const edges = this.treemapSelections.getEdges()
@@ -152,25 +152,34 @@ export class TreemapEventListenersModule {
     });
   };
   // cluster mouseover, mouseout event listener
-  clusterNodesHighlightOn = (event: any, d:any) => {
+  clusterHighlightOn = (event: any, d:any) => {
     const colorZ = this.treemapData.colorZ;
     const clusterCount = this.treemapData.getClusterCount();
-    const clusterNodes = this.treemapSelections.getClusters()
+    const cluster = this.treemapSelections.getClusters()
       .filter(m => {
-        return d.data.parentId == m.data.data.id;
+        // console.log(+d.data.data.id, +m.data.data.id);
+        return +d.data.data.id == +m.data.data.id;
       })
-      .select("g");
-
-    const clusterNodesSelection = clusterNodes
-      .selectAll("rect")
-      .attr("fill", (d: any) => colorZ(+d.data.parentId / clusterCount));
+      .select("rect");
+    
+    const clusterNodesSelection = cluster
+      .attr("fill-opacity", this.treemapData.opacity.cluster*0.5);
     // console.log(d.data.data.id, clusterNodesSelection);
   }
 
-  clusterNodesHighlightOff = (event: any, d:any) => {
+  clusterHighlightOff = (event: any, d:any) => {
     const colorZ = this.treemapData.colorZ;
     const clusterCount = this.treemapData.getClusterCount();
     const clusters = this.treemapSelections.getClusters();
+    const cluster = this.treemapSelections.getClusters()
+    .filter(m => {
+      // console.log(+d.data.data.id, +m.data.data.id);
+      return +d.data.data.id == +m.data.data.id;
+    })
+    .select("rect");
+
+    cluster
+      .attr("fill-opacity", this.treemapData.opacity.cluster);
 
     const clusterNodesSelection = clusters
       .selectAll("rect")
