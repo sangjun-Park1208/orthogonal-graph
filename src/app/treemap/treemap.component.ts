@@ -54,18 +54,76 @@ export class TreemapComponent implements OnInit {
     };
     const nodeSize = 9.5;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
-    
-    for(let i=0; i<bus.length; i++){
-      graph.addNode(bus[i].id);
+
+    class Edge_info {
+      private e_case: number;
+      public e_type: number[] = [1, 2, 1];//h,w,h
+      public xy: number[][] = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+
+      constructor(e_case: number) {
+        this.e_case = e_case;
+      }
+
+      public init(x1: number, x2: number, y1: number, y2: number) {
+        if (this.e_case == 1) {
+          this.xy[0][0] = x1;
+          this.xy[0][1] = y1;
+          this.xy[0][2] = x1;
+          this.xy[0][3] = (y1 + y2) / 2;
+          this.xy[1][0] = x1;
+          this.xy[1][1] = (y1 + y2) / 2;
+          this.xy[1][2] = x2;
+          this.xy[1][3] = (y1 + y2) / 2;
+          this.xy[2][0] = x2;
+          this.xy[2][1] = (y1 + y2) / 2;
+          this.xy[2][2] = x2;
+          this.xy[2][3] = y2;
+        }
+        else if (this.e_case == 2) {
+          this.e_type[0] = 2, this.e_type[1] = 1, this.e_type[2] = 2;
+          this.xy[0][0] = x1;
+          this.xy[0][1] = y1;
+          this.xy[0][2] = (x1 + x2) / 2;
+          this.xy[0][3] = y1;
+          this.xy[1][0] = (x1 + x2) / 2;
+          this.xy[1][1] = y1;
+          this.xy[1][2] = (x1 + x2) / 2;
+          this.xy[1][3] = y2;
+          this.xy[2][0] = (x1 + x2) / 2;
+          this.xy[2][1] = y2;
+          this.xy[2][2] = x2;
+          this.xy[2][3] = y2;
+        }
+      }
+      public e_sort() {
+        for (let i = 0; i < 3; i++) {//좌표 크기대로 정렬
+          if (this.xy[i][0] > this.xy[i][2] || this.xy[i][1] > this.xy[i][3]) {
+            let temp = this.xy[i][0];
+            this.xy[i][0] = this.xy[i][2];
+            this.xy[i][2] = temp;
+            temp = this.xy[i][1];
+            this.xy[i][1] = this.xy[i][3];
+            this.xy[i][3] = temp;
+          }
+        }
+      }
     }
-    console.log(branch);
+
+    const Edge_list: Edge_info[] = new Array<Edge_info>();
+    let edge_cross_count = 0;
+    let total_length = 0;
+
+    // 상준형 graphology 코드
+    for(let i=0; i<xY.length; i++){
+      graph.addNode(xY[i].id);
+    }
+
     for (let i = 0; i < branch.length; i++) {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
     const communities = louvain(graph, {randomWalk: false}); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
-    //
 
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
@@ -105,7 +163,7 @@ export class TreemapComponent implements OnInit {
       treemapEventListeners.attachedEdgesHighlightOff(event, d);
       tooltipOff(event, d);
     })
-    
+  
     const toolTip = d3.select(this.tooltip.nativeElement)
       .style('opacity', 0)
       .style('background-color', 'black')
@@ -130,5 +188,79 @@ export class TreemapComponent implements OnInit {
     const tooltipOff = (event: any, d: any) => {
       toolTip.style('opacity', 0).style('display', 'none');
     }
+
+    let same_count: number[] = [];
+    function Edge_cross(i: number, j: number) {
+      let temp = 0;
+      for (let k = 0; k < i; k++) {
+        temp += k;
+      }
+      for (let m = 0; m < 3; m++) {
+        for (let n = 0; n < 3; n++) {
+          if (Edge_list[i].e_type[m] != Edge_list[j].e_type[n]) {
+            if (Edge_list[i].e_type[m] == 1) {
+              //wh
+              if (Edge_list[j].xy[n][0] <= Edge_list[i].xy[m][0] && Edge_list[i].xy[m][0] <= Edge_list[j].xy[n][2]
+                && Edge_list[i].xy[m][1] <= Edge_list[j].xy[n][1] && Edge_list[j].xy[n][1] <= Edge_list[i].xy[m][3]) {
+                same_count[temp + j]++;
+                if (same_count[temp + j] == 1) break;
+              }
+            }
+            //hw
+            else if (Edge_list[j].xy[n][1] <= Edge_list[i].xy[m][1] && Edge_list[i].xy[m][1] <= Edge_list[j].xy[n][3]
+              && Edge_list[i].xy[m][0] <= Edge_list[j].xy[n][0] && Edge_list[j].xy[n][0] <= Edge_list[i].xy[m][2]) {
+              same_count[temp + j]++;
+              if (same_count[temp + j] == 1) break;
+            }
+          }
+          else if (Edge_list[i].e_type[m] == 2) {//ww
+            if (Edge_list[i].xy[m][1] == Edge_list[j].xy[n][1] && !(Edge_list[i].xy[m][2] < Edge_list[j].xy[n][0]
+              || Edge_list[j].xy[n][2] < Edge_list[i].xy[m][0])) {
+              same_count[temp + j]++;
+              if (same_count[temp + j] == 1) break;
+            }
+          }
+          else if (Edge_list[i].e_type[m] == 1) {//hh
+            if (Edge_list[i].xy[m][0] == Edge_list[j].xy[n][0] && !(Edge_list[i].xy[m][3] < Edge_list[j].xy[n][1]
+              || Edge_list[j].xy[n][3] < Edge_list[i].xy[m][1])) {
+              same_count[temp + j]++;
+              if (same_count[temp + j] == 1) break;
+            }
+          }
+        }
+        if (same_count[temp + j] == 1) {
+          edge_cross_count++;
+          break;
+        }
+      }
+    }
+
+    // let test=0;
+    for (let i = 0; i < branch.length; i++) {
+      let temp = 0;
+      for (let k = 0; k < i; k++) {
+        temp += k;
+      }
+      for (let j = 0; j < i; j++) {
+        same_count.push(0);
+        if ((Edge_list[i].xy[0][0] == Edge_list[j].xy[0][0] && Edge_list[i].xy[0][1] == Edge_list[j].xy[0][1])
+          || (Edge_list[i].xy[0][0] == Edge_list[j].xy[2][2] && Edge_list[i].xy[0][1] == Edge_list[j].xy[2][3])
+          || (Edge_list[i].xy[2][2] == Edge_list[j].xy[0][0] && Edge_list[i].xy[2][3] == Edge_list[j].xy[0][1])
+          || (Edge_list[i].xy[2][2] == Edge_list[j].xy[2][2] && Edge_list[i].xy[2][3] == Edge_list[j].xy[2][3])){
+          same_count[temp + j]--;
+        }
+      }
+    }
+
+    for (let i = 0; i < branch.length; i++) {//branch.length  까지
+      Edge_list[i].e_sort();
+      for (let j = 0; j < i; j++) {
+        if (i == j) continue;
+        Edge_cross(i, j);
+      }
+    }
+
+    console.log("total_length : " + total_length);
+    console.log("edge_crossing : " + edge_cross_count);
   }
 }
