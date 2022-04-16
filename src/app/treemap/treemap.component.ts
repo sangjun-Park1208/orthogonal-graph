@@ -114,10 +114,6 @@ export class TreemapComponent implements OnInit {
     let total_length = 0;
 
     // 상준형 graphology 코드
-    for(let i=0; i<xY.length; i++){
-      graph.addNode(xY[i].id);
-    }
-
     for (let i = 0; i < branch.length; i++) {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
