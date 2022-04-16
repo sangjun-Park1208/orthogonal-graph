@@ -2,7 +2,6 @@ import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angula
 import { MultiGraph } from 'graphology';
 import * as d3 from 'd3';
 import louvain from 'graphology-communities-louvain';
-import { setY } from 'src/shared/modules/random-position/random-position.module';
 import { brushY } from 'd3';
 
 @Component({

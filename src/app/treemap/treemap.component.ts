@@ -108,12 +108,11 @@ export class TreemapComponent implements OnInit {
         }
       }
     }
-
-    const Edge_list: Edge_info[] = new Array<Edge_info>();
-    let edge_cross_count = 0;
-    let total_length = 0;
-
     // 상준형 graphology 코드
+    for(let i=0; i<bus.length; i++){
+      graph.addNode(bus[i].id);
+    }
+
     for (let i = 0; i < branch.length; i++) {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
@@ -129,6 +128,12 @@ export class TreemapComponent implements OnInit {
     let treemapData = new TreemapData(bus, branch, communities, size, nodeSize, strokeWidth, opacity)
     let treemapSelections = new TreemapSelections(treemapData, svg);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
+
+    const Edge_list: Edge_info[] = new Array<Edge_info>();
+    let edge_cross_count = 0;
+    let total_length = 0;
+
+    branch.forEach(d => edgeListInitialize(d));
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();
@@ -258,5 +263,29 @@ export class TreemapComponent implements OnInit {
 
     console.log("total_length : " + total_length);
     console.log("edge_crossing : " + edge_cross_count);
+
+    function edgeListInitialize(d: any) {
+      const xScale = treemapData.xScale;
+      const yScale = treemapData.yScale;
+      const nodeXY = treemapData.getNodeXY();
+      
+      let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
+      let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
+      let abs_xdif = Math.abs(xdif); // |x diff|
+      let abs_ydif = Math.abs(ydif); // |y diff|
+  
+      let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
+      let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
+  
+      if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
+        Edge_list.push(new Edge_info(1))//e_case,to_cluster,from_cluster
+        Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+      }
+      else { // if |x diff| <= |y diff|
+        Edge_list.push(new Edge_info(2))//e_case,to_cluster,from_cluster
+        Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+      }
+      total_length += abs_xdif + abs_ydif;
+    }
   }
 }

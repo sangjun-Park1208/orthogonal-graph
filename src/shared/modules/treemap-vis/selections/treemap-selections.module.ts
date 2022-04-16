@@ -99,33 +99,11 @@ export class TreemapSelections {
     console.log("nodes", this.nodes);
   }
 
-//   drawEdge(d: any): any {
-//     const xScale = this.treemapData.xScale;
-//     const yScale = this.treemapData.yScale;
-//     const nodeXY = this.treemapData.getNodeXY();
-
-//     let k = `M${xScale(nodeXY[d.from-1].x)}, ${yScale(nodeXY[d.from-1].y)}`; // 'path' starting point
-//     let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
-//     let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
-//     let abs_xdif = Math.abs(xdif); // |x diff|
-//     let abs_ydif = Math.abs(ydif); // |y diff|
-
-//     let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
-//     let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
-
-//     if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-//       k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
-//       k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
-//       k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
-//     }
-//     else { // if |x diff| <= |y diff|
-//       k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
-//       k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
-//       k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`; 
-//     }
-//     return k;
-//   }
   drawEdge(d: any): any {
+    const xScale = this.treemapData.xScale;
+    const yScale = this.treemapData.yScale;
+    const nodeXY = this.treemapData.getNodeXY();
+
     let k = `M${xScale(nodeXY[d.from-1].x)}, ${yScale(nodeXY[d.from-1].y)}`; // 'path' starting point
     let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
     let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
@@ -139,19 +117,45 @@ export class TreemapSelections {
       k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
       k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
       k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
-      Edge_list.push(new Edge_info(1))//e_case,to_cluster,from_cluster
-      Edge_list[Edge_list.length - 1].init(x[d.from - 1], x[d.to - 1], y[d.from - 1], y[d.to - 1])
     }
     else { // if |x diff| <= |y diff|
       k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
       k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
-      k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
-      Edge_list.push(new Edge_info(2))//e_case,to_cluster,from_cluster
-      Edge_list[Edge_list.length - 1].init(x[d.from - 1], x[d.to - 1], y[d.from - 1], y[d.to - 1])
+      k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`; 
     }
-    total_length += abs_xdif + abs_ydif;
     return k;
   }
+  // drawEdge(d: any): any {
+  //   const xScale = this.treemapData.xScale;
+  //   const yScale = this.treemapData.yScale;
+  //   const nodeXY = this.treemapData.getNodeXY();
+    
+  //   let k = `M${xScale(nodeXY[d.from-1].x)}, ${yScale(nodeXY[d.from-1].y)}`; // 'path' starting point
+  //   let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
+  //   let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
+  //   let abs_xdif = Math.abs(xdif); // |x diff|
+  //   let abs_ydif = Math.abs(ydif); // |y diff|
+
+  //   let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
+  //   let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
+
+  //   if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
+  //     k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
+  //     k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
+  //     k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+  //     Edge_list.push(new Edge_info(1))//e_case,to_cluster,from_cluster
+  //     Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+  //   }
+  //   else { // if |x diff| <= |y diff|
+  //     k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
+  //     k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
+  //     k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+  //     Edge_list.push(new Edge_info(2))//e_case,to_cluster,from_cluster
+  //     Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+  //   }
+  //   total_length += abs_xdif + abs_ydif;
+  //   return k;
+  // }
 
   setEdges(edges: d3.Selection<d3.BaseType | SVGPathElement, IBranchData, SVGGElement, unknown>) {
     this.edges = edges;
