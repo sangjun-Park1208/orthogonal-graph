@@ -133,7 +133,7 @@ export class TreemapComponent implements OnInit {
     let edge_cross_count = 0;
     let total_length = 0;
 
-    branch.forEach(d => edgeListInitialize(d));
+    branch.forEach(d => initializeEdgeList(d));
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();
@@ -264,7 +264,7 @@ export class TreemapComponent implements OnInit {
     console.log("total_length : " + total_length);
     console.log("edge_crossing : " + edge_cross_count);
 
-    function edgeListInitialize(d: any) {
+    function initializeEdgeList(d: any) {
       const xScale = treemapData.xScale;
       const yScale = treemapData.yScale;
       const nodeXY = treemapData.getNodeXY();
