@@ -16,6 +16,7 @@ export class TreemapSelections {
     this.svg = svg;
     const colorZ = treemapData.colorZ;
     const clusterCount = treemapData.getClusterCount();
+    const areaCount = this.treemapData.getAreaCount();
 
     this.edges = this.svg.append("g")
       .attr("id", "edges")
@@ -92,8 +93,7 @@ export class TreemapSelections {
       .attr("x", (d:any) =>  (xScale(d.x0)))
       .attr("y", (d:any) =>  (xScale(d.y0)))
       .attr("fill", (d:any) => {
-        const hsl = d3.hsl(this.treemapData.colorZ(+d.data.parentId / this.treemapData.getClusterCount()));
-        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+        return this.treemapData.colorZ(+d.data.area / areaCount);
       })
       .attr("fill-opacity", this.treemapData.opacity.node);
     console.log("nodes", this.nodes);

@@ -6,11 +6,12 @@ import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IConstant } from 'src/shared/interfaces/iconstant';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
+import { DetailedLouvainOutput } from "graphology-communities-louvain";
 
 export class TreemapData { 
   _bus: IBusData[];
   _branch: IBranchData[];
-  _communities: IConstant;
+  _details: DetailedLouvainOutput;
 
   _size: ISize;
   _nodeSize: number;
@@ -22,6 +23,7 @@ export class TreemapData {
   _yScale: d3.ScaleLinear<number, number, never>;
 
   private clusterCount: number;
+  private areaCount: number;
   private tabularData: ITabularData[];
   private root: d3.HierarchyNode<any>;
   private nodeXY: IBusObjectData[];
@@ -29,24 +31,32 @@ export class TreemapData {
   private leaves: d3.HierarchyNode<any>[];
   private children: d3.HierarchyNode<any>[];
 
-  constructor(_bus: IBusData[], _branch: IBranchData[], _communities: IConstant, _size: ISize, _nodeSize: number, _strokeWidth: IConstant, _opacity: IConstant){
+  constructor(_bus: IBusData[], _branch: IBranchData[], _details: DetailedLouvainOutput, _size: ISize, _nodeSize: number, _strokeWidth: IConstant, _opacity: IConstant){
     this._bus = _bus;
     this._branch = _branch;
-    this._communities = _communities;
+    this._details = _details;
     
     this._size = _size;
     this._nodeSize = _nodeSize;
     this._strokeWidth = _strokeWidth;
     this._opacity = _opacity;
     
-    this.clusterCount = d3.max(Object.keys(_communities).map(d => _communities[d])) as number + 1;
+    this.clusterCount = _details.count;
     this._colorZ = d3.interpolateSinebow;
 
     let tabularData: ITabularData[] = [];
     let clusterCount = this.clusterCount;
-    tabularData = Object.keys(_communities).map(d => { // 잎 추가 (노드 id는 클러스터 노드)
-      return {id: +d + clusterCount, parentId: _communities[d] + 1};
+    
+    const communities = _details.communities;
+    tabularData = Object.keys(communities).map(d => { // 잎 추가 (노드 id는 클러스터 노드)
+      return {id: +d + clusterCount, parentId: communities[d] + 1};
     });
+    
+    let areaSet = new Set();
+    _bus.forEach(d => {
+      areaSet.add(+d.area);
+    });
+    this.areaCount = areaSet.size;
 
     tabularData.push({id: 0, parentId: undefined})  // 루트 추가
     
@@ -60,7 +70,12 @@ export class TreemapData {
     root.count();
 
     this.children = root.children as d3.HierarchyNode<any>[];
-    this.leaves = root.leaves();
+    this.leaves = root.leaves().map(d => {
+      // console.log("leaf data before", d);
+      Object.assign(d.data, _bus[d.data.id - clusterCount - 1]);
+      // console.log("leaf data after", d);
+      return d;
+    });
     this.leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
       return (+a.data.id - +b.data.id);
     });
@@ -146,12 +161,12 @@ export class TreemapData {
     return this._branch;
   }
 
-  public set communities(communities: IConstant){
-    this._communities = communities;
+  public set details(details: DetailedLouvainOutput){
+    this._details = details;
   }
 
-  public get communities() {
-    return this._communities;
+  public get details() {
+    return this._details;
   }
 
   public set size(size: ISize){
@@ -203,14 +218,14 @@ export class TreemapData {
   }
 
   public setClusterCount() {
-    let communities = this.communities;
-    this.clusterCount = d3.max(Object.keys(communities).map(d => communities[d])) as number + 1;
+    let details = this.details;
+    this.clusterCount = details.count;
   }
 
   public setTabularData() {
     let tabularData: ITabularData[] = [];
     let clusterCount = this.clusterCount;
-    let communities = this.communities;
+    let communities = this.details.communities;
     tabularData = Object.keys(communities).map(d => { // 잎 추가 (노드 id는 클러스터 노드)
       return {id: +d + clusterCount, parentId: communities[d] + 1};
     });
@@ -247,6 +262,10 @@ export class TreemapData {
 
   public getClusterCount() {
     return this.clusterCount;
+  }
+
+  public getAreaCount() {
+    return this.areaCount;
   }
 
   public getTabularData() {

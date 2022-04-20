@@ -50,19 +50,24 @@ export class TreemapEventListeners {
   adjacentNodesHighlightOn (event: MouseEvent, d: any) {
     const strokeWidth = this.treemapData.strokeWidth;
     const clusterCount = this.treemapData.getClusterCount();
+    const areaCount = this.treemapData.getAreaCount();
     const colorZ = this.treemapData.colorZ;
 
     const nodes = this.treemapSelections.getNodes();
     // console.log("nodes", nodes);
+    nodes.attr("fill", (d:any) => {
+      const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+      // console.log("hsl convertion", hsl);
+      return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+    });
 
     nodes.filter((m, i) => {
       return m === d;
     })
       .attr("stroke", "black")
       .attr("stroke-width", strokeWidth.nodes)
-      .attr("fill", (d: any) => colorZ(+d.data.parentId / clusterCount))
+      .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
       .attr("fill-opacity", 1);
-
     // Highlight 'red' nodes : starts from selected node(mouse-overed node).
     let linkedNodes_from: number[] = [];
     let countNum = 0;
@@ -71,7 +76,9 @@ export class TreemapEventListeners {
       nodes.filter((m: any, i: any) => {
         return +m.id - clusterCount === linkedNodes_from[countNum];
       })
-        .attr('fill', 'red')
+        .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
+        .attr("stroke", "red")
+        .attr("stroke-width", strokeWidth.nodes)
         .attr("fill-opacity", 1);
     }
 
@@ -83,7 +90,9 @@ export class TreemapEventListeners {
       nodes.filter((m: any, i: any) => {
         return +m.id - clusterCount === linkedNodes_to[countNum];
       })
-        .attr('fill', 'green')
+        .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
+        .attr("stroke", "green")
+        .attr("stroke-width", strokeWidth.nodes)
         .attr("fill-opacity", 1);
     }
     // console.log("linkedNodes from, to", linkedNodes_from, linkedNodes_to)
@@ -94,36 +103,38 @@ export class TreemapEventListeners {
     const colorZ = this.treemapData.colorZ;
     const opacity = this.treemapData.opacity;
     const clusterCount = this.treemapData.getClusterCount();
+    const areaCount = this.treemapData.getAreaCount();
     
     const clusters = this.treemapSelections.getClusters();
-    const clusterNodes = this.treemapSelections.getClusters()
-      .filter(m => {
-        return d.data.parentId == m.data.data.id;
-      });
+    const nodes = this.treemapSelections.getNodes()
+      // .filter(m => {
+      //   return d.data.parentId == m.data.data.id;
+      // });
 
-    let nodesSelection = clusterNodes
-      .select("g")
-      .selectAll("rect")
-      .attr("fill", (d:any) => {
-        const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
-        // console.log("hsl convertion", hsl);
-        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
-      })
+    let nodesSelection = nodes
+      // .select("g")
+      // .selectAll("rect")
+      // .attr("fill", (d:any) => {
+      //   const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+      //   // console.log("hsl convertion", hsl);
+      //   return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+      // })
+      .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
       .attr("fill-opacity", opacity.node)
       .attr("stroke", "none");
 
     // console.log("clusters", clusters);
-    nodesSelection = clusters
-      .filter((m: any) => {
-        return d.data.parentId != m.data.data.id; 
-      })
-      .select("g")
-      .selectAll("rect")
-      .attr("fill", (d:any) => {
-        const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
-        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
-      })
-      .attr("fill-opacity", opacity.node)
+    // clusters
+    //   .filter((m: any) => {
+    //     return d.data.parentId != m.data.data.id; 
+    //   })
+    //   .select("g")
+    //   .selectAll("rect")
+    //   .attr("fill", (d:any) => {
+    //     const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+    //     return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+    //   })
+    //   .attr("fill-opacity", opacity.node)
     
     // console.log("nodesSelection", nodesSelection);
   }
@@ -153,8 +164,6 @@ export class TreemapEventListeners {
   };
   // cluster mouseover, mouseout event listener
   clusterHighlightOn = (event: any, d:any) => {
-    const colorZ = this.treemapData.colorZ;
-    const clusterCount = this.treemapData.getClusterCount();
     const cluster = this.treemapSelections.getClusters()
       .filter(m => {
         // console.log(+d.data.data.id, +m.data.data.id);
@@ -168,26 +177,15 @@ export class TreemapEventListeners {
   }
 
   clusterHighlightOff = (event: any, d:any) => {
-    const colorZ = this.treemapData.colorZ;
-    const clusterCount = this.treemapData.getClusterCount();
-    const clusters = this.treemapSelections.getClusters();
     const cluster = this.treemapSelections.getClusters()
-    .filter(m => {
-      // console.log(+d.data.data.id, +m.data.data.id);
-      return +d.data.data.id == +m.data.data.id;
-    })
-    .select("rect");
-
-    cluster
+      .filter(m => {
+        // console.log(+d.data.data.id, +m.data.data.id);
+        return +d.data.data.id == +m.data.data.id;
+      })
+      .select("rect");
+    
+    const clusterNodesSelection = cluster
       .attr("fill-opacity", this.treemapData.opacity.cluster);
-
-    const clusterNodesSelection = clusters
-      .selectAll("rect")
-      .attr("fill", (d:any) => {
-        const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
-        // console.log("hsl convertion", hsl);
-        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
-      });
 
     // console.log("clusterNodesSelection", clusterNodesSelection);
   }
