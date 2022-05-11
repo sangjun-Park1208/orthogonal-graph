@@ -125,7 +125,13 @@ export class TreemapComponent implements OnInit {
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
       .attr("width", size.width)
-      .attr("height", size.height);
+      .attr("height", size.height)
+      .on("dblclick", (event, d) => {
+        treemapEventListeners.restoreViewBox(event, d);
+        treemapEventListeners.adjacentNodesHighlightOff(event, d);
+        treemapEventListeners.attachedEdgesHighlightOff(event, d);
+        treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
+      });;
 
     let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity)
     let treemapSelections = new TreemapSelections(treemapData, svg);
@@ -160,12 +166,19 @@ export class TreemapComponent implements OnInit {
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
       tooltipOn(event, d);
     })
-    .on("mouseout", (event, d) => {
+      .on("mouseout", (event, d) => {
       console.log("mouseout", event, d);
-      treemapEventListeners.adjacentNodesHighlightOff(event, d);
-      treemapEventListeners.attachedEdgesHighlightOff(event, d);
+      // treemapEventListeners.adjacentNodesHighlightOff(event, d);
+      // treemapEventListeners.attachedEdgesHighlightOff(event, d);
+      // treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
       tooltipOff(event, d);
     })
+    .on("click", (event, d) => {
+      treemapEventListeners.adjacentNodesHighlightOn(event, d);
+      treemapEventListeners.attachedEdgesHighlightOn(event, d);
+      treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
+      treemapEventListeners.magnifyViewBox(event, d);
+    });
   
     const toolTip = d3.select(this.tooltip.nativeElement)
       .style('opacity', 0)
