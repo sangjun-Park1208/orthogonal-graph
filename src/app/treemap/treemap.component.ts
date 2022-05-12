@@ -126,12 +126,13 @@ export class TreemapComponent implements OnInit {
       .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
       .attr("width", size.width)
       .attr("height", size.height)
-      .on("dblclick", (event, d) => {
+      .on("click", (event, d) => {
+        console.log("svg click", event, d);
         treemapEventListeners.restoreViewBox(event, d);
         treemapEventListeners.adjacentNodesHighlightOff(event, d);
         treemapEventListeners.attachedEdgesHighlightOff(event, d);
         treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
-      });;
+      });
 
     let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity)
     let treemapSelections = new TreemapSelections(treemapData, svg);
@@ -148,36 +149,38 @@ export class TreemapComponent implements OnInit {
     const nodes = treemapSelections.getNodes();
 
     clusters.on("mouseenter", (event, d) => {
-      console.log("mouseenter", event, d);
+      console.log("cluster mouseenter", event, d);
       // treemapEventListeners.clusterStrokeHighlightOn(event, d);
       treemapEventListeners.clusterHighlightOn(event, d);
       treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
-      console.log("mouseleave", event, d);
+      console.log("cluster mouseleave", event, d);
       // treemapEventListeners.clusterStrokeHighlightOff(event, d);
       treemapEventListeners.clusterHighlightOff(event, d);
       treemapEventListeners.clusterNumberOff(event, d);
     })
 
     nodes.on("mouseover", (event, d) => {
-      console.log("mouseover", event, d);
+      console.log("node mouseover", event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
       tooltipOn(event, d);
     })
       .on("mouseout", (event, d) => {
-      console.log("mouseout", event, d);
+      console.log("node mouseout", event, d);
       // treemapEventListeners.adjacentNodesHighlightOff(event, d);
       // treemapEventListeners.attachedEdgesHighlightOff(event, d);
       // treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
       tooltipOff(event, d);
     })
     .on("click", (event, d) => {
+      console.log("node click", event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
       treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
       treemapEventListeners.magnifyViewBox(event, d);
+      event.stopPropagation();
     });
   
     const toolTip = d3.select(this.tooltip.nativeElement)
