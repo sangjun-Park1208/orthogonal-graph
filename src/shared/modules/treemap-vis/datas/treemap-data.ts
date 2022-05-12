@@ -131,7 +131,7 @@ export class TreemapData {
       
       clustersWithNodes.push(clusterData);
     }
-    console.log("before node coordinate data", clustersWithNodes)
+    // console.log("before node coordinate data", clustersWithNodes)
     this.clustersWithNodes = clustersWithNodes;
     
     // 이렇게 해도 겹치는 지점이 생김
@@ -180,7 +180,7 @@ export class TreemapData {
         // console.log("node x0 y0 distance from cluster x0, y0", Math.round((clustersWithNodes[i].children[j].x0 - clusterX0) / widthInterval), Math.round((clustersWithNodes[i].children[j].y0 - clusterY0) / heightInterval));
       }
     }
-    console.log("after node coordinate data", clustersWithNodes);
+    // console.log("after node coordinate data", clustersWithNodes);
     this.clustersWithNodes = clustersWithNodes;
     this.root = root;
     //

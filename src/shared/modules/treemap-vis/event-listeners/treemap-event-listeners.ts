@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
-import { TreemapSelections } from '../selections/treemap-selections.module';
-import { TreemapData } from '../datas/treemap-data.module';
+import { TreemapSelections } from '../selections/treemap-selections';
+import { TreemapData } from '../datas/treemap-data';
 
 export class TreemapEventListeners { 
   private treemapData: TreemapData;
@@ -261,6 +261,7 @@ export class TreemapEventListeners {
 
   magnifyViewBox = (event: Event, d: any) => {
     const svg = this.treemapSelections.getSvg();
+    const nodes = this.treemapSelections.getNodes();
     const root = this.treemapData.getRoot();
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
@@ -289,26 +290,28 @@ export class TreemapEventListeners {
     })
 
     const minX = xScale(d3.min(linkedNodesData, d => d.x0));
-
     const minY = yScale(d3.min(linkedNodesData, d => d.y0));
-
     const maxX = xScale(d3.max(linkedNodesData, d => d.x1));
-
     const maxY = yScale(d3.max(linkedNodesData, d => d.y1));
 
     svg.transition()
       .ease(d3.easeLinear)
       .duration(1000)
-      .attr("viewBox", `${minX - marginLeft} ${minY - marginTop} ${maxX - minX + marginLeft + marginRight} ${maxY - minY + marginTop + marginBottom}`);
+      .attr("viewBox", `${minX - marginLeft} ${minY - marginTop} ${maxX - minX + marginLeft + marginRight} ${maxY - minY + marginTop + marginBottom}`)
+      .on("start", () => {nodes.style("pointer-events", "none");})
+      .on("end", () => {nodes.style("pointer-events", "auto");});
   }
 
   restoreViewBox = (event: any, d:any) => {
     const svg = this.treemapSelections.getSvg();
+    const nodes = this.treemapSelections.getNodes();
     const size = this.treemapData.size;
-
+    
     svg.transition()
       .ease(d3.easeLinear)
       .duration(1000)
-      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`);
+      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
+      .on("start", () => {nodes.style("pointer-events", "none");})
+      .on("end", () => {nodes.style("pointer-events", "auto");});
   }
 }
