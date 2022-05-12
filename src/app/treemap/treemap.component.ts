@@ -48,7 +48,7 @@ export class TreemapComponent implements OnInit {
       cluster: 0.2
     };
     const strokeWidth = {
-      nodes: 1.5,
+      nodes: 2,
       cluster: 2,
       edge: 2
     };
@@ -117,15 +117,24 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    const communities = louvain(graph, {randomWalk: false}); // assign Louvain Algorithm
+    const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
+    const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
+    console.log("details", details);
 
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
       .attr("width", size.width)
-      .attr("height", size.height);
+      .attr("height", size.height)
+      .on("click", (event, d) => {
+        console.log("svg click", event, d);
+        treemapEventListeners.restoreViewBox(event, d);
+        treemapEventListeners.adjacentNodesHighlightOff(event, d);
+        treemapEventListeners.attachedEdgesHighlightOff(event, d);
+        treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
+      });
 
-    let treemapData = new TreemapData(bus, branch, communities, size, nodeSize, strokeWidth, opacity)
+    let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity)
     let treemapSelections = new TreemapSelections(treemapData, svg);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
 
@@ -140,30 +149,39 @@ export class TreemapComponent implements OnInit {
     const nodes = treemapSelections.getNodes();
 
     clusters.on("mouseenter", (event, d) => {
-      console.log("mouseenter", event, d);
+      console.log("cluster mouseenter", event, d);
       // treemapEventListeners.clusterStrokeHighlightOn(event, d);
       treemapEventListeners.clusterHighlightOn(event, d);
       treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
-      console.log("mouseleave", event, d);
+      console.log("cluster mouseleave", event, d);
       // treemapEventListeners.clusterStrokeHighlightOff(event, d);
       treemapEventListeners.clusterHighlightOff(event, d);
       treemapEventListeners.clusterNumberOff(event, d);
     })
 
     nodes.on("mouseover", (event, d) => {
-      console.log("mouseover", event, d);
+      console.log("node mouseover", event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
       tooltipOn(event, d);
     })
-    .on("mouseout", (event, d) => {
-      console.log("mouseout", event, d);
-      treemapEventListeners.adjacentNodesHighlightOff(event, d);
-      treemapEventListeners.attachedEdgesHighlightOff(event, d);
+      .on("mouseout", (event, d) => {
+      console.log("node mouseout", event, d);
+      // treemapEventListeners.adjacentNodesHighlightOff(event, d);
+      // treemapEventListeners.attachedEdgesHighlightOff(event, d);
+      // treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
       tooltipOff(event, d);
     })
+    .on("click", (event, d) => {
+      console.log("node click", event, d);
+      treemapEventListeners.adjacentNodesHighlightOn(event, d);
+      treemapEventListeners.attachedEdgesHighlightOn(event, d);
+      treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
+      treemapEventListeners.magnifyViewBox(event, d);
+      event.stopPropagation();
+    });
   
     const toolTip = d3.select(this.tooltip.nativeElement)
       .style('opacity', 0)

@@ -10,12 +10,14 @@ export class TreemapSelections {
   private edges: d3.Selection<d3.BaseType | SVGPathElement, IBranchData, SVGGElement, unknown>;
   private clusters: d3.Selection<d3.BaseType | SVGGElement, IClusterData, SVGGElement, unknown>;
   private nodes: d3.Selection<d3.BaseType | SVGRectElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
+  private nodeTexts: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
   
   constructor (treemapData: TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
     this.svg = svg;
     const colorZ = treemapData.colorZ;
     const clusterCount = treemapData.getClusterCount();
+    const areaCount = this.treemapData.getAreaCount();
 
     this.edges = this.svg.append("g")
       .attr("id", "edges")
@@ -41,7 +43,7 @@ export class TreemapSelections {
   
     this.clusters.append("rect")
       .attr("fill", (d:any) => {
-        const hsl = d3.hsl(colorZ(+d.data.parentId / clusterCount));
+        const hsl = d3.hsl(colorZ(+d.data.data.id / clusterCount));
         // console.log("hsl convertion", hsl);
         return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       })
@@ -49,37 +51,39 @@ export class TreemapSelections {
       .attr("fill-opacity", this.treemapData.opacity.cluster)
       .attr("width", (d:any) => {
         let m = d.data;
-        return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) : xScale(5);
+        return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) + "px" : xScale(5) + "px";
       })
       .attr("height", (d:any) => {
         let m = d.data;
-        return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0) : yScale(5);
+        return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0) + "px" : yScale(5) + "px";
       })
       .attr("x", (d:any) => {
         let m = d.data;
-        return xScale(m.x0);
+        return xScale(m.x0) + "px";
       })
       .attr("y", (d:any) => {
         let m = d.data;
-        return yScale(m.y0);
+        return yScale(m.y0) + "px";
       });
 
     this.clusters.append("text")
       .attr("opacity", 0)
-      .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2))
-      .attr("dy", d => yScale(d.data.y0 + 12))
-      .attr("font-size", this.treemapData.nodeSize*1.2)
+      .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2) + "px")
+      .attr("dy", d => yScale(d.data.y0 + 12) + "px")
+      .attr("font-size", this.treemapData.nodeSize*1.2 + "px")
       .attr("text-anchor", "middle")
+      .style("display", "inline-block")
+      .style("pointer-events", "none")
       .html(d => `Cluster ${d.data.id}`);
     console.log("clusters", this.clusters);
-    
+
     this.nodes = this.clusters.append("g")
       .attr("id", d => "cluster_" + d.data.id + "_nodes")
       .selectAll("rect")
       .data(d => d.children)
       .join("rect")
       .attr("id", (d:any) => {
-        return (+d.data.id - this.treemapData.getClusterCount());
+        return d.data.id;
       })
       // .attr("width", (d:any) => {
       //   return (d.x1 - d.x0 > 5) ? xScale(d.x1 - d.x0) : xScale(5);
@@ -87,16 +91,30 @@ export class TreemapSelections {
       // .attr("height", (d:any) => {
       //   return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
       // })
-      .attr("width", this.treemapData.nodeSize)
-      .attr("height", this.treemapData.nodeSize)
-      .attr("x", (d:any) =>  (xScale(d.x0)))
-      .attr("y", (d:any) =>  (xScale(d.y0)))
+      .attr("width", d => xScale(d.x1 - d.x0) + "px")
+      .attr("height", d => xScale(d.y1 - d.y0) + "px")
+      .attr("x", d =>  (xScale(d.x0)) + "px")
+      .attr("y", d =>  (xScale(d.y0)) + "px")
       .attr("fill", (d:any) => {
-        const hsl = d3.hsl(this.treemapData.colorZ(+d.data.parentId / this.treemapData.getClusterCount()));
-        return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
+        return this.treemapData.colorZ(+d.data.area / areaCount);
       })
       .attr("fill-opacity", this.treemapData.opacity.node);
     console.log("nodes", this.nodes);
+
+    this.nodeTexts = this.clusters.append("g")
+      .attr("id", d => "cluster_" + d.data.id + "_texts")
+      .selectAll("text")
+      .data(d => d.children)
+      .join("text")
+      .attr("x", d => xScale((d.x0 + this.treemapData.nodeSize*0.5)) + "px")
+      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize*0.6) + "px")
+      .attr("font-size", this.treemapData.nodeSize*0.47 + "px")
+      .style("display", "inline-block")
+      .style("pointer-events", "none")
+      .attr("text-anchor", "middle")
+      .attr("font-weight", "bold")
+      .html(d => `${d.data.id}`);
+    //
   }
 
   drawEdge(d: any): any {
@@ -156,6 +174,9 @@ export class TreemapSelections {
   //   total_length += abs_xdif + abs_ydif;
   //   return k;
   // }
+  getSvg() {
+    return this.svg;
+  };
 
   setEdges(edges: d3.Selection<d3.BaseType | SVGPathElement, IBranchData, SVGGElement, unknown>) {
     this.edges = edges;
@@ -179,5 +200,13 @@ export class TreemapSelections {
 
   getNodes() {
     return this.nodes;
+  };
+
+  setNodeTexts(nodeTexts: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>) {
+    this.nodes = nodeTexts;
+  };
+
+  getNodeTexts() {
+    return this.nodeTexts;
   };
 }
