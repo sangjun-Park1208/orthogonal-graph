@@ -2,16 +2,16 @@ import { IBranchData } from "src/shared/interfaces/ibranch-data";
 import { TreemapData } from "../datas/treemap-data";
 
 class EdgeInfo {
-  private e_case: number;
-  public e_type: number[] = [1, 2, 1];//h,w,h
+  private eCase: number;
+  public eType: number[] = [1, 2, 1];//h,w,h
   public xy: number[][] = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
 
-  constructor(e_case: number) {
-    this.e_case = e_case;
+  constructor(eCase: number) {
+    this.eCase = eCase;
   }
 
   public init(x1: number, x2: number, y1: number, y2: number) {
-    if (this.e_case == 1) {
+    if (this.eCase == 1) {
       this.xy[0][0] = x1;
       this.xy[0][1] = y1;
       this.xy[0][2] = x1;
@@ -25,8 +25,8 @@ class EdgeInfo {
       this.xy[2][2] = x2;
       this.xy[2][3] = y2;
     }
-    else if (this.e_case == 2) {
-      this.e_type[0] = 2, this.e_type[1] = 1, this.e_type[2] = 2;
+    else if (this.eCase == 2) {
+      this.eType[0] = 2, this.eType[1] = 1, this.eType[2] = 2;
       this.xy[0][0] = x1;
       this.xy[0][1] = y1;
       this.xy[0][2] = (x1 + x2) / 2;
@@ -124,11 +124,11 @@ export class EdgeCrossingCountCalculator {
     let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
   
     if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-      edgeList.push(new EdgeInfo(1))//e_case,to_cluster,from_cluster
+      edgeList.push(new EdgeInfo(1))//eCase,to_cluster,from_cluster
       edgeList[edgeList.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
     }
     else { // if |x diff| <= |y diff|
-      edgeList.push(new EdgeInfo(2))//e_case,to_cluster,from_cluster
+      edgeList.push(new EdgeInfo(2))//eCase,to_cluster,from_cluster
       edgeList[edgeList.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
     }
     this.totalLength += abs_xdif + abs_ydif;
@@ -144,8 +144,8 @@ export class EdgeCrossingCountCalculator {
     }
     for (let m = 0; m < 3; m++) {
       for (let n = 0; n < 3; n++) {
-        if (edgeList[i].e_type[m] != edgeList[j].e_type[n]) {
-          if (edgeList[i].e_type[m] == 1) {
+        if (edgeList[i].eType[m] != edgeList[j].eType[n]) {
+          if (edgeList[i].eType[m] == 1) {
             //wh
             if (edgeList[j].xy[n][0] <= edgeList[i].xy[m][0] && edgeList[i].xy[m][0] <= edgeList[j].xy[n][2]
               && edgeList[i].xy[m][1] <= edgeList[j].xy[n][1] && edgeList[j].xy[n][1] <= edgeList[i].xy[m][3]) {
@@ -160,14 +160,14 @@ export class EdgeCrossingCountCalculator {
             if (sameCount[temp + j] == 1) break;
           }
         }
-        else if (edgeList[i].e_type[m] == 2) {//ww
+        else if (edgeList[i].eType[m] == 2) {//ww
           if (edgeList[i].xy[m][1] == edgeList[j].xy[n][1] && !(edgeList[i].xy[m][2] < edgeList[j].xy[n][0]
             || edgeList[j].xy[n][2] < edgeList[i].xy[m][0])) {
             sameCount[temp + j]++;
             if (sameCount[temp + j] == 1) break;
           }
         }
-        else if (edgeList[i].e_type[m] == 1) {//hh
+        else if (edgeList[i].eType[m] == 1) {//hh
           if (edgeList[i].xy[m][0] == edgeList[j].xy[n][0] && !(edgeList[i].xy[m][3] < edgeList[j].xy[n][1]
             || edgeList[j].xy[n][3] < edgeList[i].xy[m][1])) {
             sameCount[temp + j]++;

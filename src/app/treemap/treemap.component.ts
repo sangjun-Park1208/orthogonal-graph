@@ -7,7 +7,7 @@ import { IBusData } from 'src/shared/interfaces/ibus-data';
 import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
-import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge cross/calculate-edge-cross';
+import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
 
 @Component({
   selector: 'app-treemap',
