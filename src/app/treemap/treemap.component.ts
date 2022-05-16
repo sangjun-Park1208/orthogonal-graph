@@ -35,6 +35,38 @@ export class TreemapComponent implements OnInit {
   }
   
   renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{ 
+    //////////////////////////////////////////////////////////////////////////////////
+    //찬일 추가
+    let draw: number;
+    draw=1062;
+    let drawlist: number[]=new Array<number>();
+
+    //난수 집합 생성
+    function rand_draw(drawlist:number[],draw:number){
+      let temp:number;
+      let i,j:number;
+      for(i=0;i<draw;i++){
+        temp=Math.floor(Math.random()*bus.length+1);
+        for(j=0;j<i;j++){
+          if(temp==drawlist[j]){
+            temp=Math.floor(Math.random()*bus.length+1);
+            j=-1;
+          }
+        }
+        if(j==i){
+          drawlist.push(temp);
+        }
+      }
+    }
+    rand_draw(drawlist,draw);
+    drawlist.sort(function(a,b){
+      return a-b;
+    });
+    // for(let i=0;i<draw;i++){
+    //   console.log(i+" : "+drawlist[i]);
+    // }
+    ////////////////////////////////////////////////////////////////////////////////
+
     const size = {
       width: 960,
       height: 960,
@@ -101,21 +133,51 @@ export class TreemapComponent implements OnInit {
             let temp = this.xy[i][0];
             this.xy[i][0] = this.xy[i][2];
             this.xy[i][2] = temp;
-            temp = this.xy[i][1];
+            temp = this.xy[i][1]; 
             this.xy[i][1] = this.xy[i][3];
             this.xy[i][3] = temp;
           }
         }
       }
     }
-    // 상준형 graphology 코드
-    for(let i=0; i<bus.length; i++){
-      graph.addNode(bus[i].id);
+
+    // const Edge_list: Edge_info[] = new Array<Edge_info>();
+    // let edge_cross_count = 0;
+    // let total_length = 0;
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    //찬일 추가
+    for(let i=0;i<draw;i++){
+      // console.log(i+" : "+drawlist[i]);
+      graph.addNode(drawlist[i]);
+    }
+    
+    for(let i=0;i<draw;i++){
+      for(let j=0;j<branch.length;j++){
+        if(drawlist[i]==branch[j].from){
+          for(let k=0;k<draw;k++){
+            if(i==k){
+              continue;
+            }
+            if(drawlist[k]==branch[j].to){
+              graph.addEdge(branch[j].from,branch[j].to);
+            }
+          }
+        }
+      }
     }
 
-    for (let i = 0; i < branch.length; i++) {
-      graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
-    }
+    //////////////////////////////////////////////////////////////////////////////////
+
+
+    // 상준형 graphology 코드
+    // for(let i=0; i<bus.length; i++){
+    //   graph.addNode(bus[i].id);
+    // }
+
+    // for (let i = 0; i < branch.length; i++) {
+    //   graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
+    // }
 
     const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
     const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
@@ -255,6 +317,7 @@ export class TreemapComponent implements OnInit {
     }
 
     // let test=0;
+    // let same_count: number[] = [];
     for (let i = 0; i < branch.length; i++) {
       let temp = 0;
       for (let k = 0; k < i; k++) {
