@@ -1,0 +1,1 @@
+fname_input = './data/house_prices.csv'
