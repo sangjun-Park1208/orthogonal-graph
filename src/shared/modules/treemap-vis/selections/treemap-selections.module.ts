@@ -52,11 +52,11 @@ export class TreemapSelections {
       .attr("fill-opacity", this.treemapData.opacity.cluster)
       .attr("width", (d:any) => {
         let m = d.data;
-        return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) + "px" : xScale(5) + "px";
+        return xScale(m.x1 - m.x0) + "px";
       })
       .attr("height", (d:any) => {
         let m = d.data;
-        return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0) + "px" : yScale(5) + "px";
+        return yScale(m.y1 - m.y0) + "px";
       })
       .attr("x", (d:any) => {
         let m = d.data;
@@ -129,7 +129,7 @@ export class TreemapSelections {
     const toNode = nodeXY.find(function (m) {
       return d.to == m.id;
     }) as IBusObjectData;
-    console.log("from node, to node", fromNode, toNode);
+    // console.log("from node, to node", fromNode, toNode);
 
     let k = `M${xScale(fromNode.x)}, ${yScale(fromNode.y)}`; // 'path' starting point
     let xdif = toNode.x - fromNode.x; // x diff

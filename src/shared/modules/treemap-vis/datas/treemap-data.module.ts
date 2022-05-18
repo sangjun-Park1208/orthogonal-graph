@@ -73,7 +73,11 @@ export class TreemapData {
     this.children = root.children as d3.HierarchyNode<any>[];
     this.leaves = root.leaves().map(d => {
       // console.log("leaf data before", d);
-      Object.assign(d.data, _bus[d.data.id - clusterCount - 1]);
+      let bus = _bus.find((m) => {
+        return m.id == d.data.id - clusterCount
+      });
+      // console.log("selected bus", bus);
+      Object.assign(d.data, bus);
       // console.log("leaf data after", d);
       return d;
     });
