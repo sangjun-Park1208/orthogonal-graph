@@ -7,6 +7,7 @@ import { IBusData } from 'src/shared/interfaces/ibus-data';
 import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data.module';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections.module';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners.module';
+import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 
 @Component({
   selector: 'app-treemap',
@@ -179,8 +180,8 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
-    const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
+    const communities = louvain(graph, {randomWalk: false, resolution: 1}); 
+    const details = louvain.detailed(graph, {randomWalk: false, resolution: 1}); // assign Louvain Algorithm
     console.log("communities", communities); // data type : number[]
     console.log("details", details);
 
@@ -349,22 +350,29 @@ export class TreemapComponent implements OnInit {
       const xScale = treemapData.xScale;
       const yScale = treemapData.yScale;
       const nodeXY = treemapData.getNodeXY();
+
+      const fromNode = nodeXY.find(function (m) {
+        return d.from == m.id;
+      }) as IBusObjectData;
+      const toNode = nodeXY.find(function (m) {
+        return d.to == m.id;
+      }) as IBusObjectData;
       
-      let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
-      let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
+      let xdif = toNode.x - fromNode.x; // x diff
+      let ydif = toNode.y - fromNode.y; // y diff
       let abs_xdif = Math.abs(xdif); // |x diff|
       let abs_ydif = Math.abs(ydif); // |y diff|
   
-      let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
-      let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
+      let xhalf = xScale((toNode.x + fromNode.x) /2); // x's half point between source & target.
+      let yhalf = yScale((toNode.y + fromNode.y) /2); // y's half point between source & target.
   
       if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
         Edge_list.push(new Edge_info(1))//e_case,to_cluster,from_cluster
-        Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+        Edge_list[Edge_list.length - 1].init(fromNode.x, toNode.x, fromNode.y, toNode.y)
       }
       else { // if |x diff| <= |y diff|
         Edge_list.push(new Edge_info(2))//e_case,to_cluster,from_cluster
-        Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+        Edge_list[Edge_list.length - 1].init(fromNode.x, toNode.x, fromNode.y, toNode.y)
       }
       total_length += abs_xdif + abs_ydif;
     }
