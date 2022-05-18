@@ -6,7 +6,7 @@ pd.options.display.max_columns=10
 fbus = 'bus-1062.csv'
 bus_data=pd.read_csv(fbus)
 
-draw=500
+draw=input("How many nodes : ")
 drawlist=[]
 
 import random
@@ -70,7 +70,7 @@ for k in range(0,draw) :
                     }
                     new_df=pd.DataFrame(new_data)
                     h_data=pd.concat([h_data,new_df])
-                    
+
 # s_data.isnull()
 # s_data.isnull().sum()
 
