@@ -51,9 +51,9 @@ export class TreemapComponent implements OnInit {
     const strokeWidth = {
       nodes: 2,
       cluster: 2,
-      edge: 2
+      edge: 3
     };
-    const nodeSize = 10;
+    const nodeSize = 19;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
@@ -77,10 +77,6 @@ export class TreemapComponent implements OnInit {
       .on("click", (event, d) => {
         // console.log("svg click", event, d);
         treemapEventListeners.restoreViewBox(event, d);
-        treemapEventListeners.restoreNodeAndTextSize(event, d);
-        treemapEventListeners.adjacentNodesHighlightOff(event, d);
-        treemapEventListeners.attachedEdgesHighlightOff(event, d);
-        treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
       });
 
     let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity)
@@ -94,18 +90,18 @@ export class TreemapComponent implements OnInit {
     const nodes = treemapSelections.getNodes();
 
     clusters.on("mouseenter", (event, d) => {
-      // console.log("cluster mouseenter", event, d);
+      console.log("cluster mouseenter", event, d);
       treemapEventListeners.clusterHighlightOn(event, d);
-      treemapEventListeners.clusterNumberOn(event, d);
+      // treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
       // console.log("cluster mouseleave", event, d);
       treemapEventListeners.clusterHighlightOff(event, d);
-      treemapEventListeners.clusterNumberOff(event, d);
+      // treemapEventListeners.clusterNumberOff(event, d);
     })
 
     nodes.on("mouseover", (event, d) => {
-      // console.log("node mouseover", event, d);
+      console.log("node mouseover", event, d);
       treemapEventListeners.restoreNodeAndTextSize(event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
@@ -117,7 +113,7 @@ export class TreemapComponent implements OnInit {
       tooltipOff(event, d);
     })
     .on("click", (event, d) => {
-      // console.log("node click", event, d);
+      console.log("node click", event, d);
       treemapEventListeners.magnifyViewBox(event, d);
       event.stopPropagation();
     });

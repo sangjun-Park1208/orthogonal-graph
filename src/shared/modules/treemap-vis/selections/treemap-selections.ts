@@ -29,7 +29,8 @@ export class TreemapSelections {
       .attr("stroke", "steelblue")
       .attr("stroke-width", this.treemapData.strokeWidth.edge)
       .attr("fill", "none")
-      .attr("stroke-opacity", this.treemapData.opacity.edge);
+      .attr("stroke-opacity", this.treemapData.opacity.edge)
+      .attr("shape-rendering", "crispEdges");
     console.log("edges", this.edges);
 
     const xScale = this.treemapData.xScale;
@@ -65,18 +66,20 @@ export class TreemapSelections {
       .attr("y", (d:any) => {
         let m = d.data;
         return yScale(m.y0) ;
-      });
+      })
+     .attr("shape-rendering", "crispEdges");
 
-    this.clusters.append("text")
-      .attr("opacity", 0)
-      .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2) )
-      .attr("dy", d => yScale(d.data.y0 + 12) )
-      .attr("font-size", this.treemapData.nodeSize*1.2 )
-      .attr("text-anchor", "middle")
-      .style("display", "inline-block")
-      .style("pointer-events", "none")
-      .html(d => `Cluster ${d.data.id}`);
-    console.log("clusters", this.clusters);
+    // this.clusters.append("text")
+    //   .attr("opacity", 0)
+    //   .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2) )
+    //   .attr("dy", d => yScale(d.data.y0 + this.treemapData.nodeSize*1.5))
+    //   .attr("font-size", this.treemapData.nodeSize)
+    //   .attr("text-anchor", "middle")
+    //   .style("display", "inline-block")
+    //   .style("pointer-events", "none")
+    //   .html(d => `Cluster ${d.data.id}`)
+    //   .attr("shape-rendering", "crispEdges");
+    // console.log("clusters", this.clusters);
 
     this.nodes = this.clusters.append("g")
       .attr("id", d => "cluster_" + d.data.id + "_nodes")
@@ -99,22 +102,47 @@ export class TreemapSelections {
       .attr("fill", (d:any) => {
         return this.treemapData.colorZ(+d.data.area / areaCount);
       })
-      .attr("fill-opacity", this.treemapData.opacity.node);
+      .attr("fill-opacity", this.treemapData.opacity.node)
+      .attr("shape-rendering", "crispEdges");
     console.log("nodes", this.nodes);
 
     this.nodeTexts = this.clusters.append("g")
       .attr("id", d => "cluster_" + d.data.id + "_texts")
-      .selectAll("text")
+      .selectAll("g")
       .data(d => d.children)
-      .join("text")
-      .attr("x", d => xScale((d.x0 + d.x1) / 2))
-      .attr("y", d => yScale((d.y0 + d.y1) / 2))
-      .attr("font-size", this.treemapData.nodeSize*0.45 )
-      .style("display", "inline-block")
-      .style("pointer-events", "none")
+      .join("g")
       .attr("text-anchor", "middle")
       .attr("font-weight", "bold")
-      .html(d => `${d.data.id}`);
+      .attr("font-size", xScale(this.treemapData.nodeSize * 0.45))
+      .style("display", "inline-block")
+      .style("pointer-events", "none")
+      .attr("shape-rendering", "crispEdges");
+
+    this.nodeTexts.filter(d => d.data.id / 1000 >= 1)
+      .append("text")
+      .attr("id", "a")
+      .attr("x", d => xScale((d.x0 + d.x1) / 2))
+      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize * 0.45))
+      .html(d => {
+        return `${d.data.id}`.toString().substring(0,2);
+      })
+
+    this.nodeTexts.filter(d => d.data.id / 1000 >= 1)
+      .append("text")
+      .attr("id", "b")
+      .attr("x", d => xScale((d.x0 + d.x1) / 2))
+      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize * 0.9))
+      .html(d => {
+        return `${d.data.id}`.toString().substring(2,4);
+      });
+
+    this.nodeTexts.filter(d => d.data.id / 1000 < 1)
+      .append("text")
+      .attr("x", d => xScale((d.x0 + d.x1) / 2))
+      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize * 0.45))
+      .html(d => {
+        return `${d.data.id}`;
+      });
     //
   }
 

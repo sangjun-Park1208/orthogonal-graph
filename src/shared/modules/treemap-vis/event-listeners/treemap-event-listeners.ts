@@ -6,27 +6,19 @@ import { IClusterData } from 'src/shared/interfaces/icluster-data';
 export class TreemapEventListeners { 
   private treemapData: TreemapData;
   private treemapSelections: TreemapSelections;
-  private static zoomBool: Boolean;
 
   constructor (treemapData: TreemapData, treemapSelections: TreemapSelections){
     this.treemapData = treemapData;
     this.treemapSelections = treemapSelections;
-    TreemapEventListeners.zoomBool = false;
   }
 
   attachedEdgesHighlightOn (event: MouseEvent, d: any) {
-    if (TreemapEventListeners.zoomBool){
-      return;
-    }
     this.attachedEdgesHighlightOff(event, d);
-    const svg = this.treemapSelections.getSvg();
     const edges = this.treemapSelections.getEdges();
-    const size = this.treemapData.size;
-    const defaultViewportWidth = size.viewBox.width + size.margin.right;
-    const currentViewBox = svg.attr("viewBox").split(" ");
-    const currentViewportWidth = +currentViewBox[2];
-    const xMagnification = defaultViewportWidth / currentViewportWidth;
-    const strokeWidth = this.treemapData.strokeWidth.edge / xMagnification;
+    const magnification = this.calculateViewportMagnification();
+    const strokeWidth = this.treemapData.strokeWidth.edge / magnification;
+    // console.log("magnification", magnification);
+    // console.log("edge stroke width before after", this.treemapData.strokeWidth.edge, strokeWidth);
 
     // edges(from) : red.
     // starts at selected node.
@@ -35,7 +27,8 @@ export class TreemapEventListeners {
     })
       .attr('stroke', 'red') // m == from
       .attr("stroke-width", strokeWidth)
-      .attr("stroke-opacity", 1);
+      .attr("stroke-opacity", 1)
+      .raise();
     
     // edges(to) : green.
     // ends at selected node.
@@ -44,20 +37,16 @@ export class TreemapEventListeners {
     })  
       .attr('stroke', 'green') // m == to
       .attr("stroke-width", strokeWidth)
-      .attr("stroke-opacity", 1);
+      .attr("stroke-opacity", 1)
+      .raise();
   };
 
   // tmp nodes, edges mouseout event listener
   attachedEdgesHighlightOff (event: MouseEvent, d: any) {
     const opacity = this.treemapData.opacity;
-    const svg = this.treemapSelections.getSvg();
     const edges = this.treemapSelections.getEdges();
-    const size = this.treemapData.size;
-    const defaultViewportWidth = size.viewBox.width + size.margin.right;
-    const currentViewBox = svg.attr("viewBox").split(" ");
-    const currentViewportWidth = +currentViewBox[2];
-    const xMagnification = defaultViewportWidth / currentViewportWidth;
-    const strokeWidth = this.treemapData.strokeWidth.edge / xMagnification;
+    const magnification = this.calculateViewportMagnification();
+    const strokeWidth = this.treemapData.strokeWidth.edge / magnification;
 
     edges.attr("stroke", "steelblue")
       .attr("stroke-width", strokeWidth)
@@ -65,27 +54,19 @@ export class TreemapEventListeners {
   }
   
   adjacentNodesHighlightOn (event: MouseEvent, d: any) {
-    if (TreemapEventListeners.zoomBool){
-      return;
-    }
     this.adjacentNodesHighlightOff(event, d);
 
-    const svg = this.treemapSelections.getSvg();
     const nodes = this.treemapSelections.getNodes();
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
-    const size = this.treemapData.size;
     const clusterCount = this.treemapData.getClusterCount();
     const areaCount = this.treemapData.getAreaCount();
     const colorZ = this.treemapData.colorZ;
 
-    const defaultViewportWidth = size.viewBox.width + size.margin.right;
-    const currentViewBox = svg.attr("viewBox").split(" ");
-    const currentViewportWidth = +currentViewBox[2];
-    const xMagnification = defaultViewportWidth / currentViewportWidth;
-    let nodeSize = this.treemapData.nodeSize / xMagnification;
+    const magnification = this.calculateViewportMagnification();
+    let nodeSize = this.treemapData.nodeSize / magnification;
+    const strokeWidth = nodeSize * 0.15;
     // console.log("node size comparision", this.treemapData.nodeSize, nodeSize);
-    // console.log(defaultViewportWidth, currentViewBox, currentViewportWidth, xMagnification);
 
     nodes.attr("width", d => xScale(nodeSize) )
       .attr("height", d => yScale(nodeSize) )
@@ -96,12 +77,12 @@ export class TreemapEventListeners {
         return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       });
 
-    nodeSize *= 1.75;
+    nodeSize *= 1;
     nodes.filter((m, i) => {
       return m === d;
     })
       .attr("stroke", "black")
-      .attr("stroke-width", xScale(nodeSize * 0.2))
+      .attr("stroke-width", xScale(strokeWidth))
       .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
       .attr("fill-opacity", 1)
       .attr("width", d => xScale(nodeSize))
@@ -119,7 +100,7 @@ export class TreemapEventListeners {
       })
         .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
         .attr("stroke", "red")
-        .attr("stroke-width", xScale(nodeSize * 0.2))
+        .attr("stroke-width", xScale(strokeWidth))
         .attr("fill-opacity", 1)
         .attr("width", d => xScale(nodeSize))
         .attr("height", d => yScale(nodeSize))
@@ -137,7 +118,7 @@ export class TreemapEventListeners {
       })
         .attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
         .attr("stroke", "green")
-        .attr("stroke-width", xScale(nodeSize * 0.2))
+        .attr("stroke-width", xScale(strokeWidth))
         .attr("fill-opacity", 1)
         .attr("width", d => xScale(nodeSize))
         .attr("height", d => yScale(nodeSize))
@@ -156,49 +137,41 @@ export class TreemapEventListeners {
     nodes.attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
       .attr("fill-opacity", opacity.node)
       .attr("stroke", "none");
-
-    // let nodeSize = this.treemapData.nodeSize;
-    // nodes.transition()
-    //   .ease(d3.easeLinear)
-    //   .duration(1000)
-    //   .attr("width", d => xScale(nodeSize) )
-    //   .attr("height", d => xScale(nodeSize) )
-    //   .attr("x", d =>  (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)) )
-    //   .attr("y", d =>  (xScale((d.y0 + d.y1) / 2 - nodeSize / 2)) )
-    
-    // nodeTexts.transition()
-    //   .ease(d3.easeLinear)
-    //   .duration(1000)
-    //   .attr("x", d => xScale((d.x0 + nodeSize*0.5)) )
-    //   .attr("y", d => yScale(d.y0 + nodeSize*0.6) )
-    //   .attr("font-size", nodeSize*0.45);
   }
 
   adjacentNodesTextHighlightOn (event: MouseEvent, d: any) {
-    const svg = this.treemapSelections.getSvg();
-    const size = this.treemapData.size;
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
-    const defaultViewportWidth = size.viewBox.width + size.margin.right;
-    const currentViewBox = svg.attr("viewBox").split(" ");
-    const currentViewportWidth = +currentViewBox[2];
-    const xMagnification = defaultViewportWidth / currentViewportWidth;
-    let nodeSize = this.treemapData.nodeSize / xMagnification;
+    const magnification = this.calculateViewportMagnification();
+    let nodeSize = this.treemapData.nodeSize / magnification;
+    // console.log("node text size comparision", this.treemapData.nodeSize, nodeSize);
 
     const nodeTexts = this.treemapSelections.getNodeTexts();
     // Highlight 'red' nodes : starts from selected node(mouse-overed node).
     nodeTexts.style("fill", "white")
-      .attr("x", d => xScale((d.x0 + d.x1) / 2))
-      .attr("y", d => yScale((d.y0 + d.y1) / 2))
-      .attr("font-size", nodeSize*0.45);
+      .attr("font-size", xScale(nodeSize*0.45));
 
-    nodeSize *= 1.75;
+    nodeTexts.filter(d => d.data.id / 1000 >= 1)
+      .selectAll("#a")
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
+
+    nodeTexts.filter(d => d.data.id / 1000 >= 1)
+      .selectAll("#b")
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4));
+
+    nodeTexts.filter(d => d.data.id / 1000 < 1)
+      .selectAll("text")
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
+
     nodeTexts.filter((m, i) => {
       return m === d;
     })
       .style("fill", "black")
-      .attr("font-size", nodeSize*0.45);
 
+    // Highlight 'red' nodes : starts at selected node.
     let linkedNodes_from: number[] = [];
     let countNum = 0;
     this.colorLinkedNodes_from1(d, linkedNodes_from);
@@ -207,7 +180,6 @@ export class TreemapEventListeners {
         return +m.data.id === linkedNodes_from[countNum];
       })
         .style("fill", "black")
-        .attr("font-size", nodeSize*0.45);
     }
 
     // Highlight 'green' nodes : ends at selected node.
@@ -219,25 +191,36 @@ export class TreemapEventListeners {
         return +m.data.id === linkedNodes_to[countNum];
       })
         .style("fill", "black")
-        .attr("font-size", nodeSize*0.45);
     }
   }
   
   adjacentNodesTextHighlightOff (event: MouseEvent, d: any) {
-    const colorZ = this.treemapData.colorZ;
-    const opacity = this.treemapData.opacity;
-    const clusterCount = this.treemapData.getClusterCount();
-    const areaCount = this.treemapData.getAreaCount();
-    
-    const clusters = this.treemapSelections.getClusters();
-    const nodeTexts = this.treemapSelections.getNodeTexts()
+    const nodeTexts = this.treemapSelections.getNodeTexts();
+    const xScale = this.treemapData.xScale;
+    const yScale = this.treemapData.yScale;
+    let nodeSize = this.treemapData.nodeSize;
 
-    let nodeTextsManipulation = nodeTexts
-      .style("fill", "black");
+    nodeTexts
+      .style("fill", "black")
+      .attr("font-size", xScale(nodeSize*0.45));
+
+    nodeTexts.filter(d => d.data.id / 1000 >= 1)
+      .selectAll("#a")
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
+
+    nodeTexts.filter(d => d.data.id / 1000 >= 1)
+      .selectAll("#b")
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4));
+
+    nodeTexts.filter(d => d.data.id / 1000 < 1)
+      .selectAll("text")
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
   }
 
   colorLinkedNodes_from1 (d: any, linkedNodes: number[]) { // for linkedNodes_from.push()
-    const clusterCount = this.treemapData.getClusterCount();
     const edges = this.treemapSelections.getEdges();
 
     edges.filter((s: any, j: any) => {
@@ -249,7 +232,6 @@ export class TreemapEventListeners {
   };
 
   colorLinkedNodes_to1 (d: any, linkedNodes: number[]) { // for linkedNodes_to.push() 
-    const clusterCount = this.treemapData.getClusterCount();
     const edges = this.treemapSelections.getEdges();
 
     edges.filter((s: any, j: any) => {
@@ -339,11 +321,9 @@ export class TreemapEventListeners {
     const marginBottom = size.margin.bottom;
 
     let linkedNodes_from: number[] = [];
-    let countNum = 0;
     this.colorLinkedNodes_from1(d, linkedNodes_from);
 
     let linkedNodes_to: number[] = [];
-    countNum = 0;
     this.colorLinkedNodes_to1(d, linkedNodes_to);
 
     let linkedNodes: number[] = linkedNodes_from.concat(linkedNodes_to);
@@ -356,9 +336,6 @@ export class TreemapEventListeners {
       }));
     })
 
-    const defaultViewportWidth = size.viewBox.width + size.margin.right;
-    const defaultViewportHeight = size.viewBox.height + size.margin.right;
-
     const minX = xScale(d3.min(linkedNodesData, d => d.x0));
     const minY = yScale(d3.min(linkedNodesData, d => d.y0));
     const maxX = xScale(d3.max(linkedNodesData, d => d.x1));
@@ -368,10 +345,15 @@ export class TreemapEventListeners {
     const zoomMinY = minY - marginTop;
     const zoomWidth = maxX - minX + marginLeft + marginRight;
     const zoomHeight = maxY - minY + marginTop + marginBottom;
+    const defaultViewportWidth = size.viewBox.width + size.margin.right;
+    const defaultViewportHeight = size.viewBox.height + size.margin.bottom;
+    const xMagnification = defaultViewportWidth / zoomWidth;
+    const yMagnification = defaultViewportHeight / zoomHeight;
+    const magnification = Math.min(xMagnification, yMagnification);
 
     svg.transition()
       .ease(d3.easeLinear)
-      .duration(1000)
+      .duration(100 * magnification)
       .attr("viewBox", `${zoomMinX} ${zoomMinY} ${zoomWidth} ${zoomHeight}`)
       .on("start", () => {
         nodes.style("pointer-events", "none");
@@ -382,51 +364,26 @@ export class TreemapEventListeners {
         this.attachedEdgesHighlightOn(event, d);
         this.adjacentNodesTextHighlightOn(event, d);
       });
-
-    // let nodeSize = this.treemapData.nodeSize / xMagnification;
-    // // this.treemapData.strokeWidth.
-    // nodes
-    //   .attr("width", d => xScale(nodeSize) )
-    //   .attr("height", d => yScale(nodeSize) )
-    //   .attr("x", d =>  xScale((d.x0 + d.x1) / 2 - nodeSize / 2))
-    //   .attr("y", d =>  yScale((d.y0 + d.y1) / 2 - nodeSize / 2));
-    
-    // nodeTexts
-    //   .attr("x", d => xScale((d.x0 + d.x1) / 2))
-    //   .attr("y", d => yScale((d.y0 + d.y1) / 2))
-    //   .attr("font-size", nodeSize*0.45);
   }
 
   restoreViewBox = (event: any, d:any) => {
     const svg = this.treemapSelections.getSvg();
     const nodes = this.treemapSelections.getNodes();
-    const nodeTexts = this.treemapSelections.getNodeTexts();
-    const xScale = this.treemapData.xScale;
-    const yScale = this.treemapData.yScale;
     const size = this.treemapData.size;
+    const magnification = this.calculateViewportMagnification();
     
     svg.transition()
       .ease(d3.easeLinear)
-      .duration(1000)
+      .duration((magnification == 1) ? 0 : 100 * magnification)
       .attr("viewBox", `${-size.viewBox.minX} ${-size.viewBox.minY} ${size.viewBox.width + size.margin.right} ${size.viewBox.height + size.margin.right}`)
       .on("start", () => {nodes.style("pointer-events", "none");})
-      .on("end", () => {nodes.style("pointer-events", "auto");});
-    
-    // let nodeSize = this.treemapData.nodeSize;
-    // nodes.transition()
-    //   .ease(d3.easeLinear)
-    //   .duration(1000)
-    //   .attr("width", d => xScale(nodeSize) )
-    //   .attr("height", d => xScale(nodeSize) )
-    //   .attr("x", d =>  (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)) )
-    //   .attr("y", d =>  (xScale((d.y0 + d.y1) / 2 - nodeSize / 2)) )
-    
-    // nodeTexts.transition()
-    //   .ease(d3.easeLinear)
-    //   .duration(1000)
-    //   .attr("x", d => xScale((d.x0 + nodeSize*0.5)) )
-    //   .attr("y", d => yScale(d.y0 + nodeSize*0.6) )
-    //   .attr("font-size", nodeSize*0.45);
+      .on("end", () => {
+        nodes.style("pointer-events", "auto");
+        this.adjacentNodesHighlightOff(event, d);
+        this.attachedEdgesHighlightOff(event, d);
+        this.adjacentNodesTextHighlightOff(event, d);
+        this.restoreNodeAndTextSize(event, d);
+      });
   }
 
   restoreNodeAndTextSize(event: Event, d: any) {
@@ -446,5 +403,20 @@ export class TreemapEventListeners {
       .attr("x", d => xScale((d.x0 + nodeSize*0.5)) )
       .attr("y", d => yScale(d.y0 + nodeSize*0.6) )
       .attr("font-size", nodeSize*0.45);
+  }
+
+  calculateViewportMagnification(): number {
+    const svg = this.treemapSelections.getSvg();
+    const size = this.treemapData.size;
+    const defaultViewportWidth = size.viewBox.width + size.margin.right;
+    const defaultViewportHeight = size.viewBox.height + size.margin.bottom;
+    const currentViewBox = svg.attr("viewBox").split(" ");
+    const currentViewportWidth = +currentViewBox[2];
+    const currentViewportHeight = +currentViewBox[3];
+    const xMagnification = defaultViewportWidth / currentViewportWidth;
+    const yMagnification = defaultViewportHeight / currentViewportHeight;
+
+    // return (xMagnification + yMagnification) / 2;
+    return Math.min(xMagnification, yMagnification);
   }
 }
