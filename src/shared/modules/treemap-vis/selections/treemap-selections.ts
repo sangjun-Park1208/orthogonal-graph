@@ -2,6 +2,7 @@ import { TreemapData } from '../datas/treemap-data';
 import * as d3 from 'd3';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
+import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 
 export class TreemapSelections { 
   private treemapData: TreemapData;
@@ -51,26 +52,26 @@ export class TreemapSelections {
       .attr("fill-opacity", this.treemapData.opacity.cluster)
       .attr("width", (d:any) => {
         let m = d.data;
-        return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0) + "px" : xScale(5) + "px";
+        return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0)  : xScale(5) ;
       })
       .attr("height", (d:any) => {
         let m = d.data;
-        return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0) + "px" : yScale(5) + "px";
+        return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0)  : yScale(5) ;
       })
       .attr("x", (d:any) => {
         let m = d.data;
-        return xScale(m.x0) + "px";
+        return xScale(m.x0) ;
       })
       .attr("y", (d:any) => {
         let m = d.data;
-        return yScale(m.y0) + "px";
+        return yScale(m.y0) ;
       });
 
     this.clusters.append("text")
       .attr("opacity", 0)
-      .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2) + "px")
-      .attr("dy", d => yScale(d.data.y0 + 12) + "px")
-      .attr("font-size", this.treemapData.nodeSize*1.2 + "px")
+      .attr("dx", d => xScale((d.data.x0 + d.data.x1) / 2) )
+      .attr("dy", d => yScale(d.data.y0 + 12) )
+      .attr("font-size", this.treemapData.nodeSize*1.2 )
       .attr("text-anchor", "middle")
       .style("display", "inline-block")
       .style("pointer-events", "none")
@@ -91,10 +92,10 @@ export class TreemapSelections {
       // .attr("height", (d:any) => {
       //   return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
       // })
-      .attr("width", d => xScale(d.x1 - d.x0) + "px")
-      .attr("height", d => xScale(d.y1 - d.y0) + "px")
-      .attr("x", d =>  (xScale(d.x0)) + "px")
-      .attr("y", d =>  (xScale(d.y0)) + "px")
+      .attr("width", d => xScale(d.x1 - d.x0) )
+      .attr("height", d => xScale(d.y1 - d.y0) )
+      .attr("x", d =>  (xScale(d.x0)) )
+      .attr("y", d =>  (xScale(d.y0)) )
       .attr("fill", (d:any) => {
         return this.treemapData.colorZ(+d.data.area / areaCount);
       })
@@ -106,9 +107,9 @@ export class TreemapSelections {
       .selectAll("text")
       .data(d => d.children)
       .join("text")
-      .attr("x", d => xScale((d.x0 + this.treemapData.nodeSize*0.5)) + "px")
-      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize*0.6) + "px")
-      .attr("font-size", this.treemapData.nodeSize*0.47 + "px")
+      .attr("x", d => xScale((d.x0 + d.x1) / 2))
+      .attr("y", d => yScale((d.y0 + d.y1) / 2))
+      .attr("font-size", this.treemapData.nodeSize*0.45 )
       .style("display", "inline-block")
       .style("pointer-events", "none")
       .attr("text-anchor", "middle")
@@ -122,24 +123,31 @@ export class TreemapSelections {
     const yScale = this.treemapData.yScale;
     const nodeXY = this.treemapData.getNodeXY();
 
-    let k = `M${xScale(nodeXY[d.from-1].x)}, ${yScale(nodeXY[d.from-1].y)}`; // 'path' starting point
-    let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
-    let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
-    let abs_xdif = Math.abs(xdif); // |x diff|
-    let abs_ydif = Math.abs(ydif); // |y diff|
+    const fromNode = nodeXY.find(function (m) {
+      return d.from == m.id;
+    }) as IBusObjectData;
+    const toNode = nodeXY.find(function (m) {
+      return d.to == m.id;
+    }) as IBusObjectData;
 
-    let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
-    let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
+    let k = `M${xScale(fromNode.x)}, ${yScale(fromNode.y)}`; // 'path' starting point
+    let xdif = toNode.x - fromNode.x; // x diff
+    let ydif = toNode.y - fromNode.y; // y diff
+    let absXdif = Math.abs(xdif); // |x diff|
+    let absYdif = Math.abs(ydif); // |y diff|
 
-    if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-      k += `L${xScale(nodeXY[d.from-1].x)}, ${yhalf}`; // starts drawing : Vertical.
-      k += `L${xScale(nodeXY[d.to-1].x)}, ${yhalf}`;
-      k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`;
+    let xhalf = xScale((toNode.x + fromNode.x) /2); // x's half point between source & target.
+    let yhalf = yScale((toNode.y + fromNode.y) /2); // y's half point between source & target.
+
+    if(absXdif > absYdif) { // if |x diff| > |y diff|
+      k += `L${xScale(fromNode.x)}, ${yhalf}`; // starts drawing : Vertical.
+      k += `L${xScale(toNode.x)}, ${yhalf}`;
+      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`;
     }
     else { // if |x diff| <= |y diff|
-      k += `L${xhalf}, ${yScale(nodeXY[d.from-1].y)}`; // starts drawing : Horizontal.
-      k += `L${xhalf}, ${yScale(nodeXY[d.to-1].y)}`;
-      k += `L${xScale(nodeXY[d.to-1].x)}, ${yScale(nodeXY[d.to-1].y)}`; 
+      k += `L${xhalf}, ${yScale(fromNode.y)}`; // starts drawing : Horizontal.
+      k += `L${xhalf}, ${yScale(toNode.y)}`;
+      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`; 
     }
     return k;
   }

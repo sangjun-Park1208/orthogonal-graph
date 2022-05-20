@@ -53,7 +53,7 @@ export class TreemapComponent implements OnInit {
       cluster: 2,
       edge: 2
     };
-    const nodeSize = 9.5;
+    const nodeSize = 10;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
@@ -71,12 +71,13 @@ export class TreemapComponent implements OnInit {
     console.log("details", details);
 
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
+      .attr("viewBox", `${-size.viewBox.minX} ${-size.viewBox.minY} ${size.viewBox.width + size.margin.right} ${size.viewBox.height + size.margin.bottom}`)
       .attr("width", size.width)
       .attr("height", size.height)
       .on("click", (event, d) => {
-        console.log("svg click", event, d);
+        // console.log("svg click", event, d);
         treemapEventListeners.restoreViewBox(event, d);
+        treemapEventListeners.restoreNodeAndTextSize(event, d);
         treemapEventListeners.adjacentNodesHighlightOff(event, d);
         treemapEventListeners.attachedEdgesHighlightOff(event, d);
         treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
@@ -93,32 +94,30 @@ export class TreemapComponent implements OnInit {
     const nodes = treemapSelections.getNodes();
 
     clusters.on("mouseenter", (event, d) => {
-      console.log("cluster mouseenter", event, d);
+      // console.log("cluster mouseenter", event, d);
       treemapEventListeners.clusterHighlightOn(event, d);
       treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
-      console.log("cluster mouseleave", event, d);
+      // console.log("cluster mouseleave", event, d);
       treemapEventListeners.clusterHighlightOff(event, d);
       treemapEventListeners.clusterNumberOff(event, d);
     })
 
     nodes.on("mouseover", (event, d) => {
-      console.log("node mouseover", event, d);
+      // console.log("node mouseover", event, d);
+      treemapEventListeners.restoreNodeAndTextSize(event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
       treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
       tooltipOn(event, d);
     })
       .on("mouseout", (event, d) => {
-      console.log("node mouseout", event, d);
+      // console.log("node mouseout", event, d);
       tooltipOff(event, d);
     })
     .on("click", (event, d) => {
-      console.log("node click", event, d);
-      treemapEventListeners.adjacentNodesHighlightOn(event, d);
-      treemapEventListeners.attachedEdgesHighlightOn(event, d);
-      treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
+      // console.log("node click", event, d);
       treemapEventListeners.magnifyViewBox(event, d);
       event.stopPropagation();
     });

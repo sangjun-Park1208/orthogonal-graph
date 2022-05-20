@@ -1,4 +1,5 @@
 import { IBranchData } from "src/shared/interfaces/ibranch-data";
+import { IBusObjectData } from "src/shared/interfaces/ibus-object-data";
 import { TreemapData } from "../datas/treemap-data";
 
 class EdgeInfo {
@@ -109,27 +110,33 @@ export class EdgeCrossingCountCalculator {
   }
   
   initializeEdgeList(d: any) {
-    const treemapData = this.treemapData;
-    const xScale = treemapData.xScale;
-    const yScale = treemapData.yScale;
-    const nodeXY = treemapData.getNodeXY();
+    const xScale = this.treemapData.xScale;
+    const yScale = this.treemapData.yScale;
+    const nodeXY = this.treemapData.getNodeXY();
     let edgeList = this.edgeList;
+
+    const fromNode = nodeXY.find(function (m) {
+      return d.from == m.id;
+    }) as IBusObjectData;
+    const toNode = nodeXY.find(function (m) {
+      return d.to == m.id;
+    }) as IBusObjectData;
     
-    let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
-    let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
+    let xdif = toNode.x - fromNode.x; // x diff
+    let ydif = toNode.y - fromNode.y; // y diff
     let abs_xdif = Math.abs(xdif); // |x diff|
     let abs_ydif = Math.abs(ydif); // |y diff|
-  
-    let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
-    let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
-  
+
+    let xhalf = xScale((toNode.x + fromNode.x) /2); // x's half point between source & target.
+    let yhalf = yScale((toNode.y + fromNode.y) /2); // y's half point between source & target.
+
     if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-      edgeList.push(new EdgeInfo(1))//eCase,to_cluster,from_cluster
-      edgeList[edgeList.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+      edgeList.push(new EdgeInfo(1))//e_case,to_cluster,from_cluster
+      edgeList[edgeList.length - 1].init(fromNode.x, toNode.x, fromNode.y, toNode.y)
     }
     else { // if |x diff| <= |y diff|
-      edgeList.push(new EdgeInfo(2))//eCase,to_cluster,from_cluster
-      edgeList[edgeList.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
+      edgeList.push(new EdgeInfo(2))//e_case,to_cluster,from_cluster
+      edgeList[edgeList.length - 1].init(fromNode.x, toNode.x, fromNode.y, toNode.y)
     }
     this.totalLength += abs_xdif + abs_ydif;
   }
