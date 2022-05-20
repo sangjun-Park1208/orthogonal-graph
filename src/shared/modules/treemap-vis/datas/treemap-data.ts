@@ -9,18 +9,18 @@ import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { DetailedLouvainOutput } from "graphology-communities-louvain";
 
 export class TreemapData { 
-  _bus: IBusData[];
-  _branch: IBranchData[];
-  _details: DetailedLouvainOutput;
+  private _bus: IBusData[];
+  private _branch: IBranchData[];
+  private _details: DetailedLouvainOutput;
 
-  _size: ISize;
-  _nodeSize: number;
-  _strokeWidth: IConstant;
-  _opacity: IConstant; 
-  _colorZ: any;
+  private _size: ISize;
+  private _nodeSize: number;
+  private _strokeWidth: IConstant;
+  private _opacity: IConstant; 
+  private _colorZ: any;
 
-  _xScale: d3.ScaleLinear<number, number, never>;
-  _yScale: d3.ScaleLinear<number, number, never>;
+  private _xScale: d3.ScaleLinear<number, number, never>;
+  private _yScale: d3.ScaleLinear<number, number, never>;
 
   private clusterCount: number;
   private areaCount: number;
@@ -30,6 +30,7 @@ export class TreemapData {
   private clustersWithNodes: IClusterData[];
   private leaves: d3.HierarchyNode<any>[];
   private children: d3.HierarchyNode<any>[];
+  private clusterInterval: number[][];
 
   constructor(_bus: IBusData[], _branch: IBranchData[], _details: DetailedLouvainOutput, _size: ISize, _nodeSize: number, _strokeWidth: IConstant, _opacity: IConstant){
     this._bus = _bus;
@@ -73,7 +74,10 @@ export class TreemapData {
     this.children = root.children as d3.HierarchyNode<any>[];
     this.leaves = root.leaves().map(d => {
       // console.log("leaf data before", d);
-      Object.assign(d.data, _bus[d.data.id - clusterCount - 1]);
+      let bus = _bus.find((m) => {
+        return m.id == d.data.id - clusterCount;
+      })
+      Object.assign(d.data, bus);
       // console.log("leaf data after", d);
       return d;
     });
@@ -131,10 +135,9 @@ export class TreemapData {
       
       clustersWithNodes.push(clusterData);
     }
-    console.log("before node coordinate data", clustersWithNodes)
+    // console.log("before node coordinate data", clustersWithNodes)
     this.clustersWithNodes = clustersWithNodes;
-    
-    // 이렇게 해도 겹치는 지점이 생김
+    this.clusterInterval = [];
     for (let i = 0; i < clusterCount; i++){
       const clusterX1 = clustersWithNodes[i].data.x1;
       const clusterX0 = clustersWithNodes[i].data.x0;
@@ -144,43 +147,37 @@ export class TreemapData {
       const nodeCount = clustersWithNodes[i].children.length;
       const clusterWidth = clusterX1 - clusterX0;
       const clusterHeight = clusterY1 - clusterY0;
-      // console.log("node count, cluster width, height", nodeCount, clusterWidth, clusterHeight);
 
-      const heightNodeCount = Math.ceil(Math.sqrt(clusterHeight / clusterWidth * nodeCount));
-      const widthNodeCount = Math.ceil(nodeCount / heightNodeCount);
-      // console.log("height node count, width node count", heightNodeCount, widthNodeCount);
+      let heightNodeCount = Math.ceil(Math.sqrt(clusterHeight / clusterWidth * nodeCount));
+      let widthNodeCount = Math.ceil(nodeCount / heightNodeCount);
 
-      //
-      const availableWidthLength = clusterX1 - clusterX0 - size.padding.right - _nodeSize;
-      const availableHeightLength = clusterY1 - clusterY0 - size.padding.bottom - _nodeSize;
+      heightNodeCount += 1;
+      widthNodeCount += 1;
+
+      const availableWidthLength = clusterX1 - clusterX0;
+      const availableHeightLength = clusterY1 - clusterY0;
       const widthInterval = availableWidthLength / widthNodeCount;
       const heightInterval = availableHeightLength / heightNodeCount;
-      // console.log("width, height interval", widthInterval, heightInterval);
+      this.clusterInterval.push([widthInterval, heightInterval]);
 
-      let x0 = clusterX0;
-      let y0 = clusterY0 + heightInterval;
+      let x = clusterX0;
+      let y = clusterY0 + heightInterval;
       let dx = widthInterval;
       for (let j = 0; j < nodeCount; j++){
-        x0 += dx;
-        if ((dx > 0) ? (x0 > clusterX1 - size.padding.right) : (x0 < clusterX0 + size.padding.left)){
+        x += dx;
+        if ((dx > 0) ? (x >= clusterX1) : (x <= clusterX0)){
           dx *= -1;
-          x0 += dx;
-          y0 += heightInterval;
+          x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
+          y += heightInterval;
         }
         
-        clustersWithNodes[i].children[j].x0 = x0;
-        clustersWithNodes[i].children[j].x1 = x0 + _nodeSize;
+        clustersWithNodes[i].children[j].x0 = x - _nodeSize / 2;
+        clustersWithNodes[i].children[j].x1 = x + _nodeSize / 2;
         
-        clustersWithNodes[i].children[j].y0 = y0;
-        clustersWithNodes[i].children[j].y1 = y0 + _nodeSize;
-
-        // round node x0, y0 to base line
-        // clustersWithNodes[i].children[j].x0 = clusterX0 + widthInterval * Math.round((clustersWithNodes[i].children[j].x0 - clusterX0) / widthInterval)
-        // clustersWithNodes[i].children[j].y0 = clusterY0 + heightInterval * Math.round((clustersWithNodes[i].children[j].y0 - clusterY0) / heightInterval)
-        // console.log("node x0 y0 distance from cluster x0, y0", Math.round((clustersWithNodes[i].children[j].x0 - clusterX0) / widthInterval), Math.round((clustersWithNodes[i].children[j].y0 - clusterY0) / heightInterval));
+        clustersWithNodes[i].children[j].y0 = y - _nodeSize / 2;
+        clustersWithNodes[i].children[j].y1 = y + _nodeSize / 2;
       }
     }
-    console.log("after node coordinate data", clustersWithNodes);
     this.clustersWithNodes = clustersWithNodes;
     this.root = root;
     //
@@ -189,6 +186,8 @@ export class TreemapData {
       {id: +d.id - clusterCount, 
         x: d.x0 + _nodeSize / 2, 
         y: d.y0 + _nodeSize / 2} as IBusObjectData));
+
+    console.log(this.clusterInterval);
   }
   
   public set bus(bus: IBusData[]) {
@@ -308,7 +307,6 @@ export class TreemapData {
         data: this.children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>,
         children: this.leaves.filter(d => (i + 1 == d.data.parentId) ) as d3.HierarchyRectangularNode<any>[]
       };
-      
       clustersWithNodes.push(clusterData);
     }
     this.clustersWithNodes = clustersWithNodes;
@@ -336,5 +334,9 @@ export class TreemapData {
 
   public getClustersWithNodes() {
     return this.clustersWithNodes;
+  }
+
+  public getClusterInterval() {
+    return this.clusterInterval;
   }
 }

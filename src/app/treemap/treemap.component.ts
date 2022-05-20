@@ -4,9 +4,10 @@ import * as d3 from "d3"
 import louvain from 'graphology-communities-louvain';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IBusData } from 'src/shared/interfaces/ibus-data';
-import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data.module';
-import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections.module';
-import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners.module';
+import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data';
+import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
+import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
+import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
 
 @Component({
   selector: 'app-treemap',
@@ -50,64 +51,11 @@ export class TreemapComponent implements OnInit {
     const strokeWidth = {
       nodes: 2,
       cluster: 2,
-      edge: 2
+      edge: 3
     };
-    const nodeSize = 9.5;
+    const nodeSize = 19;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
-    class Edge_info {
-      private e_case: number;
-      public e_type: number[] = [1, 2, 1];//h,w,h
-      public xy: number[][] = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
-
-      constructor(e_case: number) {
-        this.e_case = e_case;
-      }
-
-      public init(x1: number, x2: number, y1: number, y2: number) {
-        if (this.e_case == 1) {
-          this.xy[0][0] = x1;
-          this.xy[0][1] = y1;
-          this.xy[0][2] = x1;
-          this.xy[0][3] = (y1 + y2) / 2;
-          this.xy[1][0] = x1;
-          this.xy[1][1] = (y1 + y2) / 2;
-          this.xy[1][2] = x2;
-          this.xy[1][3] = (y1 + y2) / 2;
-          this.xy[2][0] = x2;
-          this.xy[2][1] = (y1 + y2) / 2;
-          this.xy[2][2] = x2;
-          this.xy[2][3] = y2;
-        }
-        else if (this.e_case == 2) {
-          this.e_type[0] = 2, this.e_type[1] = 1, this.e_type[2] = 2;
-          this.xy[0][0] = x1;
-          this.xy[0][1] = y1;
-          this.xy[0][2] = (x1 + x2) / 2;
-          this.xy[0][3] = y1;
-          this.xy[1][0] = (x1 + x2) / 2;
-          this.xy[1][1] = y1;
-          this.xy[1][2] = (x1 + x2) / 2;
-          this.xy[1][3] = y2;
-          this.xy[2][0] = (x1 + x2) / 2;
-          this.xy[2][1] = y2;
-          this.xy[2][2] = x2;
-          this.xy[2][3] = y2;
-        }
-      }
-      public e_sort() {
-        for (let i = 0; i < 3; i++) {//좌표 크기대로 정렬
-          if (this.xy[i][0] > this.xy[i][2] || this.xy[i][1] > this.xy[i][3]) {
-            let temp = this.xy[i][0];
-            this.xy[i][0] = this.xy[i][2];
-            this.xy[i][2] = temp;
-            temp = this.xy[i][1];
-            this.xy[i][1] = this.xy[i][3];
-            this.xy[i][3] = temp;
-          }
-        }
-      }
-    }
     // 상준형 graphology 코드
     for(let i=0; i<bus.length; i++){
       graph.addNode(bus[i].id);
@@ -123,26 +71,19 @@ export class TreemapComponent implements OnInit {
     console.log("details", details);
 
     const svg = d3.select(this.rootSvg.nativeElement)
-      .attr("viewBox", `${-size.viewBox.minX}, ${-size.viewBox.minY}, ${size.viewBox.width + size.margin.right}, ${size.viewBox.height + size.margin.right}`)
+      .attr("viewBox", `${-size.viewBox.minX} ${-size.viewBox.minY} ${size.viewBox.width + size.margin.right} ${size.viewBox.height + size.margin.bottom}`)
       .attr("width", size.width)
       .attr("height", size.height)
       .on("click", (event, d) => {
-        console.log("svg click", event, d);
+        // console.log("svg click", event, d);
         treemapEventListeners.restoreViewBox(event, d);
-        treemapEventListeners.adjacentNodesHighlightOff(event, d);
-        treemapEventListeners.attachedEdgesHighlightOff(event, d);
-        treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
       });
 
     let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity)
     let treemapSelections = new TreemapSelections(treemapData, svg);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
-
-    const Edge_list: Edge_info[] = new Array<Edge_info>();
-    let edge_cross_count = 0;
-    let total_length = 0;
-
-    branch.forEach(d => initializeEdgeList(d));
+    let edgeCrossingCalculator = new EdgeCrossingCountCalculator(treemapData, branch);
+    edgeCrossingCalculator.calculateEdgeCrossingCount();
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();
@@ -150,35 +91,29 @@ export class TreemapComponent implements OnInit {
 
     clusters.on("mouseenter", (event, d) => {
       console.log("cluster mouseenter", event, d);
-      // treemapEventListeners.clusterStrokeHighlightOn(event, d);
       treemapEventListeners.clusterHighlightOn(event, d);
-      treemapEventListeners.clusterNumberOn(event, d);
+      // treemapEventListeners.clusterNumberOn(event, d);
     })
     .on("mouseleave", (event, d) => {
-      console.log("cluster mouseleave", event, d);
-      // treemapEventListeners.clusterStrokeHighlightOff(event, d);
+      // console.log("cluster mouseleave", event, d);
       treemapEventListeners.clusterHighlightOff(event, d);
-      treemapEventListeners.clusterNumberOff(event, d);
+      // treemapEventListeners.clusterNumberOff(event, d);
     })
 
     nodes.on("mouseover", (event, d) => {
       console.log("node mouseover", event, d);
+      treemapEventListeners.restoreNodeAndTextSize(event, d);
       treemapEventListeners.adjacentNodesHighlightOn(event, d);
       treemapEventListeners.attachedEdgesHighlightOn(event, d);
+      treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
       tooltipOn(event, d);
     })
       .on("mouseout", (event, d) => {
-      console.log("node mouseout", event, d);
-      // treemapEventListeners.adjacentNodesHighlightOff(event, d);
-      // treemapEventListeners.attachedEdgesHighlightOff(event, d);
-      // treemapEventListeners.adjacentNodesTextHighlightOff(event, d);
+      // console.log("node mouseout", event, d);
       tooltipOff(event, d);
     })
     .on("click", (event, d) => {
       console.log("node click", event, d);
-      treemapEventListeners.adjacentNodesHighlightOn(event, d);
-      treemapEventListeners.attachedEdgesHighlightOn(event, d);
-      treemapEventListeners.adjacentNodesTextHighlightOn(event, d);
       treemapEventListeners.magnifyViewBox(event, d);
       event.stopPropagation();
     });
@@ -206,104 +141,6 @@ export class TreemapComponent implements OnInit {
 
     const tooltipOff = (event: any, d: any) => {
       toolTip.style('opacity', 0).style('display', 'none');
-    }
-
-    let same_count: number[] = [];
-    function Edge_cross(i: number, j: number) {
-      let temp = 0;
-      for (let k = 0; k < i; k++) {
-        temp += k;
-      }
-      for (let m = 0; m < 3; m++) {
-        for (let n = 0; n < 3; n++) {
-          if (Edge_list[i].e_type[m] != Edge_list[j].e_type[n]) {
-            if (Edge_list[i].e_type[m] == 1) {
-              //wh
-              if (Edge_list[j].xy[n][0] <= Edge_list[i].xy[m][0] && Edge_list[i].xy[m][0] <= Edge_list[j].xy[n][2]
-                && Edge_list[i].xy[m][1] <= Edge_list[j].xy[n][1] && Edge_list[j].xy[n][1] <= Edge_list[i].xy[m][3]) {
-                same_count[temp + j]++;
-                if (same_count[temp + j] == 1) break;
-              }
-            }
-            //hw
-            else if (Edge_list[j].xy[n][1] <= Edge_list[i].xy[m][1] && Edge_list[i].xy[m][1] <= Edge_list[j].xy[n][3]
-              && Edge_list[i].xy[m][0] <= Edge_list[j].xy[n][0] && Edge_list[j].xy[n][0] <= Edge_list[i].xy[m][2]) {
-              same_count[temp + j]++;
-              if (same_count[temp + j] == 1) break;
-            }
-          }
-          else if (Edge_list[i].e_type[m] == 2) {//ww
-            if (Edge_list[i].xy[m][1] == Edge_list[j].xy[n][1] && !(Edge_list[i].xy[m][2] < Edge_list[j].xy[n][0]
-              || Edge_list[j].xy[n][2] < Edge_list[i].xy[m][0])) {
-              same_count[temp + j]++;
-              if (same_count[temp + j] == 1) break;
-            }
-          }
-          else if (Edge_list[i].e_type[m] == 1) {//hh
-            if (Edge_list[i].xy[m][0] == Edge_list[j].xy[n][0] && !(Edge_list[i].xy[m][3] < Edge_list[j].xy[n][1]
-              || Edge_list[j].xy[n][3] < Edge_list[i].xy[m][1])) {
-              same_count[temp + j]++;
-              if (same_count[temp + j] == 1) break;
-            }
-          }
-        }
-        if (same_count[temp + j] == 1) {
-          edge_cross_count++;
-          break;
-        }
-      }
-    }
-
-    // let test=0;
-    for (let i = 0; i < branch.length; i++) {
-      let temp = 0;
-      for (let k = 0; k < i; k++) {
-        temp += k;
-      }
-      for (let j = 0; j < i; j++) {
-        same_count.push(0);
-        if ((Edge_list[i].xy[0][0] == Edge_list[j].xy[0][0] && Edge_list[i].xy[0][1] == Edge_list[j].xy[0][1])
-          || (Edge_list[i].xy[0][0] == Edge_list[j].xy[2][2] && Edge_list[i].xy[0][1] == Edge_list[j].xy[2][3])
-          || (Edge_list[i].xy[2][2] == Edge_list[j].xy[0][0] && Edge_list[i].xy[2][3] == Edge_list[j].xy[0][1])
-          || (Edge_list[i].xy[2][2] == Edge_list[j].xy[2][2] && Edge_list[i].xy[2][3] == Edge_list[j].xy[2][3])){
-          same_count[temp + j]--;
-        }
-      }
-    }
-
-    for (let i = 0; i < branch.length; i++) {//branch.length  까지
-      Edge_list[i].e_sort();
-      for (let j = 0; j < i; j++) {
-        if (i == j) continue;
-        Edge_cross(i, j);
-      }
-    }
-
-    console.log("total_length : " + total_length);
-    console.log("edge_crossing : " + edge_cross_count);
-
-    function initializeEdgeList(d: any) {
-      const xScale = treemapData.xScale;
-      const yScale = treemapData.yScale;
-      const nodeXY = treemapData.getNodeXY();
-      
-      let xdif = nodeXY[d.to-1].x - nodeXY[d.from-1].x; // x diff
-      let ydif = nodeXY[d.to-1].y - nodeXY[d.from-1].y; // y diff
-      let abs_xdif = Math.abs(xdif); // |x diff|
-      let abs_ydif = Math.abs(ydif); // |y diff|
-  
-      let xhalf = xScale((nodeXY[d.to-1].x + nodeXY[d.from-1].x) /2); // x's half point between source & target.
-      let yhalf = yScale((nodeXY[d.to-1].y + nodeXY[d.from-1].y) /2); // y's half point between source & target.
-  
-      if(abs_xdif > abs_ydif) { // if |x diff| > |y diff|
-        Edge_list.push(new Edge_info(1))//e_case,to_cluster,from_cluster
-        Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
-      }
-      else { // if |x diff| <= |y diff|
-        Edge_list.push(new Edge_info(2))//e_case,to_cluster,from_cluster
-        Edge_list[Edge_list.length - 1].init(nodeXY[d.from - 1].x, nodeXY[d.to - 1].x, nodeXY[d.from - 1].y, nodeXY[d.to - 1].y)
-      }
-      total_length += abs_xdif + abs_ydif;
     }
   }
 }
