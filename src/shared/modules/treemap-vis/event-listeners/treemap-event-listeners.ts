@@ -16,7 +16,7 @@ export class TreemapEventListeners {
     this.attachedEdgesHighlightOff(event, d);
     const edges = this.treemapSelections.getEdges();
     const magnification = this.calculateViewportMagnification();
-    const strokeWidth = this.treemapData.strokeWidth.edge / magnification;
+    const strokeWidth = this.treemapData.strokeWidth.edge / magnification * ((magnification > 2) ? 1.5 : 1);
     // console.log("magnification", magnification);
     // console.log("edge stroke width before after", this.treemapData.strokeWidth.edge, strokeWidth);
 
@@ -64,7 +64,7 @@ export class TreemapEventListeners {
     const colorZ = this.treemapData.colorZ;
 
     const magnification = this.calculateViewportMagnification();
-    let nodeSize = this.treemapData.nodeSize / magnification;
+    let nodeSize = this.treemapData.nodeSize / magnification * ((magnification > 2) ? magnification / 2 : 1);
     const strokeWidth = nodeSize * 0.15;
     // console.log("node size comparision", this.treemapData.nodeSize, nodeSize);
 
@@ -143,8 +143,8 @@ export class TreemapEventListeners {
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
     const magnification = this.calculateViewportMagnification();
-    let nodeSize = this.treemapData.nodeSize / magnification;
-    // console.log("node text size comparision", this.treemapData.nodeSize, nodeSize);
+    console.log("magnification", magnification);
+    let nodeSize = this.treemapData.nodeSize / magnification * ((magnification > 2) ? magnification / 2 : 1);
 
     const nodeTexts = this.treemapSelections.getNodeTexts();
     // Highlight 'red' nodes : starts from selected node(mouse-overed node).
@@ -395,13 +395,11 @@ export class TreemapEventListeners {
 
     nodes
       .attr("width", d => xScale(nodeSize) )
-      .attr("height", d => xScale(nodeSize) )
-      .attr("x", d =>  (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)) )
-      .attr("y", d =>  (xScale((d.y0 + d.y1) / 2 - nodeSize / 2)) )
+      .attr("height", d => yScale(nodeSize) )
+      .attr("x", d =>  (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)))
+      .attr("y", d =>  (yScale((d.y0 + d.y1) / 2 - nodeSize / 2)));
     
     nodeTexts
-      .attr("x", d => xScale((d.x0 + nodeSize*0.5)) )
-      .attr("y", d => yScale(d.y0 + nodeSize*0.6) )
       .attr("font-size", nodeSize*0.45);
   }
 

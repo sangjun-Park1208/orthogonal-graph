@@ -53,7 +53,7 @@ export class TreemapComponent implements OnInit {
       cluster: 2,
       edge: 3
     };
-    const nodeSize = 19;
+    const nodeSize = 17;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
@@ -79,7 +79,8 @@ export class TreemapComponent implements OnInit {
         treemapEventListeners.restoreViewBox(event, d);
       });
 
-    let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity)
+    let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    treemapData.setZNodePosition();
     let treemapSelections = new TreemapSelections(treemapData, svg);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
     let edgeCrossingCalculator = new EdgeCrossingCountCalculator(treemapData, branch);

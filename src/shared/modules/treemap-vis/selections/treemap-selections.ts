@@ -81,6 +81,7 @@ export class TreemapSelections {
     //   .attr("shape-rendering", "crispEdges");
     // console.log("clusters", this.clusters);
 
+    const nodeSize = this.treemapData.nodeSize;
     this.nodes = this.clusters.append("g")
       .attr("id", d => "cluster_" + d.data.id + "_nodes")
       .selectAll("rect")
@@ -95,10 +96,14 @@ export class TreemapSelections {
       // .attr("height", (d:any) => {
       //   return (d.y1 - d.y0 > 5) ? yScale(d.y1 - d.y0) : yScale(5);
       // })
-      .attr("width", d => xScale(d.x1 - d.x0) )
-      .attr("height", d => xScale(d.y1 - d.y0) )
-      .attr("x", d =>  (xScale(d.x0)) )
-      .attr("y", d =>  (xScale(d.y0)) )
+      // .attr("width", d => (d.x1 - d.x0 < nodeSize) ? xScale(nodeSize) : xScale(d.x1 - d.x0))
+      // .attr("height", d => (d.y1 - d.y0 < nodeSize) ? xScale(nodeSize) : xScale(d.y1 - d.y0))
+      // .attr("x", d =>  (xScale(d.x0)) )
+      // .attr("y", d =>  (xScale(d.y0)) )
+      .attr("width", d => xScale(nodeSize) )
+      .attr("height", d => xScale(nodeSize) )
+      .attr("x", d =>  (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)))
+      .attr("y", d =>  (xScale((d.y0 + d.y1) / 2 - nodeSize / 2)))
       .attr("fill", (d:any) => {
         return this.treemapData.colorZ(+d.data.area / areaCount);
       })
@@ -121,8 +126,8 @@ export class TreemapSelections {
     this.nodeTexts.filter(d => d.data.id / 1000 >= 1)
       .append("text")
       .attr("id", "a")
-      .attr("x", d => xScale((d.x0 + d.x1) / 2))
-      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize * 0.45))
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2))
       .html(d => {
         return `${d.data.id}`.toString().substring(0,2);
       })
@@ -130,16 +135,16 @@ export class TreemapSelections {
     this.nodeTexts.filter(d => d.data.id / 1000 >= 1)
       .append("text")
       .attr("id", "b")
-      .attr("x", d => xScale((d.x0 + d.x1) / 2))
-      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize * 0.9))
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4))
       .html(d => {
         return `${d.data.id}`.toString().substring(2,4);
       });
 
     this.nodeTexts.filter(d => d.data.id / 1000 < 1)
       .append("text")
-      .attr("x", d => xScale((d.x0 + d.x1) / 2))
-      .attr("y", d => yScale(d.y0 + this.treemapData.nodeSize * 0.45))
+      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2))
       .html(d => {
         return `${d.data.id}`;
       });

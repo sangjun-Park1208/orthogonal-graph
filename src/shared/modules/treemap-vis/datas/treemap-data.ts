@@ -84,7 +84,6 @@ export class TreemapData {
     this.leaves.sort((a: d3.HierarchyNode<any>, b: d3.HierarchyNode<any>) => { // 미정렬시 edge에서 node 좌표 인식에 오류 발생
       return (+a.data.id - +b.data.id);
     });
-    // console.log("root", root);
 
     const size = this.size;
     d3.treemap()
@@ -135,7 +134,7 @@ export class TreemapData {
       
       clustersWithNodes.push(clusterData);
     }
-    // console.log("before node coordinate data", clustersWithNodes)
+
     this.clustersWithNodes = clustersWithNodes;
     this.clusterInterval = [];
     for (let i = 0; i < clusterCount; i++){
@@ -144,6 +143,15 @@ export class TreemapData {
       const clusterY1 = clustersWithNodes[i].data.y1;
       const clusterY0 = clustersWithNodes[i].data.y0;
 
+      if (clusterX1 - clusterX0 < this.nodeSize + this.size.padding.left + this.size.padding.right){
+        this.clustersWithNodes[i].data.x0 = (clusterX0 + clusterX1) / 2 - this.nodeSize / 2 - this.size.padding.left;
+        this.clustersWithNodes[i].data.x1 = (clusterX0 + clusterX1) / 2 + this.nodeSize / 2 + this.size.padding.right;
+      }
+
+      if (clusterY1 - clusterY0 < this.nodeSize + this.size.padding.top + this.size.padding.bottom){
+        this.clustersWithNodes[i].data.y0 = (clusterY0 + clusterY1) / 2 - this.nodeSize / 2 - this.size.padding.top;
+        this.clustersWithNodes[i].data.y1 = (clusterY0 + clusterY1) / 2 + this.nodeSize / 2 + this.size.padding.bottom;
+      }
       const nodeCount = clustersWithNodes[i].children.length;
       const clusterWidth = clusterX1 - clusterX0;
       const clusterHeight = clusterY1 - clusterY0;
@@ -159,33 +167,13 @@ export class TreemapData {
       const widthInterval = availableWidthLength / widthNodeCount;
       const heightInterval = availableHeightLength / heightNodeCount;
       this.clusterInterval.push([widthInterval, heightInterval]);
-
-      let x = clusterX0;
-      let y = clusterY0 + heightInterval;
-      let dx = widthInterval;
-      for (let j = 0; j < nodeCount; j++){
-        x += dx;
-        if ((dx > 0) ? (x >= clusterX1) : (x <= clusterX0)){
-          dx *= -1;
-          x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
-          y += heightInterval;
-        }
-        
-        clustersWithNodes[i].children[j].x0 = x - _nodeSize / 2;
-        clustersWithNodes[i].children[j].x1 = x + _nodeSize / 2;
-        
-        clustersWithNodes[i].children[j].y0 = y - _nodeSize / 2;
-        clustersWithNodes[i].children[j].y1 = y + _nodeSize / 2;
-      }
     }
     this.clustersWithNodes = clustersWithNodes;
-    this.root = root;
-    //
 
     this.nodeXY = this.leaves.map((d:any) => (
       {id: +d.id - clusterCount, 
-        x: d.x0 + _nodeSize / 2, 
-        y: d.y0 + _nodeSize / 2} as IBusObjectData));
+        x: (d.x0 + d.x1) / 2, 
+        y: (d.y0 + d.y1) / 2} as IBusObjectData));
 
     console.log(this.clusterInterval);
   }
@@ -312,6 +300,41 @@ export class TreemapData {
     this.clustersWithNodes = clustersWithNodes;
   }
 
+  public setZNodePosition(){
+    const clusterCount = this.getClusterCount();
+    const nodeSize = this.nodeSize;
+    let clustersWithNodes = this.getClustersWithNodes();
+    for (let i = 0; i < clusterCount; i++){
+      const clusterX1 = clustersWithNodes[i].data.x1;
+      const clusterX0 = clustersWithNodes[i].data.x0;
+      const clusterY0 = clustersWithNodes[i].data.y0;
+
+      const nodeCount = clustersWithNodes[i].children.length;
+      const widthInterval = this.clusterInterval[i][0];
+      const heightInterval = this.clusterInterval[i][1];
+
+      let x = clusterX0;
+      let y = clusterY0 + heightInterval;
+      let dx = widthInterval;
+      for (let j = 0; j < nodeCount; j++){
+        x += dx;
+        if ((dx > 0) ? (x + nodeSize > clusterX1) : (x - nodeSize < clusterX0)){
+          dx *= -1;
+          x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
+          y += heightInterval;
+        }
+        
+        clustersWithNodes[i].children[j].x0 = x - nodeSize / 2;
+        clustersWithNodes[i].children[j].x1 = x + nodeSize / 2;
+        
+        clustersWithNodes[i].children[j].y0 = y - nodeSize / 2;
+        clustersWithNodes[i].children[j].y1 = y + nodeSize / 2;
+      }
+    }
+    this.clustersWithNodes = clustersWithNodes;
+    this.setNodeXY();
+  }
+  
   public getClusterCount() {
     return this.clusterCount;
   }
