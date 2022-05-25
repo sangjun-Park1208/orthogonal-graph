@@ -1,3 +1,10 @@
+/*
+ * 변경/추가 해야할 점
+ * 1. zoom 방식을 viewBox 값을 직접 수정하는게 아니라 d3.zoom을 사용하는 방식으로 바꾸기
+ * 2. 정점 강조시 관련 간선 색 gradual 하게 바꾸기
+ * 3. 정점 강조시 진출, 진입 간선 비율 pie chart 형식으로 띄우기
+ * 4. 투명도, 간선 크기 등 수치조절 슬라이더, 정점 세부 데이터 표현 및 검색 레이아웃 우측에 만들기
+ */
 import * as d3 from 'd3';
 import { TreemapSelections } from '../selections/treemap-selections';
 import { TreemapData } from '../datas/treemap-data';
@@ -12,13 +19,14 @@ export class TreemapEventListeners {
     this.treemapSelections = treemapSelections;
   }
 
+// node event listener
+  // 정점 mouseover, click시 사용 
+  // 기능: ( 강조 정점 기준 진출, 진입에 따라 간선 색 변경, viewbox 확대되는 크기에 맞춰 간선 두께 줄이기)
   attachedEdgesHighlightOn (event: MouseEvent, d: any) {
     this.attachedEdgesHighlightOff(event, d);
     const edges = this.treemapSelections.getEdges();
     const magnification = this.calculateViewportMagnification();
-    const strokeWidth = this.treemapData.strokeWidth.edge / magnification * ((magnification > 2) ? 1.5 : 1);
-    // console.log("magnification", magnification);
-    // console.log("edge stroke width before after", this.treemapData.strokeWidth.edge, strokeWidth);
+    const strokeWidth = this.treemapData.strokeWidth.edge / magnification * ((magnification > 2) ? magnification / 2 : 1);
 
     // edges(from) : red.
     // starts at selected node.
@@ -41,7 +49,6 @@ export class TreemapEventListeners {
       .raise();
   };
 
-  // tmp nodes, edges mouseout event listener
   attachedEdgesHighlightOff (event: MouseEvent, d: any) {
     const opacity = this.treemapData.opacity;
     const edges = this.treemapSelections.getEdges();
@@ -52,7 +59,10 @@ export class TreemapEventListeners {
       .attr("stroke-width", strokeWidth)
       .attr("stroke-opacity", opacity.edge);
   }
-  
+
+  // node highlight 
+  // (정점 mouseover, click시 사용)
+  // 대상 정점과 인접한 모든 정점 (시작 노드 끝노드에 따라 색 변경) 강조, viewbox 변경에 따라 정점 가로, 세로, 시작 위치 변경 
   adjacentNodesHighlightOn (event: MouseEvent, d: any) {
     this.adjacentNodesHighlightOff(event, d);
 
@@ -66,7 +76,6 @@ export class TreemapEventListeners {
     const magnification = this.calculateViewportMagnification();
     let nodeSize = this.treemapData.nodeSize / magnification * ((magnification > 2) ? magnification / 2 : 1);
     const strokeWidth = nodeSize * 0.15;
-    // console.log("node size comparision", this.treemapData.nodeSize, nodeSize);
 
     nodes.attr("width", d => xScale(nodeSize) )
       .attr("height", d => yScale(nodeSize) )
@@ -77,7 +86,6 @@ export class TreemapEventListeners {
         return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       });
 
-    nodeSize *= 1;
     nodes.filter((m, i) => {
       return m === d;
     })
@@ -139,12 +147,14 @@ export class TreemapEventListeners {
       .attr("stroke", "none");
   }
 
+  // (정점 mouseover click시 사용)
+  // 강조되는 정점 id 텍스트를 검정색으로 강조 (이외 노드는 하얀색으로 처리) 변경되는 viewbox 값에 맞춰 글자 크기 줄이기
   adjacentNodesTextHighlightOn (event: MouseEvent, d: any) {
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
     const magnification = this.calculateViewportMagnification();
     console.log("magnification", magnification);
-    let nodeSize = this.treemapData.nodeSize / magnification * ((magnification > 2) ? magnification / 2 : 1);
+    let nodeSize = this.treemapData.nodeSize / magnification * ((magnification > 1) ? magnification / 2 : 1);
 
     const nodeTexts = this.treemapSelections.getNodeTexts();
     // Highlight 'red' nodes : starts from selected node(mouse-overed node).
@@ -243,6 +253,8 @@ export class TreemapEventListeners {
   };
 
   // cluster mouseover, mouseout event listener
+  // (클러스터 mouseover 시 사용)
+  // 클러스터 투명도 감소
   clusterHighlightOn = (event: any, d:any) => {
     const cluster = this.treemapSelections.getClusters()
       .filter(m => {
@@ -265,6 +277,9 @@ export class TreemapEventListeners {
       .attr("fill-opacity", this.treemapData.opacity.cluster);
   }
 
+  // (클러스터 mouseover시 사용)
+  // 클러스터 테두리 생성
+  // 현재는 미사용
   clusterStrokeHighlightOn = (event: any, d: any) => {
     const cluster = this.treemapSelections.getClusters()
       .filter(m => m == d)
@@ -289,6 +304,9 @@ export class TreemapEventListeners {
       .attr("stroke-opacity", opacity.cluster);
   }
 
+  // (클러스터 mouseover시 사용)
+  // 클러스터 숫자 표현
+  // 현재는 미사용
   clusterNumberOn = (event: any, d: any) => {
     const cluster = this.treemapSelections.getClusters()
       .filter(m => m == d);
@@ -307,6 +325,8 @@ export class TreemapEventListeners {
       .attr("opacity", 0);
   }
 
+  // (정점 click 시 사용)
+  // 클릭한 정점과 인접한 모든 정점을 고려해 확대시킬 영역의 viewBox 값 구한 후 애니메이션화
   magnifyViewBox = (event: MouseEvent, d: any) => {
     const svg = this.treemapSelections.getSvg();
     const nodes = this.treemapSelections.getNodes();
@@ -366,6 +386,8 @@ export class TreemapEventListeners {
       });
   }
 
+  // (svg 내에서 노드 외 영역 click시 사용)
+  // 기본 viewbox 값으로 복구
   restoreViewBox = (event: any, d:any) => {
     const svg = this.treemapSelections.getSvg();
     const nodes = this.treemapSelections.getNodes();
@@ -386,6 +408,8 @@ export class TreemapEventListeners {
       });
   }
 
+  // (svg 내에서 노드 외 영역 click시 사용)
+  // 기본 정점, 텍스트 크기로 복구
   restoreNodeAndTextSize(event: Event, d: any) {
     const nodes = this.treemapSelections.getNodes();
     const nodeTexts = this.treemapSelections.getNodeTexts();
@@ -403,6 +427,8 @@ export class TreemapEventListeners {
       .attr("font-size", nodeSize*0.45);
   }
 
+  // node highlight, node text highlight, edge highlight 에 사용
+  // 기본 viewBox 크기와 비교해 어느 정도 확대되었는지 계산
   calculateViewportMagnification(): number {
     const svg = this.treemapSelections.getSvg();
     const size = this.treemapData.size;
