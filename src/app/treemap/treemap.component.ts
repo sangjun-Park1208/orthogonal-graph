@@ -25,9 +25,11 @@ export class TreemapComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-    d3.csv('./assets/data/bus-1062.csv')
+    // d3.csv('./assets/data/bus-1062.csv')
+    d3.csv('./assets/data/my_bus.csv')
       .then((bus: any) => {
-        d3.csv('./assets/data/branch-1062.csv')
+        // d3.csv('./assets/data/branch-1062.csv')
+        d3.csv('./assets/data/my_branch.csv')
           .then((branch: any) => {
             console.log("bus, branch", bus, branch);
             this.renderTreemap(bus, branch);
