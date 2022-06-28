@@ -3,6 +3,8 @@ import * as d3 from 'd3';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
+import { IBusData } from 'src/shared/interfaces/ibus-data';
+import { from } from 'rxjs';
 
 export class TreemapSelections { 
   private treemapData: TreemapData;
@@ -12,6 +14,7 @@ export class TreemapSelections {
   private clusters: d3.Selection<d3.BaseType | SVGGElement, IClusterData, SVGGElement, unknown>;
   private nodes: d3.Selection<d3.BaseType | SVGRectElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
   private nodeTexts: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
+  // private nodePort: d3.Selection<d3.BaseType | SVGRectElement, IBusData, d3.BaseType, d3.HierarchyRectangularNode<any>>;
   
   constructor (treemapData: TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
@@ -25,7 +28,7 @@ export class TreemapSelections {
       .selectAll("path")
       .data(this.treemapData.branch)
       .join("path")
-      .attr("d", (d: any) => this.drawEdge(d))
+      .attr("d", (d: any) => this.port_drawEdge(d))
       .attr("stroke", "steelblue")
       .attr("stroke-width", this.treemapData.strokeWidth.edge)
       .attr("fill", "none")
@@ -41,33 +44,36 @@ export class TreemapSelections {
       .selectAll("g")
       .data(this.treemapData.getClustersWithNodes())
       .join("g")
-      .attr("id", (d:any) => ("cluster_" + (d.data.data.id)));
+      .attr("id", (d:any) => ("cluster_" + (d.clusterinfo.data.id)));
+      // d == clusterWithNodes : 9 clusters
+      // each cluster has single object
+      // each object has 'child'
   
     this.clusters.append("rect")
       .attr("fill", (d:any) => {
-        const hsl = d3.hsl(colorZ(+d.data.data.id / clusterCount));
+        const hsl = d3.hsl(colorZ(+d.clusterinfo.data.id / clusterCount));
         // console.log("hsl convertion", hsl);
         return `hsl(${hsl.h}, 0%, ${hsl.l}%)`;
       })
       // .attr("fill", "hsl(0, 0%, 70%)")
       .attr("fill-opacity", this.treemapData.opacity.cluster)
       .attr("width", (d:any) => {
-        let m = d.data;
+        let m = d.clusterinfo;
         return (m.x1 - m.x0 > 5) ? xScale(m.x1 - m.x0)  : xScale(5) ;
       })
       .attr("height", (d:any) => {
-        let m = d.data;
+        let m = d.clusterinfo;
         return (m.y1 - m.y0 > 5) ? yScale(m.y1 - m.y0)  : yScale(5) ;
       })
       .attr("x", (d:any) => {
-        let m = d.data;
+        let m = d.clusterinfo;
         return xScale(m.x0) ;
       })
       .attr("y", (d:any) => {
-        let m = d.data;
+        let m = d.clusterinfo;
         return yScale(m.y0) ;
       })
-     .attr("shape-rendering", "crispEdges");
+    //  .attr("shape-rendering", "crispEdges");
 
     // this.clusters.append("text")
     //   .attr("opacity", 0)
@@ -82,8 +88,9 @@ export class TreemapSelections {
     // console.log("clusters", this.clusters);
 
     const nodeSize = this.treemapData.nodeSize;
+    console.log('nodesize', nodeSize)
     this.nodes = this.clusters.append("g")
-      .attr("id", d => "cluster_" + d.data.id + "_nodes")
+      .attr("id", d => "cluster_" + d.clusterinfo.id + "_nodes")
       .selectAll("rect")
       .data(d => d.children)
       .join("rect")
@@ -101,9 +108,15 @@ export class TreemapSelections {
       // .attr("x", d =>  (xScale(d.x0)) )
       // .attr("y", d =>  (xScale(d.y0)) )
       .attr("width", d => xScale(nodeSize) )
-      .attr("height", d => xScale(nodeSize) )
+      .attr("height", d => yScale(nodeSize) )
       .attr("x", d =>  (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)))
-      .attr("y", d =>  (xScale((d.y0 + d.y1) / 2 - nodeSize / 2)))
+      .attr("y", d =>  (yScale((d.y0 + d.y1) / 2 - nodeSize / 2)))
+      .attr("px0", d => (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + xScale(nodeSize)*(1/4))
+      .attr("px1", d => (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + xScale(nodeSize)*(1/2))
+      .attr("px2", d => (xScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + xScale(nodeSize)*(3/4))
+      .attr("py0", d => (yScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + yScale(nodeSize)*(1/4))
+      .attr("py1", d => (yScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + yScale(nodeSize)*(1/2))
+      .attr("py2", d => (yScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + yScale(nodeSize)*(3/4))
       .attr("fill", (d:any) => {
         return this.treemapData.colorZ(+d.data.area / areaCount);
       })
@@ -111,8 +124,10 @@ export class TreemapSelections {
       .attr("shape-rendering", "crispEdges");
     console.log("nodes", this.nodes);
 
+    // this.nodes.attr("port0", d => d.x0)
+
     this.nodeTexts = this.clusters.append("g")
-      .attr("id", d => "cluster_" + d.data.id + "_texts")
+      .attr("id", d => "cluster_" + d.clusterinfo.id + "_texts")
       .selectAll("g")
       .data(d => d.children)
       .join("g")
@@ -123,25 +138,32 @@ export class TreemapSelections {
       .style("pointer-events", "none")
       .attr("shape-rendering", "crispEdges");
 
-    this.nodeTexts.filter(d => d.data.id / 1000 >= 1)
-      .append("text")
-      .attr("id", "a")
-      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
-      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2))
-      .html(d => {
-        return `${d.data.id}`.toString().substring(0,2);
-      })
+    // this.nodeTexts.filter(d => d.data.id / 1000 >= 1) // 1000이상의 인덱스는 천의 자리, 백의 자리로 나눠서 표시
+    //   .append("text")
+    //   .attr("id", "a")
+    //   .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+    //   .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2))
+    //   .html(d => {
+    //     return `${d.data.id}`.toString().substring(0,2);
+    //   })
 
-    this.nodeTexts.filter(d => d.data.id / 1000 >= 1)
-      .append("text")
-      .attr("id", "b")
-      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
-      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4))
-      .html(d => {
-        return `${d.data.id}`.toString().substring(2,4);
-      });
+    // this.nodeTexts.filter(d => d.data.id / 1000 >= 1) 
+    //   .append("text")
+    //   .attr("id", "b")
+    //   .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+    //   .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4))
+    //   .html(d => {
+    //     return `${d.data.id}`.toString().substring(2,4);
+    //   });
 
-    this.nodeTexts.filter(d => d.data.id / 1000 < 1)
+    // this.nodeTexts.filter(d => d.data.id / 1000 < 1) // 1000 미만의 인덱스는 한 줄에 표시
+    //   .append("text")
+    //   .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+    //   .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2))
+    //   .html(d => {
+    //     return `${d.data.id}`;
+    //   });
+      this.nodeTexts
       .append("text")
       .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
       .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2))
@@ -181,6 +203,162 @@ export class TreemapSelections {
       k += `L${xhalf}, ${yScale(fromNode.y)}`; // starts drawing : Horizontal.
       k += `L${xhalf}, ${yScale(toNode.y)}`;
       k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`; 
+    }
+    return k;
+  }
+
+  port_drawEdge(d: any): any { // 단자 입출력 edge drawing
+    const xScale = this.treemapData.xScale;
+    const yScale = this.treemapData.yScale;
+    const nodeXY = this.treemapData.getNodeXY();
+
+    // console.log('getnodeXY', nodeXY);
+
+    const fromNode = nodeXY.find(function (m) {
+      return d.from == m.id;
+    }) as IBusObjectData;
+    const toNode = nodeXY.find(function (m) {
+      return d.to == m.id;
+    }) as IBusObjectData;
+
+    let k = ''; // 'path' starting point
+    let xdif = toNode.x - fromNode.x; // x diff
+    let ydif = toNode.y - fromNode.y; // y diff
+    let absXdif = Math.abs(xdif); // |x diff|
+    let absYdif = Math.abs(ydif); // |y diff|
+
+    const nodesize = this.treemapData.nodeSize;
+    const checkIsNeighbor = (nodesize / 2) * 5;
+    const xdist = (toNode.x - fromNode.x) **2;
+    const ydist = (toNode.y - fromNode.y) **2;
+    const dist = Math.sqrt(xdist + ydist);
+
+
+    if(dist < checkIsNeighbor){
+      k += `M${xScale(fromNode.x)}, ${yScale(fromNode.y)}`;
+      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`;
+    }
+    else{
+      if(xdif > 0 && ydif > 0){
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`;
+          k += `L${xScale((fromNode.p5[0] + toNode.p11[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+          k += `L${xScale((fromNode.p5[0] + toNode.p11[0]) / 2)}, ${yScale(toNode.p11[1])}`;
+          k += `L${xScale(toNode.p11[0])}, ${yScale(toNode.p11[1])}`;
+        }
+        else{
+          k += `M${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1])}`;
+          k += `L${xScale(fromNode.p6[0])}, ${yScale((fromNode.p6[1] + toNode.p0[1]) / 2)}`;
+          k += `L${xScale(toNode.p0[0])}, ${yScale((fromNode.p6[1] + toNode.p0[1]) / 2)}`;
+          k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+        }
+      }
+      else if(xdif > 0 && ydif < 0){
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p3[0])}, ${yScale(fromNode.p3[1])}`;
+          k += `L${xScale((fromNode.p3[0] + toNode.p9[0]) / 2)}, ${yScale(fromNode.p3[1])}`;
+          k += `L${xScale((fromNode.p3[0] + toNode.p9[0]) / 2)}, ${yScale(toNode.p9[1])}`;
+          k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+        }
+        else{
+          k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;
+          k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + toNode.p8[1]) / 2)}`;
+          k += `L${xScale(toNode.p8[0])}, ${yScale((fromNode.p2[1] + toNode.p8[1]) / 2)}`;
+          k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1])}`;
+        }
+      }
+      else if(xdif < 0 && ydif > 0){
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`;
+          k += `L${xScale((fromNode.p9[0] + toNode.p3[0]) / 2)}, ${yScale(fromNode.p9[1])}`;
+          k += `L${xScale((fromNode.p9[0] + toNode.p3[0]) / 2)}, ${yScale(toNode.p3[1])}`;
+          k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+        }
+        else{
+          k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`;
+          k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + toNode.p2[1]) / 2)}`;
+          k += `L${xScale(toNode.p2[0])}, ${yScale((fromNode.p8[1] + toNode.p2[1]) / 2)}`;
+          k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1])}`;
+        }
+      }
+      else if(xdif < 0 && ydif < 0){
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`;
+          k += `L${xScale((fromNode.p11[0] + toNode.p5[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+          k += `L${xScale((fromNode.p11[0] + toNode.p5[0]) / 2)}, ${yScale(toNode.p5[1])}`;
+          k += `L${xScale(toNode.p5[0])}, ${yScale(toNode.p5[1])}`;
+        }
+        else{
+          k += `M${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1])}`;
+          k += `L${xScale(fromNode.p0[0])}, ${yScale((fromNode.p0[1] + toNode.p6[1]) / 2)}`;
+          k += `L${xScale(toNode.p6[0])}, ${yScale((fromNode.p0[1] + toNode.p6[1]) / 2)}`;
+          k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+        }
+        
+      }
+      else if(xdif == 0){
+        let rd = Math.floor(Math.random()*2);
+        if(ydif > 0){
+          if(rd == 0){
+            k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`;
+            k += `L${xScale(fromNode.p9[0] - (nodesize / 2))}, ${yScale(fromNode.p9[1])}`;
+            k += `L${xScale(fromNode.p9[0] - (nodesize / 2))}, ${yScale(toNode.p11[1])}`;
+            k += `L${xScale(toNode.p11[0])}, ${yScale(toNode.p11[1])}`
+          }
+          else{
+            k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale(fromNode.p5[0] + (nodesize / 2))}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale(fromNode.p5[0] + (nodesize / 2))}, ${yScale(toNode.p3[1])}`;
+            k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`
+          }
+        }
+        else{
+          if(rd == 0){
+            k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale(fromNode.p11[0] - (nodesize / 2))}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale(fromNode.p11[0] - (nodesize / 2))}, ${yScale(toNode.p9[1])}`;
+            k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`
+          }
+          else{
+            k += `M${xScale(fromNode.p3[0])}, ${yScale(fromNode.p3[1])}`;
+            k += `L${xScale(fromNode.p3[0] + (nodesize / 2))}, ${yScale(fromNode.p3[1])}`;
+            k += `L${xScale(fromNode.p3[0] + (nodesize / 2))}, ${yScale(toNode.p5[1])}`;
+            k += `L${xScale(toNode.p5[0])}, ${yScale(toNode.p5[1])}`
+          }
+        }
+      }
+      else if(ydif == 0){
+        let rd = Math.floor(Math.random()*2);
+        if(xdif > 0){
+          if(rd == 0){
+            k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;
+            k += `L${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1] - (nodesize / 2))}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1] - (nodesize / 2))}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+          }
+          else{
+            k += `M${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1])}`;
+            k += `L${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1] + (nodesize / 2))}`;
+            k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1] + (nodesize / 2))}`;
+            k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1])}`;
+          }
+        }
+        else{
+          if(rd == 0){
+            k += `M${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1])}`;
+            k += `L${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1] - (nodesize / 2))}`;
+            k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1] - (nodesize / 2))}`;
+            k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1])}`;
+          }
+          else{
+            k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`;
+            k += `L${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1] + (nodesize / 2))}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1] + (nodesize / 2))}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+          }
+        }
+      }
+
     }
     return k;
   }

@@ -42,7 +42,7 @@ export class TreemapData {
     this._strokeWidth = _strokeWidth;
     this._opacity = _opacity;
     
-    this.clusterCount = _details.count;
+    this.clusterCount = _details.count; // Community 개수
     this._colorZ = d3.interpolateSinebow;
 
     let tabularData: ITabularData[] = [];
@@ -52,7 +52,7 @@ export class TreemapData {
     tabularData = Object.keys(communities).map(d => { // 잎 추가 (노드 id는 클러스터 노드)
       return {id: +d + clusterCount, parentId: communities[d] + 1};
     });
-    
+
     let areaSet = new Set();
     _bus.forEach(d => {
       areaSet.add(+d.area);
@@ -69,14 +69,14 @@ export class TreemapData {
     let root: d3.HierarchyNode<any> = d3.stratify()  
       (tabularData);
     root.count();
-    console.log("root", root);
+    console.log("root", root); 
 
     this.children = root.children as d3.HierarchyNode<any>[];
     this.leaves = root.leaves().map(d => {
       // console.log("leaf data before", d);
       let bus = _bus.find((m) => {
         return m.id == d.data.id - clusterCount;
-      })
+      }) 
       Object.assign(d.data, bus);
       // console.log("leaf data after", d);
       return d;
@@ -128,55 +128,72 @@ export class TreemapData {
     let clustersWithNodes = [];
     for (let i = 0; i < clusterCount; i++){
       const clusterData = {
-        data: this.children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>,
-        children: this.leaves.filter(d => (i + 1 == d.data.parentId) ) as d3.HierarchyRectangularNode<any>[]
+        clusterinfo: this.children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>, // 동일한 cluster
+        children: this.leaves.filter(d => (i + 1 == d.data.parentId) ) as d3.HierarchyRectangularNode<any>[] // 해당 cluster의 자식노드(bus)들
       };
-      
-      clustersWithNodes.push(clusterData);
+      clustersWithNodes.push(clusterData); // -> cluster1 ~ cluster9까지 세트화
     }
 
     this.clustersWithNodes = clustersWithNodes;
     this.clusterInterval = [];
-    for (let i = 0; i < clusterCount; i++){
-      const clusterX1 = clustersWithNodes[i].data.x1;
-      const clusterX0 = clustersWithNodes[i].data.x0;
-      const clusterY1 = clustersWithNodes[i].data.y1;
-      const clusterY0 = clustersWithNodes[i].data.y0;
+    for (let i = 0; i < clusterCount; i++){ // 9회 수행 (cluster 갯수 == 9)
+      const clusterX1 = clustersWithNodes[i].clusterinfo.x1; // ex) i번 cluster 직사각형의 우하단 x좌표
+      const clusterX0 = clustersWithNodes[i].clusterinfo.x0; // ex) i번 cluster 직사각형의 좌상단 x좌표    (x0, y0)  (x1, y0)
+      const clusterY1 = clustersWithNodes[i].clusterinfo.y1; // ex) i번 cluster 직사각형의 우하단 y좌표
+      const clusterY0 = clustersWithNodes[i].clusterinfo.y0; // ex) i번 cluster 직사각형의 좌상단 y좌표    (x0, y1)  (x1, y1)
 
+      // console.log('clusterX0, Y0, X1, Y1', clusterX0, clusterY0, clusterX1, clusterY1)
+      /*
       if (clusterX1 - clusterX0 < this.nodeSize + this.size.padding.left + this.size.padding.right){
-        this.clustersWithNodes[i].data.x0 = (clusterX0 + clusterX1) / 2 - this.nodeSize / 2 - this.size.padding.left;
-        this.clustersWithNodes[i].data.x1 = (clusterX0 + clusterX1) / 2 + this.nodeSize / 2 + this.size.padding.right;
+        this.clustersWithNodes[i].data.x0 = (clusterX0 + clusterX1) / 2 - this.nodeSize / 2 - this.size.padding.left;  // nodeSize = 17
+        this.clustersWithNodes[i].data.x1 = (clusterX0 + clusterX1) / 2 + this.nodeSize / 2 + this.size.padding.right; // padding left&right =
       }
 
       if (clusterY1 - clusterY0 < this.nodeSize + this.size.padding.top + this.size.padding.bottom){
         this.clustersWithNodes[i].data.y0 = (clusterY0 + clusterY1) / 2 - this.nodeSize / 2 - this.size.padding.top;
         this.clustersWithNodes[i].data.y1 = (clusterY0 + clusterY1) / 2 + this.nodeSize / 2 + this.size.padding.bottom;
       }
-      const nodeCount = clustersWithNodes[i].children.length;
+*/ // 왜 있는지 모르겠음
+
+      const nodeCount = clustersWithNodes[i].children.length; // i번 cluster에 속한 노드 개수 : 118
       const clusterWidth = clusterX1 - clusterX0;
       const clusterHeight = clusterY1 - clusterY0;
 
-      let heightNodeCount = Math.ceil(Math.sqrt(clusterHeight / clusterWidth * nodeCount));
+      let heightNodeCount = Math.ceil(Math.sqrt((clusterHeight / clusterWidth) * nodeCount));
       let widthNodeCount = Math.ceil(nodeCount / heightNodeCount);
 
       heightNodeCount += 1;
       widthNodeCount += 1;
-
-      const availableWidthLength = clusterX1 - clusterX0;
-      const availableHeightLength = clusterY1 - clusterY0;
-      const widthInterval = availableWidthLength / widthNodeCount;
-      const heightInterval = availableHeightLength / heightNodeCount;
+      console.log('heightNodeCount', heightNodeCount)
+      console.log('widthNodeCount', widthNodeCount)
+      const widthInterval = clusterWidth / widthNodeCount;
+      const heightInterval = clusterHeight / heightNodeCount;
       this.clusterInterval.push([widthInterval, heightInterval]);
     }
     this.clustersWithNodes = clustersWithNodes;
+    console.log('clusterWithNodes', this.clustersWithNodes)
 
     this.nodeXY = this.leaves.map((d:any) => (
       {id: +d.id - clusterCount, 
         x: (d.x0 + d.x1) / 2, 
-        y: (d.y0 + d.y1) / 2} as IBusObjectData));
+        y: (d.y0 + d.y1) / 2,
+        p0: [d.x0 + (d.x1-d.x0)*(1/4), d.y0],
+        p1: [d.x0 + (d.x1-d.x0)*(1/2), d.y0],
+        p2: [d.x0 + (d.x1-d.x0)*(3/4), d.y0],
+        p3: [d.x1, d.y0 + (d.y1-d.y0)*(1/4)],
+        p4: [d.x1, d.y0 + (d.y1-d.y0)*(1/2)],
+        p5: [d.x1, d.y0 + (d.y1-d.y0)*(3/4)],
+        p6: [d.x1 - (d.x1-d.x0)*(1/4), d.y1],
+        p7: [d.x1 - (d.x1-d.x0)*(1/2), d.y1],
+        p8: [d.x1 - (d.x1-d.x0)*(3/4), d.y1],
+        p9: [d.x0, d.y1 - (d.y1-d.y0)*(1/4)],
+        p10: [d.x0, d.y1 - (d.y1-d.y0)*(1/2)],
+        p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)]
+      } as IBusObjectData));
 
     console.log(this.clusterInterval);
   }
+  
   
   public set bus(bus: IBusData[]) {
     this._bus = bus;
@@ -285,14 +302,27 @@ export class TreemapData {
     this.nodeXY = this.leaves.map((d:any) => (
       {id: +d.id - clusterCount, 
         x: d.x0 + nodeSize / 2, 
-        y: d.y0 + nodeSize / 2} as IBusObjectData));
+        y: d.y0 + nodeSize / 2,
+        p0: [d.x0 + (d.x1-d.x0)*(1/4), d.y0],
+        p1: [d.x0 + (d.x1-d.x0)*(1/2), d.y0],
+        p2: [d.x0 + (d.x1-d.x0)*(3/4), d.y0],
+        p3: [d.x1, d.y0 + (d.y1-d.y0)*(1/4)],
+        p4: [d.x1, d.y0 + (d.y1-d.y0)*(1/2)],
+        p5: [d.x1, d.y0 + (d.y1-d.y0)*(3/4)],
+        p6: [d.x1 - (d.x1-d.x0)*(1/4), d.y1],
+        p7: [d.x1 - (d.x1-d.x0)*(1/2), d.y1],
+        p8: [d.x1 - (d.x1-d.x0)*(3/4), d.y1],
+        p9: [d.x0, d.y1 - (d.y1-d.y0)*(1/4)],
+        p10: [d.x0, d.y1 - (d.y1-d.y0)*(1/2)],
+        p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)]
+      } as IBusObjectData));
   }
 
   public setClustersWithNodes() {
     let clustersWithNodes: IClusterData[] = [];  // 각 cluster에 해당하는 nodes 데이터가 있도록 구조 변경
     for (let i = 0; i < this.clusterCount; i++){
       const clusterData = {
-        data: this.children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>,
+        clusterinfo: this.children.find(d => d.data.id == i + 1) as d3.HierarchyRectangularNode<any>,
         children: this.leaves.filter(d => (i + 1 == d.data.parentId) ) as d3.HierarchyRectangularNode<any>[]
       };
       clustersWithNodes.push(clusterData);
@@ -300,39 +330,39 @@ export class TreemapData {
     this.clustersWithNodes = clustersWithNodes;
   }
 
-  public setZNodePosition(){
+  public setZNodePosition(){ // 'ㄹ'  layout 작성 알고리즘
     const clusterCount = this.getClusterCount();
     const nodeSize = this.nodeSize;
     let clustersWithNodes = this.getClustersWithNodes();
-    for (let i = 0; i < clusterCount; i++){
-      const clusterX1 = clustersWithNodes[i].data.x1;
-      const clusterX0 = clustersWithNodes[i].data.x0;
-      const clusterY0 = clustersWithNodes[i].data.y0;
+    for (let i = 0; i < clusterCount; i++){ // 9회 수행
+      const clusterX1 = clustersWithNodes[i].clusterinfo.x1;
+      const clusterX0 = clustersWithNodes[i].clusterinfo.x0;
+      const clusterY0 = clustersWithNodes[i].clusterinfo.y0;
 
       const nodeCount = clustersWithNodes[i].children.length;
-      const widthInterval = this.clusterInterval[i][0];
-      const heightInterval = this.clusterInterval[i][1];
+      const widthInterval = this.clusterInterval[i][0]; // 각 클러스터 별 children node들 간의 너비 간격
+      const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
 
       let x = clusterX0;
       let y = clusterY0 + heightInterval;
       let dx = widthInterval;
-      for (let j = 0; j < nodeCount; j++){
+      for (let j = 0; j < nodeCount; j++){ // 118회 수행 
         x += dx;
         if ((dx > 0) ? (x + nodeSize > clusterX1) : (x - nodeSize < clusterX0)){
           dx *= -1;
           x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
           y += heightInterval;
-        }
-        
+        }        
         clustersWithNodes[i].children[j].x0 = x - nodeSize / 2;
         clustersWithNodes[i].children[j].x1 = x + nodeSize / 2;
         
         clustersWithNodes[i].children[j].y0 = y - nodeSize / 2;
         clustersWithNodes[i].children[j].y1 = y + nodeSize / 2;
-      }
+      } // for loop 한 바퀴 끝나면, x위치 재조정
     }
     this.clustersWithNodes = clustersWithNodes;
     this.setNodeXY();
+    console.log('nodeXY', this.nodeXY)
   }
   
   public getClusterCount() {

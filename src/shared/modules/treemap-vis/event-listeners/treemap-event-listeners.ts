@@ -212,22 +212,27 @@ export class TreemapEventListeners {
 
     nodeTexts
       .style("fill", "black")
-      .attr("font-size", xScale(nodeSize*0.45));
+      .attr("font-size", xScale(nodeSize*0.4));
 
-    nodeTexts.filter(d => d.data.id / 1000 >= 1)
-      .selectAll("#a")
-      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
-      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
+    // nodeTexts.filter(d => d.data.id / 1000 >= 1)
+    //   .selectAll("#a")
+    //   .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+    //   .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
 
-    nodeTexts.filter(d => d.data.id / 1000 >= 1)
-      .selectAll("#b")
-      .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
-      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4));
+    // nodeTexts.filter(d => d.data.id / 1000 >= 1)
+    //   .selectAll("#b")
+    //   .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+    //   .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4));
 
-    nodeTexts.filter(d => d.data.id / 1000 < 1)
+    // nodeTexts.filter(d => d.data.id / 1000 < 1)
+    //   .selectAll("text")
+    //   .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
+    //   .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
+      
+    nodeTexts
       .selectAll("text")
       .attr("x", (d:any) => xScale((d.x0 + d.x1) / 2))
-      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2));
+      .attr("y", (d:any) => yScale((d.y0 + d.y1) / 2 + nodeSize * 0.4));
   }
 
   colorLinkedNodes_from1 (d: any, linkedNodes: number[]) { // for linkedNodes_from.push()
@@ -258,7 +263,7 @@ export class TreemapEventListeners {
   clusterHighlightOn = (event: any, d:any) => {
     const cluster = this.treemapSelections.getClusters()
       .filter(m => {
-        return +d.data.data.id == +m.data.data.id;
+        return +d.clusterinfo.data.id == +m.clusterinfo.data.id;
       })
       .select("rect");
     
@@ -269,7 +274,7 @@ export class TreemapEventListeners {
   clusterHighlightOff = (event: any, d:any) => {
     const cluster = this.treemapSelections.getClusters()
       .filter(m => {
-        return +d.data.data.id == +m.data.data.id;
+        return +d.clusterinfo.data.id == +m.clusterinfo.data.id;
       })
       .select("rect");
     
@@ -424,7 +429,7 @@ export class TreemapEventListeners {
       .attr("y", d =>  (yScale((d.y0 + d.y1) / 2 - nodeSize / 2)));
     
     nodeTexts
-      .attr("font-size", nodeSize*0.45);
+      .attr("font-size", nodeSize*0.4);
   }
 
   // node highlight, node text highlight, edge highlight 에 사용

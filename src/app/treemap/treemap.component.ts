@@ -25,11 +25,11 @@ export class TreemapComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-    // d3.csv('./assets/data/bus-1062.csv')
-    d3.csv('./assets/data/my_bus.csv')
+    d3.csv('./assets/data/bus-1062.csv')
+    // d3.csv('./assets/data/my_bus.csv')
       .then((bus: any) => {
-        // d3.csv('./assets/data/branch-1062.csv')
-        d3.csv('./assets/data/my_branch.csv')
+        d3.csv('./assets/data/branch-1062.csv')
+        // d3.csv('./assets/data/my_branch.csv')
           .then((branch: any) => {
             console.log("bus, branch", bus, branch);
             this.renderTreemap(bus, branch);
@@ -39,9 +39,9 @@ export class TreemapComponent implements OnInit {
   
   renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{ 
     const size = {
-      width: 960,
-      height: 960,
-      viewBox: {minX: 20, minY: 20, width: 1000, height: 1000},
+      width: 1700,
+      height: 1000,
+      viewBox: {minX: 20, minY: 20, width: 1700, height: 1000},
       margin: {left: 20, right: 20, top: 20, bottom: 20},
       padding: {left: 20, right: 20, top: 20, bottom: 20}
     }; 
@@ -53,7 +53,7 @@ export class TreemapComponent implements OnInit {
     const strokeWidth = {
       nodes: 2,
       cluster: 2,
-      edge: 3
+      edge: 1.5
     };
     const nodeSize = 17;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
