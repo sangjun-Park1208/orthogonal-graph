@@ -74,5 +74,5 @@ while(True) :
             random_branch.append(i)
         random.shuffle(random_branch)
 
-s_data.to_csv('my_bus.csv',index=False)
-h_data.to_csv('my_branch.csv',index=False)
+s_data.to_csv('bus-300.csv',index=False)
+h_data.to_csv('branch-300.csv',index=False)
