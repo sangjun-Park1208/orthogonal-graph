@@ -53,11 +53,17 @@ export class TreemapData {
       return {id: +d + clusterCount, parentId: communities[d] + 1};
     });
 
+    // let areaSet = new Set();
+    // _bus.forEach(d => {
+    //   areaSet.add(+d.area);
+    // });
+    // this.areaCount = areaSet.size;
     let areaSet = new Set();
-    _bus.forEach(d => {
-      areaSet.add(+d.area);
+    Object.keys(communities).map(d => {
+      areaSet.add(+communities[d]);
     });
     this.areaCount = areaSet.size;
+    console.log('chan',areaSet)
 
     tabularData.push({id: 0, parentId: undefined})  // 루트 추가
     

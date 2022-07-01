@@ -88,6 +88,7 @@ export class TreemapSelections {
     // console.log("clusters", this.clusters);
 
     const nodeSize = this.treemapData.nodeSize;
+    const communities = this.treemapData.details.communities;
     console.log('nodesize', nodeSize)
     this.nodes = this.clusters.append("g")
       .attr("id", d => "cluster_" + d.clusterinfo.id + "_nodes")
@@ -118,7 +119,7 @@ export class TreemapSelections {
       .attr("py1", d => (yScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + yScale(nodeSize)*(1/2))
       .attr("py2", d => (yScale((d.x0 + d.x1) / 2 - nodeSize / 2)) + yScale(nodeSize)*(3/4))
       .attr("fill", (d:any) => {
-        return this.treemapData.colorZ(+d.data.area / areaCount);
+        return this.treemapData.colorZ(+d.data.parentId / areaCount);
       })
       .attr("fill-opacity", this.treemapData.opacity.node)
       .attr("shape-rendering", "crispEdges");
