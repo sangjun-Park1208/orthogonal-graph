@@ -22,10 +22,22 @@ print(branch_data)
 
 #bus - id,area
 bus=[]
+area=[]
 for i in range(len(bus_data)):
     temp=[]
     temp.append(bus_data[i][0])
+    # temp.append(bus_data[i][1])   
+    TF=0
+    for j in range(len(area)):
+        if area[j]==bus_data[i][1]:
+            temp.append(j)
+            TF=1
+            break
+    if TF==0:
+        area.append(bus_data[i][1])
+        temp.append(len(area))
     bus.append(temp)
+print(area)
 print(bus)
         
 
@@ -36,13 +48,13 @@ for i in range(len(branch_data)):
     temp.append(branch_data[i][0])
     temp.append(branch_data[i][1])
     branch.append(temp)
-print(branch)
 
 #bus dataframe
-s_data=pd.DataFrame(data=bus,columns=['id'])
+s_data=pd.DataFrame(data=bus,columns=['id','area'])
+s_data.tail()
 
 #branch dataframe
 h_data=pd.DataFrame(data=branch,columns=['from','to'])
 
 s_data.to_csv('bus-300.csv',index=False)
-s_data.to_csv('branch-300.csv',index=False)
+h_data.to_csv('branch-300.csv',index=False)
