@@ -35,7 +35,7 @@ for i in range(len(bus_data)):
             break
     if TF==0:
         area.append(bus_data[i][1])
-        temp.append(len(area))
+        temp.append(len(area)-1)
     bus.append(temp)
 print(area)
 print(bus)
