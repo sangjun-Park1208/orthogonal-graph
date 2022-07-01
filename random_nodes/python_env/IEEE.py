@@ -3,7 +3,7 @@ pd.options.display.max_rows=10
 pd.options.display.max_columns=10
 
 #bus 데이터 받기
-fbus='./txt/bus-30.txt'
+fbus='./txt/bus-300.txt'
 bus_data=open(fbus,"r")
 data=bus_data.read().splitlines()
 bus_data=[]
@@ -12,7 +12,7 @@ for word in data:
 print(bus_data)
 
 #branch 데이터 받기
-fbranch='./txt/branch-30.txt'
+fbranch='./txt/branch-300.txt'
 branch_data=open(fbranch,"r")
 data=branch_data.read().splitlines()
 branch_data=[]
@@ -26,16 +26,16 @@ area=[]
 for i in range(len(bus_data)):
     temp=[]
     temp.append(bus_data[i][0])
-    # temp.append(bus_data[i][1])   
-    TF=0
-    for j in range(len(area)):
-        if area[j]==bus_data[i][1]:
-            temp.append(j)
-            TF=1
-            break
-    if TF==0:
-        area.append(bus_data[i][1])
-        temp.append(len(area)-1)
+    temp.append(bus_data[i][3])   
+    # TF=0
+    # for j in range(len(area)):
+    #     if area[j]==bus_data[i][1]:
+    #         temp.append(j)
+    #         TF=1
+    #         break
+    # if TF==0:
+        # area.append(bus_data[i][1])
+        # temp.append(len(area)-1)
     bus.append(temp)
 print(area)
 print(bus)
@@ -56,5 +56,5 @@ s_data.tail()
 #branch dataframe
 h_data=pd.DataFrame(data=branch,columns=['from','to'])
 
-s_data.to_csv('bus-30.csv',index=False)
-h_data.to_csv('branch-30.csv',index=False)
+s_data.to_csv('bus-300.csv',index=False)
+h_data.to_csv('branch-300.csv',index=False)
