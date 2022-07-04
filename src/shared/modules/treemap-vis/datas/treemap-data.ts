@@ -63,8 +63,6 @@ export class TreemapData {
       areaSet.add(+communities[d]);
     });
     this.areaCount = areaSet.size;
-    console.log('chan',areaSet)
-
     tabularData.push({id: 0, parentId: undefined})  // 루트 추가
     
     for (let i = 0; i < clusterCount; i++){ // 클러스터 정점 추가
@@ -108,9 +106,14 @@ export class TreemapData {
     root.each((d) => {
       let m = d as d3.HierarchyRectangularNode<any>;
       x.push([m.x0, m.x1]);
+      console.log("chan", m); 
     });
+    console.log("chan", x); 
     const xMin = d3.min(x, d => d[0]);
+    console.log("chan", xMin); 
     const xMax = d3.max(x, d => d[1]);
+    console.log("chan", xMax); 
+
 
     let y: [number, number][] = [];
     root.each((d) => {

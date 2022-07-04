@@ -63,6 +63,7 @@ export class EdgeCrossingCountCalculator {
   private totalLength;
   private sameCount: number[];
   private edgeCrossingCount: number;
+  private totalBending;
 
   constructor(treemapData: TreemapData, branch: IBranchData[]){
     this.treemapData = treemapData;
@@ -71,6 +72,7 @@ export class EdgeCrossingCountCalculator {
     this.totalLength = 0;
     this.sameCount = [];
     this.edgeCrossingCount = 0;
+    this.totalBending=0;
   }
   
   calculateEdgeCrossingCount (): number[] {
@@ -106,6 +108,7 @@ export class EdgeCrossingCountCalculator {
     
     console.log("total length : " + this.totalLength);
     console.log("edge_crossing : " + this.edgeCrossingCount);
+    console.log("total_bending : " + this.totalBending);
     return [this.totalLength, this.edgeCrossingCount];
   }
   
