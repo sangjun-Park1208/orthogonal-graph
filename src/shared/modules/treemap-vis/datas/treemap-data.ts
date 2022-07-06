@@ -54,11 +54,6 @@ export class TreemapData {
       return {id: +d + clusterCount, parentId: communities[d] + 1};
     });
 
-    // let areaSet = new Set();
-    // _bus.forEach(d => {
-    //   areaSet.add(+d.area);
-    // });
-    // this.areaCount = areaSet.size;
     let areaSet = new Set();
     Object.keys(communities).map(d => {
       areaSet.add(+communities[d]);
@@ -107,13 +102,9 @@ export class TreemapData {
     root.each((d) => {
       let m = d as d3.HierarchyRectangularNode<any>;
       x.push([m.x0, m.x1]);
-      console.log("chan", m); 
     });
-    console.log("chan", x); 
     const xMin = d3.min(x, d => d[0]);
-    console.log("chan", xMin); 
     const xMax = d3.max(x, d => d[1]);
-    console.log("chan", xMax); 
 
 
     let y: [number, number][] = [];
@@ -151,19 +142,6 @@ export class TreemapData {
       const clusterX0 = clustersWithNodes[i].clusterinfo.x0; // ex) i번 cluster 직사각형의 좌상단 x좌표    (x0, y0)  (x1, y0)
       const clusterY1 = clustersWithNodes[i].clusterinfo.y1; // ex) i번 cluster 직사각형의 우하단 y좌표
       const clusterY0 = clustersWithNodes[i].clusterinfo.y0; // ex) i번 cluster 직사각형의 좌상단 y좌표    (x0, y1)  (x1, y1)
-
-      // console.log('clusterX0, Y0, X1, Y1', clusterX0, clusterY0, clusterX1, clusterY1)
-      /*
-      if (clusterX1 - clusterX0 < this.nodeSize + this.size.padding.left + this.size.padding.right){
-        this.clustersWithNodes[i].data.x0 = (clusterX0 + clusterX1) / 2 - this.nodeSize / 2 - this.size.padding.left;  // nodeSize = 17
-        this.clustersWithNodes[i].data.x1 = (clusterX0 + clusterX1) / 2 + this.nodeSize / 2 + this.size.padding.right; // padding left&right =
-      }
-
-      if (clusterY1 - clusterY0 < this.nodeSize + this.size.padding.top + this.size.padding.bottom){
-        this.clustersWithNodes[i].data.y0 = (clusterY0 + clusterY1) / 2 - this.nodeSize / 2 - this.size.padding.top;
-        this.clustersWithNodes[i].data.y1 = (clusterY0 + clusterY1) / 2 + this.nodeSize / 2 + this.size.padding.bottom;
-      }
-*/ // 왜 있는지 모르겠음
 
       const nodeCount = clustersWithNodes[i].children.length; // i번 cluster에 속한 노드 개수 : 118
       const clusterWidth = clusterX1 - clusterX0;
@@ -305,12 +283,10 @@ export class TreemapData {
     this.tabularData = tabularData;
   }
 
-  public setNodeXY(relativePosition: number[]) {
+  public setNodeXY() {
     const clusterCount = this.clusterCount;
     const nodeSize = this.nodeSize;
-    const rP = relativePosition;
-    // console.log(`rP`, rP) // ok
-    
+
     this.nodeXY = this.leaves.map((d:any) => (
       {id: +d.id - clusterCount, 
         x: d.x0 + nodeSize / 2, 
@@ -327,7 +303,7 @@ export class TreemapData {
         p9: [d.x0, d.y1 - (d.y1-d.y0)*(1/4)],
         p10: [d.x0, d.y1 - (d.y1-d.y0)*(1/2)],
         p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)],
-        relativePosition: rP
+        relativePosition: this.relativePosition[+d.id - clusterCount]
       } as IBusObjectData));
 
   }
@@ -361,15 +337,16 @@ export class TreemapData {
       let y = clusterY0 + heightInterval;
       let dx = widthInterval;
 
-      let checkColumnCount = 0;
+
       let horizonLineCount = 1;
       let verticalLineCount = 1;
-      let relativePositionID = [0, 0, 0, 0]; // [N, E, S, W]
       let columnCount = 1; // 열 개수
       let rowCount = 1; // 행 개수
       let lastRowRemain = 0; // 마지막 행에 남아 있는 Node 개수
       let forwardIDDiff = 1;
       let reverseIdDiff;
+
+      let checkColumnCount = 0;
       if(checkColumnCount == 0){ // Cluster 별 처음 한 번만 수행
         for(let k = 0; k < nodeCount; k++){
           x += dx;
@@ -382,41 +359,13 @@ export class TreemapData {
         rowCount = Math.ceil(nodeCount / columnCount);
         lastRowRemain = nodeCount % columnCount;
         x = clusterX0;
-
       }
       
-      console.log('columnCount, rowCount', columnCount, rowCount);
       reverseIdDiff = columnCount*2 - forwardIDDiff;
       for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행 
-        /* 각 Cluster 당 한 행에 배치될 노드의 개수 == columnCount */
-        // if(checkColumnCount == 0){ // Cluster 별 처음 한 번만 수행
-        //   for(let k = 0; k < nodeCount; k++){
-        //     x += dx;
-        //     if(x + nodeSize > clusterX1)
-        //       break;
-        //     columnCount++;
-        //   }
-        //   checkColumnCount++;
-        //   rowCount = Math.ceil(nodeCount / columnCount);
-        //   lastRowRemain = nodeCount % columnCount;
-        //   x = clusterX0;
-        // }
-        // reverseIdDiff = columnCount*2 - forwardIDDiff; // Node의 [North, South] ID 계산. " reverseIDDiff + forwardIDDiff = column 개수*2 "
-        // console.log('forward', forwardIDDiff);
-        // console.log('reverse', reverseIdDiff);
-        
-
-        /* 기존 산이 코드 */
-        // x += dx;
-        // if ((dx > 0) ? (x + nodeSize > clusterX1) : (x - nodeSize < clusterX0)){
-        //   dx *= -1;
-        //   x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
-        //   y += heightInterval;
-        // }
-
-
         /* 각 노드 별 [North, East, South, West] 상대위치 결정 알고리즘 추가 */
         // console.log(`(${horizonLineCount}, ${verticalLineCount})`);
+        let relativePositionID = [0, 0, 0, 0];
         x += dx;
         if(dx > 0){ // 방향 : 왼쪽 --> 오른쪽
           if(x + nodeSize > clusterX1){ // 오른쪽 초과한 경우
@@ -727,34 +676,27 @@ export class TreemapData {
             }
           }
         }
-        // console.log('verticalLineCount', verticalLineCount);
-        // console.log(`relativePositionID[${i+1}][${j}]`, relativePositionID[0], relativePositionID[1], relativePositionID[2], relativePositionID[3]);
-        console.log(relativePositionID)
+
         this.setRelativePosition(j, relativePositionID);
-        // console.log(this.nodeXY);
+
         clustersWithNodes[i].children[j - i*nodeCount-1].x0 = x - nodeSize / 2;
         clustersWithNodes[i].children[j - i*nodeCount-1].x1 = x + nodeSize / 2;
         
         clustersWithNodes[i].children[j - i*nodeCount-1].y0 = y - nodeSize / 2;
         clustersWithNodes[i].children[j - i*nodeCount-1].y1 = y + nodeSize / 2;
 
-        // this.setNodeXY(this.relativePosition[j]);
       }
     }
     this.clustersWithNodes = clustersWithNodes;
-    // this.setNodeXY();
-    // console.log('nodeXY', this.nodeXY)
+    this.setNodeXY();
   }
 
   public getRelativePosition(id: number): number[]{
-    // console.log('getRelativePosition', this.relativePosition[id])
     return this.relativePosition[id];
   }
 
   public setRelativePosition(id: number, relativePos: number[]){
     this.relativePosition[id] = relativePos;
-    this.setNodeXY(this.relativePosition[id]);
-    // console.log("in setRelativePosition : this.relativePosition", this.relativePosition[id])
   }
 
   public getAllRelativePosition(){
