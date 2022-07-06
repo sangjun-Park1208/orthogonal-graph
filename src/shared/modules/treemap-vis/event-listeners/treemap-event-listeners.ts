@@ -144,7 +144,7 @@ export class TreemapEventListeners {
     
     const nodes = this.treemapSelections.getNodes();
 
-    nodes.attr("fill", (d: any) => colorZ(+d.data.area / areaCount))
+    nodes.attr("fill", (d: any) => colorZ(+d.data.parentId / areaCount))
       .attr("fill-opacity", opacity.node)
       .attr("stroke", "none");
   }
