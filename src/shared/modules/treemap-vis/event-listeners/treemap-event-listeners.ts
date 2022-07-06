@@ -77,6 +77,8 @@ export class TreemapEventListeners {
     let nodeSize = this.treemapData.nodeSize / magnification * ((magnification > 2) ? magnification / 2 : 1);
     const strokeWidth = nodeSize * 0.15;
 
+    // console.log('Relative Position', this.treemapData.getRelativePosition(d.from));
+
     nodes.attr("width", d => xScale(nodeSize) )
       .attr("height", d => yScale(nodeSize) )
       .attr("x", d =>  xScale((d.x0 + d.x1) / 2 - nodeSize / 2))

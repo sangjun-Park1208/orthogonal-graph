@@ -14,4 +14,5 @@ export interface IBusObjectData {
     p9: number[],
     p10: number[],
     p11: number[],
+    relativePosition: number[]
 }

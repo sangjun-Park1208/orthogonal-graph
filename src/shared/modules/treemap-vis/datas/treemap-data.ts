@@ -31,6 +31,7 @@ export class TreemapData {
   private leaves: d3.HierarchyNode<any>[];
   private children: d3.HierarchyNode<any>[];
   private clusterInterval: number[][];
+  private relativePosition: number[][]; // [id][N, E, S, W]
 
   constructor(_bus: IBusData[], _branch: IBranchData[], _details: DetailedLouvainOutput, _size: ISize, _nodeSize: number, _strokeWidth: IConstant, _opacity: IConstant){
     this._bus = _bus;
@@ -164,8 +165,6 @@ export class TreemapData {
 
       heightNodeCount += 1;
       widthNodeCount += 1;
-      console.log('heightNodeCount', heightNodeCount)
-      console.log('widthNodeCount', widthNodeCount)
       const widthInterval = clusterWidth / widthNodeCount;
       const heightInterval = clusterHeight / heightNodeCount;
       this.clusterInterval.push([widthInterval, heightInterval]);
@@ -188,10 +187,11 @@ export class TreemapData {
         p8: [d.x1 - (d.x1-d.x0)*(3/4), d.y1],
         p9: [d.x0, d.y1 - (d.y1-d.y0)*(1/4)],
         p10: [d.x0, d.y1 - (d.y1-d.y0)*(1/2)],
-        p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)]
+        p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)],
+        relativePosition: []
       } as IBusObjectData));
 
-    console.log(this.clusterInterval);
+    this.relativePosition = [];
   }
   
   
@@ -296,9 +296,12 @@ export class TreemapData {
     this.tabularData = tabularData;
   }
 
-  public setNodeXY() {
+  public setNodeXY(relativePosition: number[]) {
     const clusterCount = this.clusterCount;
     const nodeSize = this.nodeSize;
+    const rP = relativePosition;
+    // console.log(`rP`, rP) // ok
+    
     this.nodeXY = this.leaves.map((d:any) => (
       {id: +d.id - clusterCount, 
         x: d.x0 + nodeSize / 2, 
@@ -314,8 +317,10 @@ export class TreemapData {
         p8: [d.x1 - (d.x1-d.x0)*(3/4), d.y1],
         p9: [d.x0, d.y1 - (d.y1-d.y0)*(1/4)],
         p10: [d.x0, d.y1 - (d.y1-d.y0)*(1/2)],
-        p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)]
+        p11: [d.x0, d.y1 - (d.y1-d.y0)*(3/4)],
+        relativePosition: rP
       } as IBusObjectData));
+
   }
 
   public setClustersWithNodes() {
@@ -335,9 +340,9 @@ export class TreemapData {
     const nodeSize = this.nodeSize;
     let clustersWithNodes = this.getClustersWithNodes();
     for (let i = 0; i < clusterCount; i++){ // 9회 수행
-      const clusterX1 = clustersWithNodes[i].clusterinfo.x1;
-      const clusterX0 = clustersWithNodes[i].clusterinfo.x0;
-      const clusterY0 = clustersWithNodes[i].clusterinfo.y0;
+      const clusterX1 = clustersWithNodes[i].clusterinfo.x1;  // Cluster box 끝 x좌표
+      const clusterX0 = clustersWithNodes[i].clusterinfo.x0;  // Cluster box 시작 x좌표
+      const clusterY0 = clustersWithNodes[i].clusterinfo.y0;  // Cluster box 시작 y좌표
 
       const nodeCount = clustersWithNodes[i].children.length;
       const widthInterval = this.clusterInterval[i][0]; // 각 클러스터 별 children node들 간의 너비 간격
@@ -346,23 +351,405 @@ export class TreemapData {
       let x = clusterX0;
       let y = clusterY0 + heightInterval;
       let dx = widthInterval;
-      for (let j = 0; j < nodeCount; j++){ // 118회 수행 
-        x += dx;
-        if ((dx > 0) ? (x + nodeSize > clusterX1) : (x - nodeSize < clusterX0)){
-          dx *= -1;
-          x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
-          y += heightInterval;
-        }        
-        clustersWithNodes[i].children[j].x0 = x - nodeSize / 2;
-        clustersWithNodes[i].children[j].x1 = x + nodeSize / 2;
+
+      let checkColumnCount = 0;
+      let horizonLineCount = 1;
+      let verticalLineCount = 1;
+      let relativePositionID = [0, 0, 0, 0]; // [N, E, S, W]
+      let columnCount = 1; // 열 개수
+      let rowCount = 1; // 행 개수
+      let lastRowRemain = 0; // 마지막 행에 남아 있는 Node 개수
+      let forwardIDDiff = 1;
+      let reverseIdDiff;
+      if(checkColumnCount == 0){ // Cluster 별 처음 한 번만 수행
+        for(let k = 0; k < nodeCount; k++){
+          x += dx;
+          if(x + nodeSize > clusterX1)
+            break;
+          columnCount++;
+        }
+        columnCount--;
+        checkColumnCount++;
+        rowCount = Math.ceil(nodeCount / columnCount);
+        lastRowRemain = nodeCount % columnCount;
+        x = clusterX0;
+
+      }
+      
+      console.log('columnCount, rowCount', columnCount, rowCount);
+      reverseIdDiff = columnCount*2 - forwardIDDiff;
+      for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행 
+        /* 각 Cluster 당 한 행에 배치될 노드의 개수 == columnCount */
+        // if(checkColumnCount == 0){ // Cluster 별 처음 한 번만 수행
+        //   for(let k = 0; k < nodeCount; k++){
+        //     x += dx;
+        //     if(x + nodeSize > clusterX1)
+        //       break;
+        //     columnCount++;
+        //   }
+        //   checkColumnCount++;
+        //   rowCount = Math.ceil(nodeCount / columnCount);
+        //   lastRowRemain = nodeCount % columnCount;
+        //   x = clusterX0;
+        // }
+        // reverseIdDiff = columnCount*2 - forwardIDDiff; // Node의 [North, South] ID 계산. " reverseIDDiff + forwardIDDiff = column 개수*2 "
+        // console.log('forward', forwardIDDiff);
+        // console.log('reverse', reverseIdDiff);
         
-        clustersWithNodes[i].children[j].y0 = y - nodeSize / 2;
-        clustersWithNodes[i].children[j].y1 = y + nodeSize / 2;
-      } // for loop 한 바퀴 끝나면, x위치 재조정
+
+        /* 기존 산이 코드 */
+        // x += dx;
+        // if ((dx > 0) ? (x + nodeSize > clusterX1) : (x - nodeSize < clusterX0)){
+        //   dx *= -1;
+        //   x = (dx > 0) ? clusterX0 + widthInterval : clusterX1 - widthInterval;
+        //   y += heightInterval;
+        // }
+
+
+        /* 각 노드 별 [North, East, South, West] 상대위치 결정 알고리즘 추가 */
+        // console.log(`(${horizonLineCount}, ${verticalLineCount})`);
+        x += dx;
+        if(dx > 0){ // 방향 : 왼쪽 --> 오른쪽
+          if(x + nodeSize > clusterX1){ // 오른쪽 초과한 경우
+            dx *= -1;
+            x = clusterX1 - widthInterval;
+            y += heightInterval; // 바로 아래에 배치
+            verticalLineCount--;
+            horizonLineCount++;
+
+            if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
+              relativePositionID[0] = j-1;
+              relativePositionID[1] = -1;
+              relativePositionID[2] = -1;
+              relativePositionID[3] = j+1;
+            }
+            else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
+              if(j+forwardIDDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = j+1;
+              }
+              else{ // 하단에 노드가 존재하는 경우
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = j + forwardIDDiff;
+                relativePositionID[3] = j+1;
+              }
+            }
+            else{ // 아래에 노드가 존재하는 경우
+              relativePositionID[0] = j-1;
+              relativePositionID[1] = -1;
+              relativePositionID[2] = j + forwardIDDiff;
+              relativePositionID[3] = j+1;
+            }
+
+            forwardIDDiff -= 2;
+            reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+          }
+          else{ // 아직 초과하지 않은 경우
+            if(horizonLineCount == 1){ // 1행인 경우
+              if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 첫 번째 노드인 경우)
+                relativePositionID[0] = -1;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = j + reverseIdDiff;
+                relativePositionID[3] = -1;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount++;
+              }
+              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+                relativePositionID[0] = -1;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = j+1;
+                relativePositionID[3] = j-1;
+
+              }
+              else{ // 양 끝 열이 아닌 경우
+                relativePositionID[0] = -1;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = j + reverseIdDiff;
+                relativePositionID[3] = j-1;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                
+                verticalLineCount++;
+              }
+            }
+            else if(horizonLineCount == rowCount){ // 마지막 행인 경우
+              if(verticalLineCount == lastRowRemain){
+                relativePositionID[0] = j - forwardIDDiff;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = j-1;
+              }
+              else if(verticalLineCount == 1){ // 1열인 경우
+
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = -1;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount++;
+              }
+              else if(verticalLineCount == lastRowRemain){ // 마지막 노드인 경우
+                relativePositionID[0] = j + reverseIdDiff;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = j-1;
+              }
+              else{ // 1열 || 마지막 노드가 아닌 경우
+
+                relativePositionID[0] = j-forwardIDDiff;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = j-1;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                
+                verticalLineCount++;
+              }
+            }
+            else{ // 1행 || 마지막 행이 아닌 경우
+              if(verticalLineCount == 1){ // 1열인 경우
+
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = j + reverseIdDiff;
+                relativePositionID[3] = -1;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount++;
+              }
+              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+                relativePositionID[0] = j-forwardIDDiff;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = j+1;
+                relativePositionID[3] = j-1;
+              }
+              else{ // 양 끝 열이 아닌 경우
+
+                relativePositionID[0] = j - forwardIDDiff;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = j + reverseIdDiff;
+                relativePositionID[3] = j-1;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount++;
+              }
+            }
+          }
+        }
+        else{ // 방향 : 왼쪽 <-- 오른쪽
+          if(x - nodeSize < clusterX0){ // 왼쪽 초과한 경우
+            dx *= -1;
+            x =  clusterX0 + widthInterval;
+            y += heightInterval; // 바로 아래에 배치
+            verticalLineCount++;
+            horizonLineCount++;
+
+            if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
+              relativePositionID[0] = j-1;
+              relativePositionID[1] = j+1;
+              relativePositionID[2] = -1;
+              relativePositionID[3] = -1;
+            }
+            else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
+              if(j+reverseIdDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = -1;
+              }
+              else{ // 하단에 노드가 존재하는 경우
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = j+1;
+                relativePositionID[2] = j + reverseIdDiff;
+                relativePositionID[3] = -1;
+              }
+            }
+            else{ // 아래에 노드가 존재하는 경우
+              relativePositionID[0] = j-1;
+              relativePositionID[1] = j+1;
+              relativePositionID[2] = j + reverseIdDiff;
+              relativePositionID[3] = -1;
+            }
+
+            forwardIDDiff += 2;
+            reverseIdDiff = columnCount*2 - forwardIDDiff;            
+          }
+          else{ // 아직 초과하지 않은 경우
+            if(horizonLineCount == rowCount){ // 마지막 행인 경우
+              if(verticalLineCount == lastRowRemain){
+                relativePositionID[0] = j -reverseIdDiff;
+                relativePositionID[1] = j-1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = -1;
+              }
+              else if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 마지막 노드인 경우)
+                relativePositionID[0] = j - reverseIdDiff;
+                relativePositionID[1] = j-1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = -1;
+              }
+              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = j+1;
+
+                forwardIDDiff -= 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount--;
+              }
+              else{ // 1열 || 마지막 열이 아닌 경우
+
+                relativePositionID[0] = j - reverseIdDiff;
+                relativePositionID[1] = j-1;
+                relativePositionID[2] = -1;
+                relativePositionID[3] = j+1;
+
+                forwardIDDiff -= 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount--;
+              }
+            }
+            else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
+              if(verticalLineCount == 1){ // 1열인 경우 (하단에 노드 존재함)
+                relativePositionID[0] = j - reverseIdDiff;
+                relativePositionID[1] = j-1;
+                relativePositionID[2] = j+1;
+                relativePositionID[3] = -1;
+              }
+              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+                if(j + forwardIDDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
+                  relativePositionID[0] = j-1;
+                  relativePositionID[1] = -1;
+                  relativePositionID[2] = -1;
+                  relativePositionID[3] = j+1;
+
+                  forwardIDDiff -= 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                  verticalLineCount--;
+                }
+                else{ // 하단에 노드가 존재하는 경우
+                  relativePositionID[0] = j-1;
+                  relativePositionID[1] = -1;
+                  relativePositionID[2] = j + forwardIDDiff;
+                  relativePositionID[3] = j+1;
+                  
+                  forwardIDDiff -= 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                  verticalLineCount--;
+                }
+              }
+              else{ // 1열 || 마지막 열이 아닌 경우
+                if(j + forwardIDDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
+                  relativePositionID[0] = j - reverseIdDiff;
+                  relativePositionID[1] = j-1;
+                  relativePositionID[2] = -1;
+                  relativePositionID[3] = j+1;
+
+                  forwardIDDiff -= 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                  verticalLineCount--;
+                }
+                else{ // 하단에 노드가 존재하는 경우
+                  relativePositionID[0] = j - reverseIdDiff;
+                  relativePositionID[1] = j-1;
+                  relativePositionID[2] = j + forwardIDDiff;
+                  relativePositionID[3] = j+1;
+
+                  forwardIDDiff -= 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                  verticalLineCount--;
+                }
+              }
+            }
+            else{ // 마지막 행이 아닌 경우
+              if(verticalLineCount == 1){ // 1열인 경우
+                relativePositionID[0] = j - reverseIdDiff;
+                relativePositionID[1] = j-1;
+                relativePositionID[2] = j+1;
+                relativePositionID[3] = -1;
+              }
+              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+
+                relativePositionID[0] = j-1;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = j + forwardIDDiff;
+                relativePositionID[3] = j+1;
+
+                forwardIDDiff -= 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount--;
+              }
+              else{ // 1열 || 마지막 열이 아닌 경우
+
+                relativePositionID[0] = j - reverseIdDiff;
+                relativePositionID[1] = j-1;
+                relativePositionID[2] = j + forwardIDDiff;
+                relativePositionID[3] = j+1;
+
+                forwardIDDiff -= 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+
+                verticalLineCount--;
+              }
+            }
+          }
+        }
+        // console.log('verticalLineCount', verticalLineCount);
+        // console.log(`relativePositionID[${i+1}][${j}]`, relativePositionID[0], relativePositionID[1], relativePositionID[2], relativePositionID[3]);
+        console.log(relativePositionID)
+        this.setRelativePosition(j, relativePositionID);
+        // console.log(this.nodeXY);
+        clustersWithNodes[i].children[j - i*nodeCount-1].x0 = x - nodeSize / 2;
+        clustersWithNodes[i].children[j - i*nodeCount-1].x1 = x + nodeSize / 2;
+        
+        clustersWithNodes[i].children[j - i*nodeCount-1].y0 = y - nodeSize / 2;
+        clustersWithNodes[i].children[j - i*nodeCount-1].y1 = y + nodeSize / 2;
+
+        // this.setNodeXY(this.relativePosition[j]);
+      }
     }
     this.clustersWithNodes = clustersWithNodes;
-    this.setNodeXY();
-    console.log('nodeXY', this.nodeXY)
+    // this.setNodeXY();
+    // console.log('nodeXY', this.nodeXY)
+  }
+
+  public getRelativePosition(id: number): number[]{
+    // console.log('getRelativePosition', this.relativePosition[id])
+    return this.relativePosition[id];
+  }
+
+  public setRelativePosition(id: number, relativePos: number[]){
+    this.relativePosition[id] = relativePos;
+    this.setNodeXY(this.relativePosition[id]);
+    // console.log("in setRelativePosition : this.relativePosition", this.relativePosition[id])
+  }
+
+  public getAllRelativePosition(){
+    return this.relativePosition;
   }
   
   public getClusterCount() {

@@ -46,7 +46,7 @@ export class TreemapComponent implements OnInit {
       padding: {left: 20, right: 20, top: 20, bottom: 20}
     }; 
     const opacity = { 
-      node: 0.45, 
+      node: 0.6, 
       edge: 0.30,
       cluster: 0.2
     };
