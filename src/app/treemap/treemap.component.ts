@@ -8,6 +8,7 @@ import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
 import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
+import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
 
 @Component({
   selector: 'app-treemap',
@@ -85,8 +86,8 @@ export class TreemapComponent implements OnInit {
     treemapData.setZNodePosition();
     let treemapSelections = new TreemapSelections(treemapData, svg);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
-    let edgeCrossingCalculator = new EdgeCrossingCountCalculator(treemapData, branch);
-    edgeCrossingCalculator.calculateEdgeCrossingCount();
+    let edgeMeasurement = new EdgeMeasurement(treemapData, branch);
+    edgeMeasurement.calculateEdgeCrossingCount();
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();
