@@ -8,6 +8,7 @@ import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
 import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
+import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
 
 @Component({
   selector: 'app-treemap',
@@ -31,7 +32,7 @@ export class TreemapComponent implements OnInit {
         d3.csv('./assets/data/branch-1062.csv')
         // d3.csv('./assets/data/my_branch.csv')
           .then((branch: any) => {
-            console.log("bus, branch", bus, branch);
+            // console.log("bus, branch", bus, branch);
             this.renderTreemap(bus, branch);
           })
       });
@@ -69,8 +70,8 @@ export class TreemapComponent implements OnInit {
 
     const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
     const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
-    console.log("communities", communities); // data type : number[]
-    console.log("details", details);
+    // console.log("communities", communities); // data type : number[]
+    // console.log("details", details);
 
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${-size.viewBox.minX} ${-size.viewBox.minY} ${size.viewBox.width + size.margin.right} ${size.viewBox.height + size.margin.bottom}`)
@@ -85,8 +86,8 @@ export class TreemapComponent implements OnInit {
     treemapData.setZNodePosition();
     let treemapSelections = new TreemapSelections(treemapData, svg);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
-    let edgeCrossingCalculator = new EdgeCrossingCountCalculator(treemapData, branch);
-    edgeCrossingCalculator.calculateEdgeCrossingCount();
+    let edgeMeasurement = new EdgeMeasurement(treemapData, branch);
+    edgeMeasurement.calculateEdgeCrossingCount();
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();
