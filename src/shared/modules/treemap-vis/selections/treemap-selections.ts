@@ -371,7 +371,8 @@ export class TreemapSelections {
         }
       }
       else if(xdif == 0){
-        let rd = Math.floor(Math.random()*2);
+        // let rd = Math.floor(Math.random()*2);
+        let rd = d.from%2;
         if(ydif > 0){
           if(rd == 0){
             k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`;
@@ -402,7 +403,8 @@ export class TreemapSelections {
         }
       }
       else if(ydif == 0){
-        let rd = Math.floor(Math.random()*2);
+        // let rd = Math.floor(Math.random()*2);
+        let rd = d.from%2;
         if(xdif > 0){
           if(rd == 0){
             k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;

@@ -3,7 +3,7 @@ import { IBusObjectData } from "src/shared/interfaces/ibus-object-data";
 import { TreemapData } from "../datas/treemap-data";
 
 class EdgeInfo {
-    public eType: number[] = [-1, -1, -1, -1]; //h=1,w=2. -1은 없음
+    public eType: number[] = [-1, -1, -1, -1]; //h=1,w=2. -1은 없음(NA)
     public xy: number[][] = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
 
     constructor(x1: number, y1: number, x2: number, y2: number) {
@@ -109,13 +109,10 @@ export class EdgeMeasurement {
             edgeInfo = new EdgeInfo(fromNode.x, fromNode.y, toNode.x, toNode.y);
             edgeInfo.xy[0][2] = toNode.x;
             edgeInfo.xy[0][3] = toNode.y;
-            if (fromNode.x == toNode.x) {//세로 일자
+            if (fromNode.x == toNode.x)//세로 일자
                 edgeInfo.eType[0] = h;
-            }
-            else {//가로 일자
+            else //가로 일자
                 edgeInfo.eType[0] = w;
-            }
-
         }
         else {
             if (xdif > 0 && ydif > 0) {
@@ -583,7 +580,8 @@ export class EdgeMeasurement {
                 }
             }
             else if (xdif == 0) {
-                let rd = Math.floor(Math.random() * 2);
+                // let rd = Math.floor(Math.random()*2);
+                let rd = d.from%2;
                 if (ydif > 0) {
                     if (rd == 0) {
                         edgeInfo = new EdgeInfo(fromNode.p9[0], fromNode.p9[1], toNode.p11[0], toNode.p11[1]);
@@ -646,7 +644,8 @@ export class EdgeMeasurement {
                 }
             }
             else if (ydif == 0) {
-                let rd = Math.floor(Math.random() * 2);
+                // let rd = Math.floor(Math.random()*2);
+                let rd = d.from%2;
                 if (xdif > 0) {
                     if (rd == 0) {
                         edgeInfo = new EdgeInfo(fromNode.p2[0], fromNode.p2[1], toNode.p0[0], toNode.p0[1]);
