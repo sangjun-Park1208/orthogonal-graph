@@ -92,6 +92,8 @@ export class TreemapSelections {
       .attr("y", d =>  (yScale((d.y0 + d.y1) / 2 - nodeSize / 2)))
       .attr("fill", (d:any) => {
         return this.treemapData.colorZ(+d.data.parentId / areaCount);
+        // return this.treemapData.colorZ(+d.data.area / areaCount);
+
       })
       .attr("fill-opacity", this.treemapData.opacity.node)
       .attr("shape-rendering", "crispEdges");
@@ -131,19 +133,24 @@ export class TreemapSelections {
     }) as IBusObjectData;
 
     let k = ''; // 'path' starting point
-    let xdif = toNode.x - fromNode.x; // x diff
-    let ydif = toNode.y - fromNode.y; // y diff
+    let xdif = Math.floor(toNode.x - fromNode.x); // x diff
+    let ydif = Math.floor(toNode.y - fromNode.y); // y diff
     let absXdif = Math.abs(xdif); // |x diff|
     let absYdif = Math.abs(ydif); // |y diff|
 
     const nodesize = this.treemapData.nodeSize;
+    // console.log(fromNode);
+    // console.log(d);
+    console.log('nodeXY', nodeXY)
+    console.log(`fromNode.id(${fromNode.id}), fromNode.relativePosition(${fromNode.relativePosition})`)
+
     
     if(fromNode.relativePosition.includes(toNode.id)){
       k += `M${xScale(fromNode.x)}, ${yScale(fromNode.y)}`;
       k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`;
     }
     else{
-      if(xdif > 0 && ydif > 0){
+      if(xdif > 1 && ydif > 1){
         if(absXdif < absYdif){
           
           k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`; // 출발 지점
@@ -200,7 +207,7 @@ export class TreemapSelections {
           }
         }
       }
-      else if(xdif > 0 && ydif < 0){
+      else if(xdif > 1 && ydif < -1){
         
         if(absXdif < absYdif){
           k += `M${xScale(fromNode.p3[0])}, ${yScale(fromNode.p3[1])}`; // 출발 지점
@@ -223,9 +230,10 @@ export class TreemapSelections {
             }
             else{ // Node overlap 발생 -> 우회
 
+
               k += `L${xScale((fromNode.p3[0] + blockNode.p11[0]) / 2)}, ${yScale(fromNode.p3[1])}`;
-              k += `L${xScale((fromNode.p3[0] + blockNode.p11[0]) / 2)}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
-              k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
+              k += `L${xScale((fromNode.p3[0] + blockNode.p11[0]) / 2)}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
               k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1])}`;
             }
           }
@@ -258,7 +266,8 @@ export class TreemapSelections {
           }
         }
       }
-      else if(xdif < 0 && ydif > 0){
+      else if(xdif < -1 && ydif > 1){
+        
         if(absXdif < absYdif){
           k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`; // 출발 지점
           if(fromNode.relativePosition[3] == -1){ // 좌측에 노드가 없는 경우
@@ -313,7 +322,7 @@ export class TreemapSelections {
           }
         }
       }
-      else if(xdif < 0 && ydif < 0){
+      else if(xdif < -1 && ydif < -1){
         if(absXdif < absYdif){
           k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`; // 출발 지점
 
@@ -327,7 +336,7 @@ export class TreemapSelections {
               return fromNode.relativePosition[3] == m.id;
             }) as IBusObjectData;
 
-            if((fromNode.p11[1] + toNode.p5[1]) / 2 > blockNode.p3[0]){ // Node overlap 없는 경우
+            if((fromNode.p11[0] + toNode.p5[0]) / 2 > blockNode.p3[0]){ // Node overlap 없는 경우
               k += `L${xScale((fromNode.p11[0] + toNode.p5[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
               k += `L${xScale((fromNode.p11[0] + toNode.p5[0]) / 2)}, ${yScale(toNode.p5[1])}`;
               k += `L${xScale(toNode.p5[0])}, ${yScale(toNode.p5[1])}`;
@@ -335,8 +344,8 @@ export class TreemapSelections {
             else{ // Node overlap 발생 -> 우회
 
               k += `L${xScale((fromNode.p11[0] + blockNode.p3[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
-              k += `L${xScale((fromNode.p11[0] + blockNode.p3[0]) / 2)}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
-              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
+              k += `L${xScale((fromNode.p11[0] + blockNode.p3[0]) / 2)}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
               k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
             }
           }
@@ -370,64 +379,65 @@ export class TreemapSelections {
 
         }
       }
-      else if(xdif == 0){
+      else if(-1 <= xdif && xdif <= 1){
+        console.log(`fromNode.id(${fromNode.id}), toNode.id(${toNode.id})`)
         let rd = Math.floor(Math.random()*2);
         if(ydif > 0){
           if(rd == 0){
             k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`;
-            k += `L${xScale(fromNode.p9[0] - (nodesize / 3)*2)}, ${yScale(fromNode.p9[1])}`;
-            k += `L${xScale(fromNode.p9[0] - (nodesize / 3)*2)}, ${yScale(toNode.p11[1])}`;
+            k += `L${xScale(fromNode.p9[0] - (nodesize / 5)*1)}, ${yScale(fromNode.p9[1])}`;
+            k += `L${xScale(fromNode.p9[0] - (nodesize / 5)*1)}, ${yScale(toNode.p11[1])}`;
             k += `L${xScale(toNode.p11[0])}, ${yScale(toNode.p11[1])}`
           }
           else{
             k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`;
-            k += `L${xScale(fromNode.p5[0] + (nodesize / 3)*2)}, ${yScale(fromNode.p5[1])}`;
-            k += `L${xScale(fromNode.p5[0] + (nodesize / 3)*2)}, ${yScale(toNode.p3[1])}`;
+            k += `L${xScale(fromNode.p5[0] + (nodesize / 5)*1)}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale(fromNode.p5[0] + (nodesize / 5)*1)}, ${yScale(toNode.p3[1])}`;
             k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`
           }
         }
         else{
           if(rd == 0){
             k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`;
-            k += `L${xScale(fromNode.p11[0] - (nodesize / 3)*2)}, ${yScale(fromNode.p11[1])}`;
-            k += `L${xScale(fromNode.p11[0] - (nodesize / 3)*2)}, ${yScale(toNode.p9[1])}`;
+            k += `L${xScale(fromNode.p11[0] - (nodesize / 5)*1)}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale(fromNode.p11[0] - (nodesize / 5)*1)}, ${yScale(toNode.p9[1])}`;
             k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`
           }
           else{
             k += `M${xScale(fromNode.p3[0])}, ${yScale(fromNode.p3[1])}`;
-            k += `L${xScale(fromNode.p3[0] + (nodesize / 3)*2)}, ${yScale(fromNode.p3[1])}`;
-            k += `L${xScale(fromNode.p3[0] + (nodesize / 3)*2)}, ${yScale(toNode.p5[1])}`;
+            k += `L${xScale(fromNode.p3[0] + (nodesize / 5)*1)}, ${yScale(fromNode.p3[1])}`;
+            k += `L${xScale(fromNode.p3[0] + (nodesize / 5)*1)}, ${yScale(toNode.p5[1])}`;
             k += `L${xScale(toNode.p5[0])}, ${yScale(toNode.p5[1])}`
           }
         }
       }
-      else if(ydif == 0){
+      else if(-1 <= ydif && ydif <= 1){
         let rd = Math.floor(Math.random()*2);
         if(xdif > 0){
           if(rd == 0){
             k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;
-            k += `L${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1] - (nodesize / 3)*2)}`;
-            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1] - (nodesize / 3)*2)}`;
+            k += `L${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1] - (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1] - (nodesize / 5)*1)}`;
             k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
           }
           else{
             k += `M${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1])}`;
-            k += `L${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1] + (nodesize / 3)*2)}`;
-            k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1] + (nodesize / 3)*2)}`;
+            k += `L${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1] + (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1] + (nodesize / 5)*1)}`;
             k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1])}`;
           }
         }
         else{
           if(rd == 0){
             k += `M${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1])}`;
-            k += `L${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1] - (nodesize / 3)*2)}`;
-            k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1] - (nodesize / 3)*2)}`;
+            k += `L${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1] - (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1] - (nodesize / 5)*1)}`;
             k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1])}`;
           }
           else{
             k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`;
-            k += `L${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1] + (nodesize / 3)*2)}`;
-            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1] + (nodesize / 3)*2)}`;
+            k += `L${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1] + (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1] + (nodesize / 5)*1)}`;
             k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
           } 
         }  

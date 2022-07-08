@@ -55,7 +55,7 @@ export class TreemapComponent implements OnInit {
       cluster: 2,
       edge: 1.5
     };
-    const nodeSize = 17;
+    const nodeSize = 20;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
@@ -67,10 +67,11 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
-    const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
-    // console.log("communities", communities); // data type : number[]
-    // console.log("details", details);
+    // const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
+    // const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
+    const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.1}); // assign Louvain Algorithm
+    
+    console.log("details", details);
 
     const svg = d3.select(this.rootSvg.nativeElement)
       .attr("viewBox", `${-size.viewBox.minX} ${-size.viewBox.minY} ${size.viewBox.width + size.margin.right} ${size.viewBox.height + size.margin.bottom}`)

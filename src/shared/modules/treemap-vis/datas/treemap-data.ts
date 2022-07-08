@@ -324,6 +324,7 @@ export class TreemapData {
     const clusterCount = this.getClusterCount();
     const nodeSize = this.nodeSize;
     let clustersWithNodes = this.getClustersWithNodes();
+
     for (let i = 0; i < clusterCount; i++){ // 9회 수행
       const clusterX1 = clustersWithNodes[i].clusterinfo.x1;  // Cluster box 끝 x좌표
       const clusterX0 = clustersWithNodes[i].clusterinfo.x0;  // Cluster box 시작 x좌표
@@ -332,6 +333,10 @@ export class TreemapData {
       const nodeCount = clustersWithNodes[i].children.length;
       const widthInterval = this.clusterInterval[i][0]; // 각 클러스터 별 children node들 간의 너비 간격
       const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
+
+      const children = clustersWithNodes[i].children;
+      console.log('children', children);
+      
 
       let x = clusterX0;
       let y = clusterY0 + heightInterval;
@@ -360,9 +365,11 @@ export class TreemapData {
         lastRowRemain = nodeCount % columnCount;
         x = clusterX0;
       }
-      
+      if(lastRowRemain == 0) lastRowRemain = columnCount;
+      console.log(`nodeCount(${nodeCount}), columnCount(${columnCount}), lastRowRemain(${lastRowRemain})`)
       reverseIdDiff = columnCount*2 - forwardIDDiff;
-      for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행 
+      // for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행 
+      for (let j = 1; j <= nodeCount; j++){ // 118회 수행 
         /* 각 노드 별 [North, East, South, West] 상대위치 결정 알고리즘 추가 */
         // console.log(`(${horizonLineCount}, ${verticalLineCount})`);
         let relativePositionID = [0, 0, 0, 0];
@@ -376,30 +383,33 @@ export class TreemapData {
             horizonLineCount++;
 
             if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
-              relativePositionID[0] = j-1;
+              relativePositionID[0] = +children[j-2].data.id; // j-1
               relativePositionID[1] = -1;
               relativePositionID[2] = -1;
-              relativePositionID[3] = j+1;
+              relativePositionID[3] = +children[j].data.id; // j+1
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
-              if(j+forwardIDDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
-                relativePositionID[0] = j-1;
+              if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우\
+                relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
-                relativePositionID[3] = j+1;
+                relativePositionID[3] = +children[j].data.id; // j+1
               }
-              else{ // 하단에 노드가 존재하는 경우
-                relativePositionID[0] = j-1;
+              else{ // 하단에 노드가 존재하는 경우 ***********************************
+                console.log(`j+reverseIdDiff-1(${j+reverseIdDiff-1}), nodeCount(${nodeCount})`)
+                relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = -1;
-                relativePositionID[2] = j + forwardIDDiff;
-                relativePositionID[3] = j+1;
+                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + forwardIDDiff-2
+                // relativePositionID[3] = +children[j+1].data.id; // j+1
+                relativePositionID[3] = +children[j].data.id; // j+1
+
               }
             }
             else{ // 아래에 노드가 존재하는 경우
-              relativePositionID[0] = j-1;
+              relativePositionID[0] = +children[j-2].data.id; // j-1
               relativePositionID[1] = -1;
-              relativePositionID[2] = j + forwardIDDiff;
-              relativePositionID[3] = j+1;
+              relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
+              relativePositionID[3] = +children[j].data.id; // j+1
             }
 
             forwardIDDiff -= 2;
@@ -407,11 +417,12 @@ export class TreemapData {
 
           }
           else{ // 아직 초과하지 않은 경우
-            if(horizonLineCount == 1){ // 1행인 경우
+            if(horizonLineCount == 1){ // 1행인 경우**********************************************
               if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 첫 번째 노드인 경우)
                 relativePositionID[0] = -1;
-                relativePositionID[1] = j+1;
-                relativePositionID[2] = j + reverseIdDiff;
+                // relativePositionID[1] = +children[j+1].data.id; // j+1
+                relativePositionID[1] = +children[j].data.id; // j+1
+                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id;
                 relativePositionID[3] = -1;
 
                 forwardIDDiff += 2;
@@ -422,15 +433,17 @@ export class TreemapData {
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우
                 relativePositionID[0] = -1;
                 relativePositionID[1] = -1;
-                relativePositionID[2] = j+1;
-                relativePositionID[3] = j-1;
+                // relativePositionID[2] = +children[j+1].data.id; // j+1
+                relativePositionID[2] = +children[j].data.id; // j+1
+                relativePositionID[3] = +children[j-2].data.id; // j-1
 
               }
               else{ // 양 끝 열이 아닌 경우
                 relativePositionID[0] = -1;
-                relativePositionID[1] = j+1;
-                relativePositionID[2] = j + reverseIdDiff;
-                relativePositionID[3] = j-1;
+                // relativePositionID[1] = +children[j+1].data.id; // j+1
+                relativePositionID[1] = +children[j].data.id; // j+1
+                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+                relativePositionID[3] = +children[j-2].data.id; // j-1
 
                 forwardIDDiff += 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -440,15 +453,14 @@ export class TreemapData {
             }
             else if(horizonLineCount == rowCount){ // 마지막 행인 경우
               if(verticalLineCount == lastRowRemain){
-                relativePositionID[0] = j - forwardIDDiff;
+                relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
-                relativePositionID[3] = j-1;
+                relativePositionID[3] = +children[j-2].data.id; // j-1
               }
               else if(verticalLineCount == 1){ // 1열인 경우
-
-                relativePositionID[0] = j-1;
-                relativePositionID[1] = j+1;
+                relativePositionID[0] = +children[j-2].data.id; // j-1
+                relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
                 relativePositionID[3] = -1;
 
@@ -457,18 +469,12 @@ export class TreemapData {
 
                 verticalLineCount++;
               }
-              else if(verticalLineCount == lastRowRemain){ // 마지막 노드인 경우
-                relativePositionID[0] = j + reverseIdDiff;
-                relativePositionID[1] = -1;
-                relativePositionID[2] = -1;
-                relativePositionID[3] = j-1;
-              }
               else{ // 1열 || 마지막 노드가 아닌 경우
-
-                relativePositionID[0] = j-forwardIDDiff;
-                relativePositionID[1] = j+1;
+                console.log('j' , j);
+                relativePositionID[0] = +children[j-forwardIDDiff-1].data.id; // j-forwardIDDiff
+                relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
-                relativePositionID[3] = j-1;
+                relativePositionID[3] = +children[j-2].data.id; // j-1
 
                 forwardIDDiff += 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -476,12 +482,75 @@ export class TreemapData {
                 verticalLineCount++;
               }
             }
-            else{ // 1행 || 마지막 행이 아닌 경우
+            else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
+              if(verticalLineCount==1){ // 1열인 경우
+                if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
+                  relativePositionID[0] = +children[j-2].data.id;
+                  relativePositionID[1] = +children[j].data.id;
+                  relativePositionID[2] = -1;
+                  relativePositionID[3] = -1;
+
+                  forwardIDDiff += 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  
+                  verticalLineCount++;
+                }
+                else{ // 하단에 노드가 존재하는 경우
+                  relativePositionID[0] = +children[j-2].data.id;
+                  relativePositionID[1] = +children[j].data.id;
+                  relativePositionID[2] = +children[j+reverseIdDiff-1].data.id;
+                  relativePositionID[3] = -1;
+                  
+                  forwardIDDiff += 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  
+                  verticalLineCount++;
+                }
+              }
+              else if(verticalLineCount == columnCount){ // 마지막 열인 경우 - 무조건 하단에 노드 존재
+                relativePositionID[0] = +children[j-forwardIDDiff-1].data.id;
+                relativePositionID[1] = -1;
+                relativePositionID[2] = +children[j].data.id;
+                relativePositionID[3] = +children[j-2].data.id;
+
+                forwardIDDiff += 2;
+                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                
+                verticalLineCount++;
+              }
+              else{ // 1열 || 마지막 열이 아닌 경우
+                if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
+                  relativePositionID[0] = +children[j-forwardIDDiff-1].data.id;
+                  relativePositionID[1] = +children[j].data.id;
+                  relativePositionID[2] = -1;
+                  relativePositionID[3] = +children[j-2].data.id;
+                  
+                  forwardIDDiff += 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  
+                  verticalLineCount++;
+                }
+                else{ // 하단에 노드가 존재하는 경우
+                  relativePositionID[0] = +children[j-forwardIDDiff-1].data.id;
+                  relativePositionID[1] = +children[j].data.id;
+                  relativePositionID[2] = +children[j+reverseIdDiff-1].data.id;
+                  relativePositionID[3] = +children[j-2].data.id;
+                  
+                  forwardIDDiff += 2;
+                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  
+                  verticalLineCount++;
+                }
+              }
+
+            }
+            else{ // 1행 || 마지막 행이 아닌 경우 **************************************
               if(verticalLineCount == 1){ // 1열인 경우
 
-                relativePositionID[0] = j-1;
-                relativePositionID[1] = j+1;
-                relativePositionID[2] = j + reverseIdDiff;
+                relativePositionID[0] = +children[j-2].data.id; // j-1
+                // relativePositionID[1] = +children[j+1].data.id; // j+1
+                relativePositionID[1] = +children[j].data.id; // j+1
+                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
                 relativePositionID[3] = -1;
 
                 forwardIDDiff += 2;
@@ -490,17 +559,18 @@ export class TreemapData {
                 verticalLineCount++;
               }
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-                relativePositionID[0] = j-forwardIDDiff;
+                relativePositionID[0] = +children[j-forwardIDDiff-1].data.id; // j-forwardIDDiff
                 relativePositionID[1] = -1;
-                relativePositionID[2] = j+1;
-                relativePositionID[3] = j-1;
+                relativePositionID[2] = +children[j].data.id; // j+1
+                relativePositionID[3] = +children[j-2].data.id; // j-1
               }
               else{ // 양 끝 열이 아닌 경우
-
-                relativePositionID[0] = j - forwardIDDiff;
-                relativePositionID[1] = j+1;
-                relativePositionID[2] = j + reverseIdDiff;
-                relativePositionID[3] = j-1;
+                console.log(`j + reverseIdDiff-1(${j + reverseIdDiff-1})`)
+                relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
+                // relativePositionID[1] = +children[j+1].data.id; // j+1
+                relativePositionID[1] = +children[j].data.id; // j+1
+                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+                relativePositionID[3] = +children[j-2].data.id; // j-1
 
                 forwardIDDiff += 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -519,29 +589,30 @@ export class TreemapData {
             horizonLineCount++;
 
             if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
-              relativePositionID[0] = j-1;
-              relativePositionID[1] = j+1;
+              relativePositionID[0] = +children[j-2].data.id; // j-1
+              relativePositionID[1] = +children[j].data.id; // j+1
               relativePositionID[2] = -1;
               relativePositionID[3] = -1;
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
-              if(j+reverseIdDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
-                relativePositionID[0] = j-1;
-                relativePositionID[1] = j+1;
+              if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+                relativePositionID[0] = +children[j-2].data.id; // j-1
+                relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
                 relativePositionID[3] = -1;
               }
-              else{ // 하단에 노드가 존재하는 경우
-                relativePositionID[0] = j-1;
-                relativePositionID[1] = j+1;
-                relativePositionID[2] = j + reverseIdDiff;
+              else{ // 하단에 노드가 존재하는 경우 ***************************
+                relativePositionID[0] = +children[j-2].data.id; // j-1
+                // relativePositionID[1] = +children[j+1].data.id; // j+1
+                relativePositionID[1] = +children[j].data.id; // j+1
+                relativePositionID[2] = +children[nodeCount-1].data.id; // j + reverseIdDiff-2
                 relativePositionID[3] = -1;
               }
             }
             else{ // 아래에 노드가 존재하는 경우
-              relativePositionID[0] = j-1;
-              relativePositionID[1] = j+1;
-              relativePositionID[2] = j + reverseIdDiff;
+              relativePositionID[0] = +children[j-2].data.id; // j-1
+              relativePositionID[1] = +children[j].data.id; // j+1
+              relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
               relativePositionID[3] = -1;
             }
 
@@ -551,22 +622,22 @@ export class TreemapData {
           else{ // 아직 초과하지 않은 경우
             if(horizonLineCount == rowCount){ // 마지막 행인 경우
               if(verticalLineCount == lastRowRemain){
-                relativePositionID[0] = j -reverseIdDiff;
-                relativePositionID[1] = j-1;
+                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j -reverseIdDiff
+                relativePositionID[1] = +children[j-2].data.id; // j-1
                 relativePositionID[2] = -1;
                 relativePositionID[3] = -1;
               }
               else if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 마지막 노드인 경우)
-                relativePositionID[0] = j - reverseIdDiff;
-                relativePositionID[1] = j-1;
+                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                relativePositionID[1] = +children[j-2].data.id; // j-1
                 relativePositionID[2] = -1;
                 relativePositionID[3] = -1;
               }
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-                relativePositionID[0] = j-1;
+                relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
-                relativePositionID[3] = j+1;
+                relativePositionID[3] = +children[j].data.id; // j+1
 
                 forwardIDDiff -= 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -574,11 +645,19 @@ export class TreemapData {
                 verticalLineCount--;
               }
               else{ // 1열 || 마지막 열이 아닌 경우
-
-                relativePositionID[0] = j - reverseIdDiff;
-                relativePositionID[1] = j-1;
-                relativePositionID[2] = -1;
-                relativePositionID[3] = j+1;
+                console.log(`verticalLineCount(${verticalLineCount}), lastRowRemain(${lastRowRemain}), j{${j}}`)
+                if(verticalLineCount == lastRowRemain-1){ // 마지막에서 두 번째 열인 경우
+                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                  relativePositionID[1] = +children[j-2].data.id; // j-1
+                  relativePositionID[2] = -1;
+                  relativePositionID[3] = +children[nodeCount-1].data.id; // j+1
+                }
+                else{
+                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                  relativePositionID[1] = +children[j-2].data.id; // j-1
+                  relativePositionID[2] = -1;
+                  relativePositionID[3] = +children[j].data.id; // j+1
+                }
 
                 forwardIDDiff -= 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -588,17 +667,17 @@ export class TreemapData {
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
               if(verticalLineCount == 1){ // 1열인 경우 (하단에 노드 존재함)
-                relativePositionID[0] = j - reverseIdDiff;
-                relativePositionID[1] = j-1;
-                relativePositionID[2] = j+1;
+                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                relativePositionID[1] = +children[j-2].data.id; // j-1
+                relativePositionID[2] = +children[j].data.id; // j+1
                 relativePositionID[3] = -1;
               }
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-                if(j + forwardIDDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
-                  relativePositionID[0] = j-1;
+                if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+                  relativePositionID[0] = +children[j-2].data.id; // j-1
                   relativePositionID[1] = -1;
                   relativePositionID[2] = -1;
-                  relativePositionID[3] = j+1;
+                  relativePositionID[3] = +children[j].data.id; // j+1
 
                   forwardIDDiff -= 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -606,10 +685,10 @@ export class TreemapData {
                   verticalLineCount--;
                 }
                 else{ // 하단에 노드가 존재하는 경우
-                  relativePositionID[0] = j-1;
+                  relativePositionID[0] = +children[j-1].data.id; // j-1
                   relativePositionID[1] = -1;
-                  relativePositionID[2] = j + forwardIDDiff;
-                  relativePositionID[3] = j+1;
+                  relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
+                  relativePositionID[3] = +children[j].data.id; // j+1
                   
                   forwardIDDiff -= 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -618,11 +697,13 @@ export class TreemapData {
                 }
               }
               else{ // 1열 || 마지막 열이 아닌 경우
-                if(j + forwardIDDiff > (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
-                  relativePositionID[0] = j - reverseIdDiff;
-                  relativePositionID[1] = j-1;
+                // if(j + forwardIDDiff-1 >= (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
+                if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+
+                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                  relativePositionID[1] = +children[j-2].data.id; // j-1
                   relativePositionID[2] = -1;
-                  relativePositionID[3] = j+1;
+                  relativePositionID[3] = +children[j].data.id; // j+1
 
                   forwardIDDiff -= 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -630,10 +711,11 @@ export class TreemapData {
                   verticalLineCount--;
                 }
                 else{ // 하단에 노드가 존재하는 경우
-                  relativePositionID[0] = j - reverseIdDiff;
-                  relativePositionID[1] = j-1;
-                  relativePositionID[2] = j + forwardIDDiff;
-                  relativePositionID[3] = j+1;
+                  // console.log(`nodeCount(${nodeCount}), j(${j}), j+forwardIDDiff-1(${j+forwardIDDiff-1}), i(${i})`);
+                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                  relativePositionID[1] = +children[j-2].data.id; // j-1
+                  relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
+                  relativePositionID[3] = +children[j].data.id; // j+1
 
                   forwardIDDiff -= 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -642,19 +724,20 @@ export class TreemapData {
                 }
               }
             }
-            else{ // 마지막 행이 아닌 경우
+            else{ // 마지막 행이 아닌 경우 *******************************************************
               if(verticalLineCount == 1){ // 1열인 경우
-                relativePositionID[0] = j - reverseIdDiff;
-                relativePositionID[1] = j-1;
-                relativePositionID[2] = j+1;
+                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                relativePositionID[1] = +children[j-2].data.id; // j-1
+                relativePositionID[2] = +children[j].data.id; // j+1
                 relativePositionID[3] = -1;
               }
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우
 
-                relativePositionID[0] = j-1;
+              // relativePositionID[0] = +children[j-1].data.id; // j-1
+                relativePositionID[0] = +children[j-reverseIdDiff-1].data.id; // j-1
                 relativePositionID[1] = -1;
-                relativePositionID[2] = j + forwardIDDiff;
-                relativePositionID[3] = j+1;
+                relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
+                relativePositionID[3] = +children[j].data.id; // j+1
 
                 forwardIDDiff -= 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -663,10 +746,10 @@ export class TreemapData {
               }
               else{ // 1열 || 마지막 열이 아닌 경우
 
-                relativePositionID[0] = j - reverseIdDiff;
-                relativePositionID[1] = j-1;
-                relativePositionID[2] = j + forwardIDDiff;
-                relativePositionID[3] = j+1;
+                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+                relativePositionID[1] = +children[j-2].data.id; // j-1
+                relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
+                relativePositionID[3] = +children[j].data.id; // j+1
 
                 forwardIDDiff -= 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
@@ -677,13 +760,18 @@ export class TreemapData {
           }
         }
 
-        this.setRelativePosition(j, relativePositionID);
-
-        clustersWithNodes[i].children[j - i*nodeCount-1].x0 = x - nodeSize / 2;
-        clustersWithNodes[i].children[j - i*nodeCount-1].x1 = x + nodeSize / 2;
+        this.setRelativePosition(children[j-1].data.id, relativePositionID);
+        clustersWithNodes[i].children[j-1].x0 = x - nodeSize / 2;
+        clustersWithNodes[i].children[j-1].x1 = x + nodeSize / 2;
         
-        clustersWithNodes[i].children[j - i*nodeCount-1].y0 = y - nodeSize / 2;
-        clustersWithNodes[i].children[j - i*nodeCount-1].y1 = y + nodeSize / 2;
+        clustersWithNodes[i].children[j-1].y0 = y - nodeSize / 2;
+        clustersWithNodes[i].children[j-1].y1 = y + nodeSize / 2;
+
+        // clustersWithNodes[i].children[j - i*nodeCount-1].x0 = x - nodeSize / 2;
+        // clustersWithNodes[i].children[j - i*nodeCount-1].x1 = x + nodeSize / 2;
+        
+        // clustersWithNodes[i].children[j - i*nodeCount-1].y0 = y - nodeSize / 2;
+        // clustersWithNodes[i].children[j - i*nodeCount-1].y1 = y + nodeSize / 2;
 
       }
     }
