@@ -5,7 +5,7 @@ import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 
 
-export class TreemapSelections { 
+export class TreemapSelections {
   private treemapData: TreemapData;
   private svg: d3.Selection<any, unknown, null, undefined>;
 
@@ -13,7 +13,7 @@ export class TreemapSelections {
   private clusters: d3.Selection<d3.BaseType | SVGGElement, IClusterData, SVGGElement, unknown>;
   private nodes: d3.Selection<d3.BaseType | SVGRectElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
   private nodeTexts: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
-  
+
   constructor (treemapData: TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
     this.svg = svg;
@@ -38,7 +38,7 @@ export class TreemapSelections {
 
     const xScale = this.treemapData.xScale;
     const yScale = this.treemapData.yScale;
-  
+
     this.clusters = this.svg.append("g")
       .attr("id", "clusters_and_nodes")
       .selectAll("g")
@@ -48,7 +48,7 @@ export class TreemapSelections {
       // d == clusterWithNodes : 9 clusters
       // each cluster has single object
       // each object has 'child'
-  
+
     this.clusters.append("rect")
       .attr("fill", (d:any) => {
         const hsl = d3.hsl(colorZ(+d.clusterinfo.data.id / clusterCount));
@@ -144,7 +144,7 @@ export class TreemapSelections {
     console.log('nodeXY', nodeXY)
     console.log(`fromNode.id(${fromNode.id}), fromNode.relativePosition(${fromNode.relativePosition})`)
 
-    
+
     if(fromNode.relativePosition.includes(toNode.id)){
       k += `M${xScale(fromNode.x)}, ${yScale(fromNode.y)}`;
       k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`;
@@ -152,7 +152,7 @@ export class TreemapSelections {
     else{
       if(xdif > 1 && ydif > 1){
         if(absXdif < absYdif){
-          
+
           k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`; // 출발 지점
 
           if(fromNode.relativePosition[1] == -1){ // 우측에 Node가 없는 경우
@@ -176,10 +176,10 @@ export class TreemapSelections {
               k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
               k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
             }
-          }  
+          }
         }
         else{
-          
+
           k += `M${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1])}`; // 출발 지점
 
           if(fromNode.relativePosition[2] == -1){ // 하단에 노드가 없는 경우
@@ -208,7 +208,7 @@ export class TreemapSelections {
         }
       }
       else if(xdif > 1 && ydif < -1){
-        
+
         if(absXdif < absYdif){
           k += `M${xScale(fromNode.p3[0])}, ${yScale(fromNode.p3[1])}`; // 출발 지점
 
@@ -267,7 +267,7 @@ export class TreemapSelections {
         }
       }
       else if(xdif < -1 && ydif > 1){
-        
+
         if(absXdif < absYdif){
           k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`; // 출발 지점
           if(fromNode.relativePosition[3] == -1){ // 좌측에 노드가 없는 경우
@@ -379,9 +379,9 @@ export class TreemapSelections {
 
         }
       }
-      else if(-1 <= xdif && xdif <= 1){
-        console.log(`fromNode.id(${fromNode.id}), toNode.id(${toNode.id})`)
-        let rd = Math.floor(Math.random()*2);
+      else if(xdif == 0){
+        // let rd = Math.floor(Math.random()*2);
+        let rd = d.from%2;
         if(ydif > 0){
           if(rd == 0){
             k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`;
@@ -411,8 +411,9 @@ export class TreemapSelections {
           }
         }
       }
-      else if(-1 <= ydif && ydif <= 1){
-        let rd = Math.floor(Math.random()*2);
+      else if(ydif == 0){
+        // let rd = Math.floor(Math.random()*2);
+        let rd = d.from%2;
         if(xdif > 0){
           if(rd == 0){
             k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;
@@ -439,13 +440,13 @@ export class TreemapSelections {
             k += `L${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1] + (nodesize / 5)*1)}`;
             k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1] + (nodesize / 5)*1)}`;
             k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
-          } 
-        }  
+          }
+        }
       }
     }
     return k;
   }
-  
+
   getSvg() {
     return this.svg;
   };
@@ -512,7 +513,7 @@ export class TreemapSelections {
     else { // if |x diff| <= |y diff|
       k += `L${xhalf}, ${yScale(fromNode.y)}`; // starts drawing : Horizontal.
       k += `L${xhalf}, ${yScale(toNode.y)}`;
-      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`; 
+      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`;
     }
     return k;
   }
