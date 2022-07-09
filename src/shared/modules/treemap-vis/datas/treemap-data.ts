@@ -335,7 +335,7 @@ export class TreemapData {
       const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
 
       const children = clustersWithNodes[i].children;
-      console.log('children', children);
+      // console.log('children', children);
       
 
       let x = clusterX0;
@@ -366,7 +366,6 @@ export class TreemapData {
         x = clusterX0;
       }
       if(lastRowRemain == 0) lastRowRemain = columnCount;
-      console.log(`nodeCount(${nodeCount}), columnCount(${columnCount}), lastRowRemain(${lastRowRemain})`)
       reverseIdDiff = columnCount*2 - forwardIDDiff;
       // for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행 
       for (let j = 1; j <= nodeCount; j++){ // 118회 수행 
@@ -379,7 +378,7 @@ export class TreemapData {
             dx *= -1;
             x = clusterX1 - widthInterval;
             y += heightInterval; // 바로 아래에 배치
-            verticalLineCount--;
+            
             horizonLineCount++;
 
             if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
@@ -389,7 +388,7 @@ export class TreemapData {
               relativePositionID[3] = +children[j].data.id; // j+1
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
-              if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우\
+              if(verticalLineCount > lastRowRemain){ // 하단에 노드가 존재하지 않는 경우\
                 relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
@@ -412,6 +411,7 @@ export class TreemapData {
               relativePositionID[3] = +children[j].data.id; // j+1
             }
 
+            verticalLineCount--;
             forwardIDDiff -= 2;
             reverseIdDiff = columnCount*2 - forwardIDDiff;
 
@@ -470,7 +470,7 @@ export class TreemapData {
                 verticalLineCount++;
               }
               else{ // 1열 || 마지막 노드가 아닌 경우
-                console.log('j' , j);
+                // console.log('j' , j);
                 relativePositionID[0] = +children[j-forwardIDDiff-1].data.id; // j-forwardIDDiff
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
@@ -565,7 +565,6 @@ export class TreemapData {
                 relativePositionID[3] = +children[j-2].data.id; // j-1
               }
               else{ // 양 끝 열이 아닌 경우
-                console.log(`j + reverseIdDiff-1(${j + reverseIdDiff-1})`)
                 relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1

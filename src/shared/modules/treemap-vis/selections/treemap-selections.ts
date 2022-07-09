@@ -140,9 +140,8 @@ export class TreemapSelections {
 
     const nodesize = this.treemapData.nodeSize;
     // console.log(fromNode);
-    // console.log(d);
-    console.log('nodeXY', nodeXY)
-    console.log(`fromNode.id(${fromNode.id}), fromNode.relativePosition(${fromNode.relativePosition})`)
+    // console.log('nodeXY', nodeXY)
+    // console.log(`fromNode.id(${fromNode.id}), fromNode.relativePosition(${fromNode.relativePosition})`)
 
 
     if(fromNode.relativePosition.includes(toNode.id)){
