@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import { WorkspaceComponent } from './workspace/workspace.component';
 import { TreemapComponent } from './treemap/treemap.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatCardHarness } from '@angular/material/card/testing';
+
 
 @NgModule({
   declarations: [
@@ -17,8 +17,7 @@ import { MatCardHarness } from '@angular/material/card/testing';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
-    MatCardHarness
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
