@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { WorkspaceComponent } from './workspace/workspace.component';
 import { TreemapComponent } from './treemap/treemap.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {MatSelectModule} from '@angular/material/select';
 
 
 @NgModule({
@@ -17,7 +18,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    MatSelectModule
   ],
   providers: [],
   bootstrap: [AppComponent]

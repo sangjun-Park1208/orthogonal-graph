@@ -21,33 +21,51 @@ export class TreemapComponent implements OnInit {
   @ViewChild('tooltip', {static : false}) tooltip!: ElementRef;
 
   nodeGroups: Array<number> = [];
+  data: number[];
+  selectDataNum: number;
 
   ngOnInit(): void {
   }
 
+  constructor(){
+    this.data = [14, 30, 57, 118, 300, 1062];
+    this.selectDataNum = 1062;
+  }
+
   ngAfterViewInit(): void {
     d3.csv('./assets/data/bus-1062.csv')
-    // d3.csv('./assets/data/my_bus.csv')
       .then((bus: any) => {
         d3.csv('./assets/data/branch-1062.csv')
-        // d3.csv('./assets/data/my_branch.csv')
           .then((branch: any) => {
             // console.log("bus, branch", bus, branch);
             this.renderTreemap(bus, branch);
           })
       });
   }
-  
-  renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{ 
+
+  select(num: number){
+    console.log(num)
+    d3.csv(`./assets/data/bus-${num}.csv`)
+      .then((bus: any) => {
+        d3.csv(`./assets/data/branch-${num}.csv`)
+          .then((branch: any) => {
+            this.renderTreemap(bus, branch);
+          })
+      });
+
+  }
+
+  renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{
+    console.log({bus, branch})
     const size = {
       width: 1700,
       height: 1000,
       viewBox: {minX: 20, minY: 20, width: 1700, height: 1000},
       margin: {left: 20, right: 20, top: 20, bottom: 20},
       padding: {left: 20, right: 20, top: 20, bottom: 20}
-    }; 
-    const opacity = { 
-      node: 0.6, 
+    };
+    const opacity = {
+      node: 0.6,
       edge: 0.30,
       cluster: 0.2
     };
@@ -56,7 +74,7 @@ export class TreemapComponent implements OnInit {
       cluster: 2,
       edge: 1.5
     };
-    const nodeSize = 20;
+    const nodeSize = 17;
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
@@ -68,10 +86,8 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    // const communities = louvain(graph, {randomWalk: false, resolution: 0.2}); 
-    // const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.2}); // assign Louvain Algorithm
     const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.1}); // assign Louvain Algorithm
-    
+
     console.log("details", details);
 
     const svg = d3.select(this.rootSvg.nativeElement)
@@ -82,10 +98,17 @@ export class TreemapComponent implements OnInit {
         // console.log("svg click", event, d);
         treemapEventListeners.restoreViewBox(event, d);
       });
-
+    // 다시 그리기
+    svg.select('g.container').remove();
+    // 그룹
+    const root = svg.append("g")
+      .attr("class", "container")
     let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     treemapData.setZNodePosition();
-    let treemapSelections = new TreemapSelections(treemapData, svg);
+
+
+
+    let treemapSelections = new TreemapSelections(treemapData, root);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
     let edgeMeasurement = new EdgeMeasurement(treemapData, branch);
     edgeMeasurement.calculateEdgeCrossingCount();
@@ -122,7 +145,7 @@ export class TreemapComponent implements OnInit {
       treemapEventListeners.magnifyViewBox(event, d);
       event.stopPropagation();
     });
-  
+
     const toolTip = d3.select(this.tooltip.nativeElement)
       .style('opacity', 0)
       .style('background-color', 'black')

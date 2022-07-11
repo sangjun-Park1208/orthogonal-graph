@@ -8,7 +8,7 @@ import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { DetailedLouvainOutput } from "graphology-communities-louvain";
 
-export class TreemapData { 
+export class TreemapData {
   private _bus: IBusData[];
   private _branch: IBranchData[];
   private _details: DetailedLouvainOutput;
@@ -16,7 +16,7 @@ export class TreemapData {
   private _size: ISize;
   private _nodeSize: number;
   private _strokeWidth: IConstant;
-  private _opacity: IConstant; 
+  private _opacity: IConstant;
   private _colorZ: any;
 
   private _xScale: d3.ScaleLinear<number, number, never>;
@@ -37,18 +37,18 @@ export class TreemapData {
     this._bus = _bus;
     this._branch = _branch;
     this._details = _details;
-    
+
     this._size = _size;
     this._nodeSize = _nodeSize;
     this._strokeWidth = _strokeWidth;
     this._opacity = _opacity;
-    
+
     this.clusterCount = _details.count; // Community 개수
     this._colorZ = d3.interpolateSinebow;
 
     let tabularData: ITabularData[] = [];
     let clusterCount = this.clusterCount;
-    
+
     const communities = _details.communities;
     tabularData = Object.keys(communities).map(d => { // 잎 추가 (노드 id는 클러스터 노드)
       return {id: +d + clusterCount, parentId: communities[d] + 1};
@@ -60,23 +60,23 @@ export class TreemapData {
     });
     this.areaCount = areaSet.size;
     tabularData.push({id: 0, parentId: undefined})  // 루트 추가
-    
+
     for (let i = 0; i < clusterCount; i++){ // 클러스터 정점 추가
       tabularData.push({id: i + 1, parentId: 0});
     }
     this.tabularData = tabularData;
-    
-    let root: d3.HierarchyNode<any> = d3.stratify()  
+
+    let root: d3.HierarchyNode<any> = d3.stratify()
       (tabularData);
     root.count();
-    console.log("root", root); 
+    console.log("root", root);
 
     this.children = root.children as d3.HierarchyNode<any>[];
     this.leaves = root.leaves().map(d => {
       // console.log("leaf data before", d);
       let bus = _bus.find((m) => {
         return m.id == d.data.id - clusterCount;
-      }) 
+      })
       Object.assign(d.data, bus);
       // console.log("leaf data after", d);
       return d;
@@ -160,8 +160,8 @@ export class TreemapData {
     console.log('clusterWithNodes', this.clustersWithNodes)
 
     this.nodeXY = this.leaves.map((d:any) => (
-      {id: +d.id - clusterCount, 
-        x: (d.x0 + d.x1) / 2, 
+      {id: +d.id - clusterCount,
+        x: (d.x0 + d.x1) / 2,
         y: (d.y0 + d.y1) / 2,
         p0: [d.x0 + (d.x1-d.x0)*(1/4), d.y0],
         p1: [d.x0 + (d.x1-d.x0)*(1/2), d.y0],
@@ -180,8 +180,8 @@ export class TreemapData {
 
     this.relativePosition = [];
   }
-  
-  
+
+
   public set bus(bus: IBusData[]) {
     this._bus = bus;
   }
@@ -253,7 +253,7 @@ export class TreemapData {
   public get xScale() {
     return this._xScale;
   }
-  
+
   public set yScale(_yScale: d3.ScaleLinear<number, number, never>) {
     this._yScale = _yScale;
   }
@@ -276,7 +276,7 @@ export class TreemapData {
     });
 
     tabularData.push({id: 0, parentId: undefined})  // 루트 추가
-    
+
     for (let i = 0; i < clusterCount; i++){ // 클러스터 정점 추가
       tabularData.push({id: i + 1, parentId: 0});
     }
@@ -288,8 +288,8 @@ export class TreemapData {
     const nodeSize = this.nodeSize;
 
     this.nodeXY = this.leaves.map((d:any) => (
-      {id: +d.id - clusterCount, 
-        x: d.x0 + nodeSize / 2, 
+      {id: +d.id - clusterCount,
+        x: d.x0 + nodeSize / 2,
         y: d.y0 + nodeSize / 2,
         p0: [d.x0 + (d.x1-d.x0)*(1/4), d.y0],
         p1: [d.x0 + (d.x1-d.x0)*(1/2), d.y0],
@@ -336,7 +336,7 @@ export class TreemapData {
 
       const children = clustersWithNodes[i].children;
       // console.log('children', children);
-      
+
 
       let x = clusterX0;
       let y = clusterY0 + heightInterval;
@@ -367,8 +367,8 @@ export class TreemapData {
       }
       if(lastRowRemain == 0) lastRowRemain = columnCount;
       reverseIdDiff = columnCount*2 - forwardIDDiff;
-      // for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행 
-      for (let j = 1; j <= nodeCount; j++){ // 118회 수행 
+      // for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행
+      for (let j = 1; j <= nodeCount; j++){ // 118회 수행
         /* 각 노드 별 [North, East, South, West] 상대위치 결정 알고리즘 추가 */
         // console.log(`(${horizonLineCount}, ${verticalLineCount})`);
         let relativePositionID = [0, 0, 0, 0];
@@ -378,7 +378,7 @@ export class TreemapData {
             dx *= -1;
             x = clusterX1 - widthInterval;
             y += heightInterval; // 바로 아래에 배치
-            
+
             horizonLineCount++;
 
             if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
@@ -398,7 +398,7 @@ export class TreemapData {
                 console.log(`j+reverseIdDiff-1(${j+reverseIdDiff-1}), nodeCount(${nodeCount})`)
                 relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = -1;
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + forwardIDDiff-2
+                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + forwardIDDiff
                 // relativePositionID[3] = +children[j+1].data.id; // j+1
                 relativePositionID[3] = +children[j].data.id; // j+1
 
@@ -447,7 +447,7 @@ export class TreemapData {
 
                 forwardIDDiff += 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
-                
+
                 verticalLineCount++;
               }
             }
@@ -478,7 +478,7 @@ export class TreemapData {
 
                 forwardIDDiff += 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
-                
+
                 verticalLineCount++;
               }
             }
@@ -492,7 +492,7 @@ export class TreemapData {
 
                   forwardIDDiff += 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
-                  
+
                   verticalLineCount++;
                 }
                 else{ // 하단에 노드가 존재하는 경우
@@ -500,10 +500,10 @@ export class TreemapData {
                   relativePositionID[1] = +children[j].data.id;
                   relativePositionID[2] = +children[j+reverseIdDiff-1].data.id;
                   relativePositionID[3] = -1;
-                  
+
                   forwardIDDiff += 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
-                  
+
                   verticalLineCount++;
                 }
               }
@@ -515,7 +515,7 @@ export class TreemapData {
 
                 forwardIDDiff += 2;
                 reverseIdDiff = columnCount*2 - forwardIDDiff;
-                
+
                 verticalLineCount++;
               }
               else{ // 1열 || 마지막 열이 아닌 경우
@@ -524,10 +524,10 @@ export class TreemapData {
                   relativePositionID[1] = +children[j].data.id;
                   relativePositionID[2] = -1;
                   relativePositionID[3] = +children[j-2].data.id;
-                  
+
                   forwardIDDiff += 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
-                  
+
                   verticalLineCount++;
                 }
                 else{ // 하단에 노드가 존재하는 경우
@@ -535,10 +535,10 @@ export class TreemapData {
                   relativePositionID[1] = +children[j].data.id;
                   relativePositionID[2] = +children[j+reverseIdDiff-1].data.id;
                   relativePositionID[3] = +children[j-2].data.id;
-                  
+
                   forwardIDDiff += 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
-                  
+
                   verticalLineCount++;
                 }
               }
@@ -616,7 +616,7 @@ export class TreemapData {
             }
 
             forwardIDDiff += 2;
-            reverseIdDiff = columnCount*2 - forwardIDDiff;            
+            reverseIdDiff = columnCount*2 - forwardIDDiff;
           }
           else{ // 아직 초과하지 않은 경우
             if(horizonLineCount == rowCount){ // 마지막 행인 경우
@@ -644,7 +644,7 @@ export class TreemapData {
                 verticalLineCount--;
               }
               else{ // 1열 || 마지막 열이 아닌 경우
-                console.log(`verticalLineCount(${verticalLineCount}), lastRowRemain(${lastRowRemain}), j{${j}}`)
+                // console.log(`verticalLineCount(${verticalLineCount}), lastRowRemain(${lastRowRemain}), j{${j}}`)
                 if(verticalLineCount == lastRowRemain-1){ // 마지막에서 두 번째 열인 경우
                   relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
                   relativePositionID[1] = +children[j-2].data.id; // j-1
@@ -688,7 +688,7 @@ export class TreemapData {
                   relativePositionID[1] = -1;
                   relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
                   relativePositionID[3] = +children[j].data.id; // j+1
-                  
+
                   forwardIDDiff -= 2;
                   reverseIdDiff = columnCount*2 - forwardIDDiff;
 
@@ -762,15 +762,9 @@ export class TreemapData {
         this.setRelativePosition(children[j-1].data.id, relativePositionID);
         clustersWithNodes[i].children[j-1].x0 = x - nodeSize / 2;
         clustersWithNodes[i].children[j-1].x1 = x + nodeSize / 2;
-        
+
         clustersWithNodes[i].children[j-1].y0 = y - nodeSize / 2;
         clustersWithNodes[i].children[j-1].y1 = y + nodeSize / 2;
-
-        // clustersWithNodes[i].children[j - i*nodeCount-1].x0 = x - nodeSize / 2;
-        // clustersWithNodes[i].children[j - i*nodeCount-1].x1 = x + nodeSize / 2;
-        
-        // clustersWithNodes[i].children[j - i*nodeCount-1].y0 = y - nodeSize / 2;
-        // clustersWithNodes[i].children[j - i*nodeCount-1].y1 = y + nodeSize / 2;
 
       }
     }
@@ -789,7 +783,7 @@ export class TreemapData {
   public getAllRelativePosition(){
     return this.relativePosition;
   }
-  
+
   public getClusterCount() {
     return this.clusterCount;
   }

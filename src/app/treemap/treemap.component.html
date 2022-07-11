@@ -1,5 +1,17 @@
-<div>
-    <svg #rootSvg></svg>
-</div>
-<div #tooltip></div>
+<div class="treemap">
 
+  <div>
+    <svg #rootSvg></svg>
+  </div>
+  <div #tooltip></div>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Select Data File</mat-label>
+    <mat-select>
+      <mat-option *ngFor="let d of data" [value]="d" (blur)="select(d)">
+        {{d}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+</div>
