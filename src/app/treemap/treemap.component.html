@@ -5,13 +5,33 @@
   </div>
   <div #tooltip></div>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Select Data File</mat-label>
-    <mat-select>
-      <mat-option *ngFor="let d of data" [value]="d" (blur)="select(d)">
-        {{d}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
+  <span class="metric">
+    <mat-form-field appearance="fill">
+      <mat-label>Select Data File</mat-label>
+      <mat-select>
+        <mat-option *ngFor="let d of data" [value]="d" (blur)="select(d)">
+          {{d}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="card-list">
+      <mat-card id="card">
+        <mat-card-title>Total Length</mat-card-title>
+        <mat-card-content>{{measurement[0]}}</mat-card-content>
+      </mat-card>
+      <mat-card id="card">
+        <mat-card-title>Edge Crossing</mat-card-title>
+        <mat-card-content>{{measurement[1]}}</mat-card-content>
+      </mat-card>
+      <mat-card id="card">
+        <mat-card-title>Total Bending</mat-card-title>
+        <mat-card-content>{{measurement[2]}}</mat-card-content>
+      </mat-card>
+    </div>
+  </span>
+
+
+
 
 </div>

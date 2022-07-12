@@ -79,7 +79,7 @@ export class EdgeMeasurement {
         console.log("total length : " + this.totalLength);
         console.log("edge_crossing : " + this.edgeCrossingCount);
         console.log("total_bending : " + this.totalBending)
-        return [this.totalLength, this.edgeCrossingCount];
+        return [this.totalLength, this.edgeCrossingCount, this.totalBending];
     }
 
     initializeEdgeList(d: any) {

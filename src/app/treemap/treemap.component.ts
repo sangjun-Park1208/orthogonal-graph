@@ -23,6 +23,9 @@ export class TreemapComponent implements OnInit {
   nodeGroups: Array<number> = [];
   data: number[];
   selectDataNum: number;
+  measurement: number[]
+  mesu_name: String[];
+
 
   ngOnInit(): void {
   }
@@ -30,6 +33,8 @@ export class TreemapComponent implements OnInit {
   constructor(){
     this.data = [14, 30, 57, 118, 300, 1062];
     this.selectDataNum = 1062;
+    this.measurement = [];
+    this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
   }
 
   ngAfterViewInit(): void {
@@ -111,7 +116,7 @@ export class TreemapComponent implements OnInit {
     let treemapSelections = new TreemapSelections(treemapData, root);
     let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
     let edgeMeasurement = new EdgeMeasurement(treemapData, branch);
-    edgeMeasurement.calculateEdgeCrossingCount();
+    this.measurement = edgeMeasurement.calculateEdgeCrossingCount();
 
     const edges = treemapSelections.getEdges();
     const clusters = treemapSelections.getClusters();

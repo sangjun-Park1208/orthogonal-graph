@@ -3,3 +3,11 @@
   justify-content: space-evenly;
   align-items: center;
 }
+
+
+#card {
+  padding: auto;
+  align-items: center;
+  /* color: #434343; */
+  background-color:beige;
+}
