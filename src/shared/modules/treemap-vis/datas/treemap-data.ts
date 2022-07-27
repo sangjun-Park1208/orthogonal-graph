@@ -375,45 +375,49 @@ export class TreemapData {
         x += dx;
         if(dx > 0){ // 방향 : 왼쪽 --> 오른쪽
           if(x + nodeSize > clusterX1){ // 오른쪽 초과한 경우
-            dx *= -1;
-            x = clusterX1 - widthInterval;
+            console.log('nodeSize',nodeSize);
+            console.log('ccount',columnCount);
+            // dx *= -1;
+            x = clusterX0 + widthInterval;
             y += heightInterval; // 바로 아래에 배치
 
             horizonLineCount++;
 
             if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
-              relativePositionID[0] = +children[j-2].data.id; // j-1
+              relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-1
               relativePositionID[1] = -1;
               relativePositionID[2] = -1;
               relativePositionID[3] = +children[j].data.id; // j+1
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
               if(verticalLineCount > lastRowRemain){ // 하단에 노드가 존재하지 않는 경우\
-                relativePositionID[0] = +children[j-2].data.id; // j-1
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-1
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
                 relativePositionID[3] = +children[j].data.id; // j+1
               }
               else{ // 하단에 노드가 존재하는 경우 ***********************************
                 console.log(`j+reverseIdDiff-1(${j+reverseIdDiff-1}), nodeCount(${nodeCount})`)
-                relativePositionID[0] = +children[j-2].data.id; // j-1
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-1
                 relativePositionID[1] = -1;
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + forwardIDDiff
+                relativePositionID[2] = +children[j + columnCount*2-1].data.id; // j + forwardIDDiff
                 // relativePositionID[3] = +children[j+1].data.id; // j+1
                 relativePositionID[3] = +children[j].data.id; // j+1
-
+          
               }
             }
             else{ // 아래에 노드가 존재하는 경우
-              relativePositionID[0] = +children[j-2].data.id; // j-1
+              console.log(j);
+              console.log(`a(${j - columnCount*2-1}), nodeCount(${nodeCount})`);
+              relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-1
               relativePositionID[1] = -1;
-              relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
+              relativePositionID[2] = +children[j + columnCount*2-1].data.id; // j + forwardIDDiff-2
               relativePositionID[3] = +children[j].data.id; // j+1
             }
-
-            verticalLineCount--;
-            forwardIDDiff -= 2;
-            reverseIdDiff = columnCount*2 - forwardIDDiff;
+            verticalLineCount=1;
+            // verticalLineCount--;
+            // forwardIDDiff -= 2;
+            // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
           }
           else{ // 아직 초과하지 않은 경우
@@ -422,11 +426,11 @@ export class TreemapData {
                 relativePositionID[0] = -1;
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id;
+                relativePositionID[2] = +children[j + columnCount*2-1].data.id;
                 relativePositionID[3] = -1;
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                 verticalLineCount++;
               }
@@ -437,47 +441,48 @@ export class TreemapData {
                 relativePositionID[2] = +children[j].data.id; // j+1
                 relativePositionID[3] = +children[j-2].data.id; // j-1
 
+                verticalLineCount=1;
               }
               else{ // 양 끝 열이 아닌 경우
                 relativePositionID[0] = -1;
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+                relativePositionID[2] = +children[j + columnCount*2-1].data.id; // j + reverseIdDiff-2
                 relativePositionID[3] = +children[j-2].data.id; // j-1
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                 verticalLineCount++;
               }
             }
             else if(horizonLineCount == rowCount){ // 마지막 행인 경우
               if(verticalLineCount == lastRowRemain){
-                relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
+                relativePositionID[0] = +children[j - columnCount*2-1].data.id; // j - forwardIDDiff
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
                 relativePositionID[3] = +children[j-2].data.id; // j-1
               }
               else if(verticalLineCount == 1){ // 1열인 경우
-                relativePositionID[0] = +children[j-2].data.id; // j-1
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-1
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
                 relativePositionID[3] = -1;
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                 verticalLineCount++;
               }
               else{ // 1열 || 마지막 노드가 아닌 경우
                 // console.log('j' , j);
-                relativePositionID[0] = +children[j-forwardIDDiff-1].data.id; // j-forwardIDDiff
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-forwardIDDiff
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
                 relativePositionID[3] = +children[j-2].data.id; // j-1
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                 verticalLineCount++;
               }
@@ -485,59 +490,60 @@ export class TreemapData {
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
               if(verticalLineCount==1){ // 1열인 경우
                 if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
-                  relativePositionID[0] = +children[j-2].data.id;
+                  relativePositionID[0] = +children[j-columnCount*2-1].data.id;
                   relativePositionID[1] = +children[j].data.id;
                   relativePositionID[2] = -1;
                   relativePositionID[3] = -1;
 
-                  forwardIDDiff += 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  // forwardIDDiff += 2;
+                  // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                   verticalLineCount++;
                 }
                 else{ // 하단에 노드가 존재하는 경우
-                  relativePositionID[0] = +children[j-2].data.id;
+                  relativePositionID[0] = +children[j-columnCount*2-1].data.id;
                   relativePositionID[1] = +children[j].data.id;
-                  relativePositionID[2] = +children[j+reverseIdDiff-1].data.id;
+                  relativePositionID[2] = +children[j+columnCount*2-1].data.id;
                   relativePositionID[3] = -1;
 
-                  forwardIDDiff += 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  // forwardIDDiff += 2;
+                  // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                   verticalLineCount++;
                 }
               }
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우 - 무조건 하단에 노드 존재
-                relativePositionID[0] = +children[j-forwardIDDiff-1].data.id;
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id;
                 relativePositionID[1] = -1;
-                relativePositionID[2] = +children[j].data.id;
+                relativePositionID[2] = +children[j+columnCount*2-1].data.id;
                 relativePositionID[3] = +children[j-2].data.id;
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                verticalLineCount++;
+                // verticalLineCount++;
+                verticalLineCount=1;
               }
               else{ // 1열 || 마지막 열이 아닌 경우
                 if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
-                  relativePositionID[0] = +children[j-forwardIDDiff-1].data.id;
+                  relativePositionID[0] = +children[j-columnCount*2-1].data.id;
                   relativePositionID[1] = +children[j].data.id;
                   relativePositionID[2] = -1;
                   relativePositionID[3] = +children[j-2].data.id;
 
-                  forwardIDDiff += 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  // forwardIDDiff += 2;
+                  // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                   verticalLineCount++;
                 }
                 else{ // 하단에 노드가 존재하는 경우
-                  relativePositionID[0] = +children[j-forwardIDDiff-1].data.id;
+                  relativePositionID[0] = +children[j-columnCount*2-1].data.id;
                   relativePositionID[1] = +children[j].data.id;
-                  relativePositionID[2] = +children[j+reverseIdDiff-1].data.id;
+                  relativePositionID[2] = +children[j+columnCount*2-1].data.id;
                   relativePositionID[3] = +children[j-2].data.id;
 
-                  forwardIDDiff += 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+                  // forwardIDDiff += 2;
+                  // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                   verticalLineCount++;
                 }
@@ -547,217 +553,220 @@ export class TreemapData {
             else{ // 1행 || 마지막 행이 아닌 경우 **************************************
               if(verticalLineCount == 1){ // 1열인 경우
 
-                relativePositionID[0] = +children[j-2].data.id; // j-1
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-1
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+                relativePositionID[2] = +children[j + columnCount*2-1].data.id; // j + reverseIdDiff-2
                 relativePositionID[3] = -1;
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                 verticalLineCount++;
               }
               else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-                relativePositionID[0] = +children[j-forwardIDDiff-1].data.id; // j-forwardIDDiff
+                relativePositionID[0] = +children[j-columnCount*2-1].data.id; // j-forwardIDDiff
                 relativePositionID[1] = -1;
-                relativePositionID[2] = +children[j].data.id; // j+1
+                relativePositionID[2] = +children[j+columnCount*2-1].data.id; // j+1
                 relativePositionID[3] = +children[j-2].data.id; // j-1
+                verticalLineCount=1;
               }
               else{ // 양 끝 열이 아닌 경우
-                relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
+                console.log(j);
+                console.log(`a(${j - columnCount*2-1}), nodeCount(${nodeCount})`);
+                relativePositionID[0] = +children[j - columnCount*2-1].data.id; // j - forwardIDDiff
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+                relativePositionID[2] = +children[j + columnCount*2-1].data.id; // j + reverseIdDiff-2
                 relativePositionID[3] = +children[j-2].data.id; // j-1
 
-                forwardIDDiff += 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+                // forwardIDDiff += 2;
+                // reverseIdDiff = columnCount*2 - forwardIDDiff;
 
                 verticalLineCount++;
               }
             }
           }
         }
-        else{ // 방향 : 왼쪽 <-- 오른쪽
-          if(x - nodeSize < clusterX0){ // 왼쪽 초과한 경우
-            dx *= -1;
-            x =  clusterX0 + widthInterval;
-            y += heightInterval; // 바로 아래에 배치
-            verticalLineCount++;
-            horizonLineCount++;
+        // else{ // 방향 : 왼쪽 <-- 오른쪽
+        //   if(x - nodeSize < clusterX0){ // 왼쪽 초과한 경우
+        //     dx *= -1;
+        //     x =  clusterX0 + widthInterval;
+        //     y += heightInterval; // 바로 아래에 배치
+        //     verticalLineCount++;
+        //     horizonLineCount++;
 
-            if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
-              relativePositionID[0] = +children[j-2].data.id; // j-1
-              relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = -1;
-              relativePositionID[3] = -1;
-            }
-            else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
-              if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
-                relativePositionID[0] = +children[j-2].data.id; // j-1
-                relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = -1;
-                relativePositionID[3] = -1;
-              }
-              else{ // 하단에 노드가 존재하는 경우 ***************************
-                relativePositionID[0] = +children[j-2].data.id; // j-1
-                // relativePositionID[1] = +children[j+1].data.id; // j+1
-                relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[nodeCount-1].data.id; // j + reverseIdDiff-2
-                relativePositionID[3] = -1;
-              }
-            }
-            else{ // 아래에 노드가 존재하는 경우
-              relativePositionID[0] = +children[j-2].data.id; // j-1
-              relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
-              relativePositionID[3] = -1;
-            }
+        //     if(horizonLineCount == rowCount) { // 아래에 노드가 존재하지 않는 경우
+        //       relativePositionID[0] = +children[j-2].data.id; // j-1
+        //       relativePositionID[1] = +children[j].data.id; // j+1
+        //       relativePositionID[2] = -1;
+        //       relativePositionID[3] = -1;
+        //     }
+        //     else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
+        //       if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+        //         relativePositionID[0] = +children[j-2].data.id; // j-1
+        //         relativePositionID[1] = +children[j].data.id; // j+1
+        //         relativePositionID[2] = -1;
+        //         relativePositionID[3] = -1;
+        //       }
+        //       else{ // 하단에 노드가 존재하는 경우 ***************************
+        //         relativePositionID[0] = +children[j-2].data.id; // j-1
+        //         // relativePositionID[1] = +children[j+1].data.id; // j+1
+        //         relativePositionID[1] = +children[j].data.id; // j+1
+        //         relativePositionID[2] = +children[nodeCount-1].data.id; // j + reverseIdDiff-2
+        //         relativePositionID[3] = -1;
+        //       }
+        //     }
+        //     else{ // 아래에 노드가 존재하는 경우
+        //       relativePositionID[0] = +children[j-2].data.id; // j-1
+        //       relativePositionID[1] = +children[j].data.id; // j+1
+        //       relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+        //       relativePositionID[3] = -1;
+        //     }
 
-            forwardIDDiff += 2;
-            reverseIdDiff = columnCount*2 - forwardIDDiff;
-          }
-          else{ // 아직 초과하지 않은 경우
-            if(horizonLineCount == rowCount){ // 마지막 행인 경우
-              if(verticalLineCount == lastRowRemain){
-                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j -reverseIdDiff
-                relativePositionID[1] = +children[j-2].data.id; // j-1
-                relativePositionID[2] = -1;
-                relativePositionID[3] = -1;
-              }
-              else if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 마지막 노드인 경우)
-                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                relativePositionID[1] = +children[j-2].data.id; // j-1
-                relativePositionID[2] = -1;
-                relativePositionID[3] = -1;
-              }
-              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-                relativePositionID[0] = +children[j-2].data.id; // j-1
-                relativePositionID[1] = -1;
-                relativePositionID[2] = -1;
-                relativePositionID[3] = +children[j].data.id; // j+1
+        //     forwardIDDiff += 2;
+        //     reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //   }
+        //   else{ // 아직 초과하지 않은 경우
+        //     if(horizonLineCount == rowCount){ // 마지막 행인 경우
+        //       if(verticalLineCount == lastRowRemain){
+        //         relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j -reverseIdDiff
+        //         relativePositionID[1] = +children[j-2].data.id; // j-1
+        //         relativePositionID[2] = -1;
+        //         relativePositionID[3] = -1;
+        //       }
+        //       else if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 마지막 노드인 경우)
+        //         relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //         relativePositionID[1] = +children[j-2].data.id; // j-1
+        //         relativePositionID[2] = -1;
+        //         relativePositionID[3] = -1;
+        //       }
+        //       else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+        //         relativePositionID[0] = +children[j-2].data.id; // j-1
+        //         relativePositionID[1] = -1;
+        //         relativePositionID[2] = -1;
+        //         relativePositionID[3] = +children[j].data.id; // j+1
 
-                forwardIDDiff -= 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //         forwardIDDiff -= 2;
+        //         reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                verticalLineCount--;
-              }
-              else{ // 1열 || 마지막 열이 아닌 경우
-                // console.log(`verticalLineCount(${verticalLineCount}), lastRowRemain(${lastRowRemain}), j{${j}}`)
-                if(verticalLineCount == lastRowRemain-1){ // 마지막에서 두 번째 열인 경우
-                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                  relativePositionID[1] = +children[j-2].data.id; // j-1
-                  relativePositionID[2] = -1;
-                  relativePositionID[3] = +children[nodeCount-1].data.id; // j+1
-                }
-                else{
-                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                  relativePositionID[1] = +children[j-2].data.id; // j-1
-                  relativePositionID[2] = -1;
-                  relativePositionID[3] = +children[j].data.id; // j+1
-                }
+        //         verticalLineCount--;
+        //       }
+        //       else{ // 1열 || 마지막 열이 아닌 경우
+        //         // console.log(`verticalLineCount(${verticalLineCount}), lastRowRemain(${lastRowRemain}), j{${j}}`)
+        //         if(verticalLineCount == lastRowRemain-1){ // 마지막에서 두 번째 열인 경우
+        //           relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //           relativePositionID[1] = +children[j-2].data.id; // j-1
+        //           relativePositionID[2] = -1;
+        //           relativePositionID[3] = +children[nodeCount-1].data.id; // j+1
+        //         }
+        //         else{
+        //           relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //           relativePositionID[1] = +children[j-2].data.id; // j-1
+        //           relativePositionID[2] = -1;
+        //           relativePositionID[3] = +children[j].data.id; // j+1
+        //         }
 
-                forwardIDDiff -= 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //         forwardIDDiff -= 2;
+        //         reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                verticalLineCount--;
-              }
-            }
-            else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
-              if(verticalLineCount == 1){ // 1열인 경우 (하단에 노드 존재함)
-                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                relativePositionID[1] = +children[j-2].data.id; // j-1
-                relativePositionID[2] = +children[j].data.id; // j+1
-                relativePositionID[3] = -1;
-              }
-              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-                if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
-                  relativePositionID[0] = +children[j-2].data.id; // j-1
-                  relativePositionID[1] = -1;
-                  relativePositionID[2] = -1;
-                  relativePositionID[3] = +children[j].data.id; // j+1
+        //         verticalLineCount--;
+        //       }
+        //     }
+        //     else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
+        //       if(verticalLineCount == 1){ // 1열인 경우 (하단에 노드 존재함)
+        //         relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //         relativePositionID[1] = +children[j-2].data.id; // j-1
+        //         relativePositionID[2] = +children[j].data.id; // j+1
+        //         relativePositionID[3] = -1;
+        //       }
+        //       else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+        //         if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+        //           relativePositionID[0] = +children[j-2].data.id; // j-1
+        //           relativePositionID[1] = -1;
+        //           relativePositionID[2] = -1;
+        //           relativePositionID[3] = +children[j].data.id; // j+1
 
-                  forwardIDDiff -= 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //           forwardIDDiff -= 2;
+        //           reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                  verticalLineCount--;
-                }
-                else{ // 하단에 노드가 존재하는 경우
-                  relativePositionID[0] = +children[j-1].data.id; // j-1
-                  relativePositionID[1] = -1;
-                  relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
-                  relativePositionID[3] = +children[j].data.id; // j+1
+        //           verticalLineCount--;
+        //         }
+        //         else{ // 하단에 노드가 존재하는 경우
+        //           relativePositionID[0] = +children[j-1].data.id; // j-1
+        //           relativePositionID[1] = -1;
+        //           relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
+        //           relativePositionID[3] = +children[j].data.id; // j+1
 
-                  forwardIDDiff -= 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //           forwardIDDiff -= 2;
+        //           reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                  verticalLineCount--;
-                }
-              }
-              else{ // 1열 || 마지막 열이 아닌 경우
-                // if(j + forwardIDDiff-1 >= (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
-                if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+        //           verticalLineCount--;
+        //         }
+        //       }
+        //       else{ // 1열 || 마지막 열이 아닌 경우
+        //         // if(j + forwardIDDiff-1 >= (i+1)*nodeCount){ // 하단에 노드가 존재하지 않는 경우
+        //         if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
 
-                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                  relativePositionID[1] = +children[j-2].data.id; // j-1
-                  relativePositionID[2] = -1;
-                  relativePositionID[3] = +children[j].data.id; // j+1
+        //           relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //           relativePositionID[1] = +children[j-2].data.id; // j-1
+        //           relativePositionID[2] = -1;
+        //           relativePositionID[3] = +children[j].data.id; // j+1
 
-                  forwardIDDiff -= 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //           forwardIDDiff -= 2;
+        //           reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                  verticalLineCount--;
-                }
-                else{ // 하단에 노드가 존재하는 경우
-                  // console.log(`nodeCount(${nodeCount}), j(${j}), j+forwardIDDiff-1(${j+forwardIDDiff-1}), i(${i})`);
-                  relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                  relativePositionID[1] = +children[j-2].data.id; // j-1
-                  relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
-                  relativePositionID[3] = +children[j].data.id; // j+1
+        //           verticalLineCount--;
+        //         }
+        //         else{ // 하단에 노드가 존재하는 경우
+        //           // console.log(`nodeCount(${nodeCount}), j(${j}), j+forwardIDDiff-1(${j+forwardIDDiff-1}), i(${i})`);
+        //           relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //           relativePositionID[1] = +children[j-2].data.id; // j-1
+        //           relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
+        //           relativePositionID[3] = +children[j].data.id; // j+1
 
-                  forwardIDDiff -= 2;
-                  reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //           forwardIDDiff -= 2;
+        //           reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                  verticalLineCount--;
-                }
-              }
-            }
-            else{ // 마지막 행이 아닌 경우 *******************************************************
-              if(verticalLineCount == 1){ // 1열인 경우
-                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                relativePositionID[1] = +children[j-2].data.id; // j-1
-                relativePositionID[2] = +children[j].data.id; // j+1
-                relativePositionID[3] = -1;
-              }
-              else if(verticalLineCount == columnCount){ // 마지막 열인 경우
+        //           verticalLineCount--;
+        //         }
+        //       }
+        //     }
+        //     else{ // 마지막 행이 아닌 경우 *******************************************************
+        //       if(verticalLineCount == 1){ // 1열인 경우
+        //         relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //         relativePositionID[1] = +children[j-2].data.id; // j-1
+        //         relativePositionID[2] = +children[j].data.id; // j+1
+        //         relativePositionID[3] = -1;
+        //       }
+        //       else if(verticalLineCount == columnCount){ // 마지막 열인 경우
 
-              // relativePositionID[0] = +children[j-1].data.id; // j-1
-                relativePositionID[0] = +children[j-reverseIdDiff-1].data.id; // j-1
-                relativePositionID[1] = -1;
-                relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
-                relativePositionID[3] = +children[j].data.id; // j+1
+        //       // relativePositionID[0] = +children[j-1].data.id; // j-1
+        //         relativePositionID[0] = +children[j-reverseIdDiff-1].data.id; // j-1
+        //         relativePositionID[1] = -1;
+        //         relativePositionID[2] = +children[j + forwardIDDiff-2].data.id; // j + forwardIDDiff-2
+        //         relativePositionID[3] = +children[j].data.id; // j+1
 
-                forwardIDDiff -= 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //         forwardIDDiff -= 2;
+        //         reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                verticalLineCount--;
-              }
-              else{ // 1열 || 마지막 열이 아닌 경우
+        //         verticalLineCount--;
+        //       }
+        //       else{ // 1열 || 마지막 열이 아닌 경우
 
-                relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
-                relativePositionID[1] = +children[j-2].data.id; // j-1
-                relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
-                relativePositionID[3] = +children[j].data.id; // j+1
+        //         relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
+        //         relativePositionID[1] = +children[j-2].data.id; // j-1
+        //         relativePositionID[2] = +children[j + forwardIDDiff-1].data.id; // j + forwardIDDiff-2
+        //         relativePositionID[3] = +children[j].data.id; // j+1
 
-                forwardIDDiff -= 2;
-                reverseIdDiff = columnCount*2 - forwardIDDiff;
+        //         forwardIDDiff -= 2;
+        //         reverseIdDiff = columnCount*2 - forwardIDDiff;
 
-                verticalLineCount--;
-              }
-            }
-          }
-        }
+        //         verticalLineCount--;
+        //       }
+        //     }
+        //   }
+        // }
 
         this.setRelativePosition(children[j-1].data.id, relativePositionID);
         clustersWithNodes[i].children[j-1].x0 = x - nodeSize / 2;
