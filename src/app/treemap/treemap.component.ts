@@ -5,10 +5,13 @@ import louvain from 'graphology-communities-louvain';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IBusData } from 'src/shared/interfaces/ibus-data';
 import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data';
+import { seqeunce_TreemapData } from 'src/shared/modules/treemap-vis/datas/seqeunce-treemap-data';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
 import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
 import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
+import { MatButtonToggleGroup } from '@angular/material/button-toggle';
+
 
 @Component({
   selector: 'app-treemap',
@@ -25,6 +28,7 @@ export class TreemapComponent implements OnInit {
   selectDataNum: number;
   measurement: number[]
   mesu_name: String[];
+  toggle: String;
 
 
   ngOnInit(): void {
@@ -35,6 +39,7 @@ export class TreemapComponent implements OnInit {
     this.selectDataNum = 1062;
     this.measurement = [];
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
+    this.toggle="Z_Layout";
   }
 
   ngAfterViewInit(): void {
@@ -58,6 +63,11 @@ export class TreemapComponent implements OnInit {
           })
       });
 
+  }
+
+  ToggleSelect(event: any){
+    console.log('chan',event); 
+    this.toggle=event;
   }
 
   renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{
@@ -108,7 +118,12 @@ export class TreemapComponent implements OnInit {
     // 그룹
     const root = svg.append("g")
       .attr("class", "container")
-    let treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    let treemapData : TreemapData|seqeunce_TreemapData;
+    treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    console.log('chan2',this.toggle);
+    if(this.toggle=="Sequence")
+      treemapData = new seqeunce_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    
     treemapData.setZNodePosition();
 
 

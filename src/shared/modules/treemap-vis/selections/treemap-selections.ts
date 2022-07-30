@@ -3,10 +3,11 @@ import * as d3 from 'd3';
 import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
+import { seqeunce_TreemapData } from '../datas/seqeunce-treemap-data';
 
 
 export class TreemapSelections {
-  private treemapData: TreemapData;
+  private treemapData: TreemapData|seqeunce_TreemapData;
   private svg: d3.Selection<any, unknown, null, undefined>;
 
   private edges: d3.Selection<d3.BaseType | SVGPathElement, IBranchData, SVGGElement, unknown>;
@@ -14,7 +15,7 @@ export class TreemapSelections {
   private nodes: d3.Selection<d3.BaseType | SVGRectElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
   private nodeTexts: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
 
-  constructor (treemapData: TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
+  constructor (treemapData: TreemapData|seqeunce_TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
     this.svg = svg;
     const colorZ = treemapData.colorZ;

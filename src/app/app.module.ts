@@ -11,7 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
 import {MatListModule} from '@angular/material/list';
 import {MatCardModule} from '@angular/material/card';
-
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
 
 
 @NgModule({
@@ -28,7 +28,8 @@ import {MatCardModule} from '@angular/material/card';
     MatTableModule,
     MatDividerModule,
     MatListModule,
-    MatCardModule
+    MatCardModule,
+    MatButtonToggleModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

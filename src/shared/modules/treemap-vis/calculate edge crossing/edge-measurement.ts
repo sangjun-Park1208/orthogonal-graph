@@ -1,6 +1,8 @@
 import { IBranchData } from "src/shared/interfaces/ibranch-data";
 import { IBusObjectData } from "src/shared/interfaces/ibus-object-data";
+import { seqeunce_TreemapData } from "../datas/seqeunce-treemap-data";
 import { TreemapData } from "../datas/treemap-data";
+
 
 class EdgeInfo {
     public eType: number[] = [-1, -1, -1, -1]; //h=1,w=2. -1은 없음(NA)
@@ -28,7 +30,7 @@ class EdgeInfo {
 }
 
 export class EdgeMeasurement {
-    private treemapData: TreemapData;
+    private treemapData: TreemapData|seqeunce_TreemapData;
     private branch: IBranchData[];
     private edgeList: EdgeInfo[];
     private totalLength;
@@ -36,7 +38,7 @@ export class EdgeMeasurement {
     private edgeCrossingCount: number;
     private totalBending;
 
-    constructor(treemapData: TreemapData, branch: IBranchData[]) {
+    constructor(treemapData: TreemapData|seqeunce_TreemapData, branch: IBranchData[]) {
         this.treemapData = treemapData;
         this.branch = branch;
         this.edgeList = new Array<EdgeInfo>();

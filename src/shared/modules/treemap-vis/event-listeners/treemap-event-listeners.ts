@@ -9,12 +9,13 @@ import * as d3 from 'd3';
 import { TreemapSelections } from '../selections/treemap-selections';
 import { TreemapData } from '../datas/treemap-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
+import { seqeunce_TreemapData } from '../datas/seqeunce-treemap-data';
 
 export class TreemapEventListeners { 
-  private treemapData: TreemapData;
+  private treemapData: TreemapData|seqeunce_TreemapData;
   private treemapSelections: TreemapSelections;
 
-  constructor (treemapData: TreemapData, treemapSelections: TreemapSelections){
+  constructor (treemapData: TreemapData|seqeunce_TreemapData, treemapSelections: TreemapSelections){
     this.treemapData = treemapData;
     this.treemapSelections = treemapSelections;
   }

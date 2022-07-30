@@ -6,6 +6,15 @@
   <div #tooltip></div>
 
   <span class="metric">
+    <p>
+      <mat-button-toggle-group (valueChange)="ToggleSelect($event)">
+        <mat-button-toggle value="Z_Layout">Z_Layout</mat-button-toggle>
+        <mat-button-toggle value="Sequence">Sequence</mat-button-toggle>
+        <mat-button-toggle value="Random">Random</mat-button-toggle>
+      </mat-button-toggle-group>
+    </p>
+    
+
     <mat-form-field appearance="fill">
       <mat-label>Select Data File</mat-label>
       <mat-select>
