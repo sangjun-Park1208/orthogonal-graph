@@ -118,10 +118,12 @@ export class TreemapComponent implements OnInit {
     // 그룹
     const root = svg.append("g")
       .attr("class", "container")
-    let treemapData : TreemapData|seqeunce_TreemapData;
-    treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    let treemapData! : TreemapData|seqeunce_TreemapData;
+    
     console.log('chan2',this.toggle);
-    if(this.toggle=="Sequence")
+    if(this.toggle=="Z_Layout")
+      treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    else if(this.toggle=="Sequence")
       treemapData = new seqeunce_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     
     treemapData.setZNodePosition();
