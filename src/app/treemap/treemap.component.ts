@@ -6,6 +6,8 @@ import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IBusData } from 'src/shared/interfaces/ibus-data';
 import { TreemapData } from 'src/shared/modules/treemap-vis/datas/treemap-data';
 import { seqeunce_TreemapData } from 'src/shared/modules/treemap-vis/datas/seqeunce-treemap-data';
+import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/local-random-treemap-data';
+import { global_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/global-random-treemap-data';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
 import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
@@ -118,14 +120,17 @@ export class TreemapComponent implements OnInit {
     // 그룹
     const root = svg.append("g")
       .attr("class", "container")
-    let treemapData! : TreemapData|seqeunce_TreemapData;
+    let treemapData! : TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
     
     console.log('chan2',this.toggle);
     if(this.toggle=="Z_Layout")
       treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
-    else if(this.toggle=="Sequence")
+    else if (this.toggle == "Sequence")
       treemapData = new seqeunce_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
-    
+    else if (this.toggle == "Local_Layout")
+      treemapData = new local_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    else if (this.toggle == "Global_Layout")
+      treemapData = new global_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     treemapData.setZNodePosition();
 
 

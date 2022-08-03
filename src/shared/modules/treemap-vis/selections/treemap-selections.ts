@@ -4,10 +4,12 @@ import { IBranchData } from 'src/shared/interfaces/ibranch-data';
 import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { IBusObjectData } from 'src/shared/interfaces/ibus-object-data';
 import { seqeunce_TreemapData } from '../datas/seqeunce-treemap-data';
+import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/local-random-treemap-data';
+import { global_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/global-random-treemap-data';
 
 
 export class TreemapSelections {
-  private treemapData: TreemapData|seqeunce_TreemapData;
+  private treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
   private svg: d3.Selection<any, unknown, null, undefined>;
 
   private edges: d3.Selection<d3.BaseType | SVGPathElement, IBranchData, SVGGElement, unknown>;
@@ -15,7 +17,7 @@ export class TreemapSelections {
   private nodes: d3.Selection<d3.BaseType | SVGRectElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
   private nodeTexts: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<any>, SVGGElement, IClusterData>;
 
-  constructor (treemapData: TreemapData|seqeunce_TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
+  constructor (treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData, svg: d3.Selection<any, unknown, null, undefined>){
     this.treemapData = treemapData;
     this.svg = svg;
     const colorZ = treemapData.colorZ;
