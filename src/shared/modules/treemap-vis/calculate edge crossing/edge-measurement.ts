@@ -2,6 +2,8 @@ import { IBranchData } from "src/shared/interfaces/ibranch-data";
 import { IBusObjectData } from "src/shared/interfaces/ibus-object-data";
 import { seqeunce_TreemapData } from "../datas/seqeunce-treemap-data";
 import { TreemapData } from "../datas/treemap-data";
+import { local_Random_TreemapData } from '../datas/local-random-treemap-data';
+import { global_Random_TreemapData } from '../datas/global-random-treemap-data';
 
 
 class EdgeInfo {
@@ -30,7 +32,7 @@ class EdgeInfo {
 }
 
 export class EdgeMeasurement {
-    private treemapData: TreemapData|seqeunce_TreemapData;
+    private treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
     private branch: IBranchData[];
     private edgeList: EdgeInfo[];
     private totalLength;
@@ -38,7 +40,7 @@ export class EdgeMeasurement {
     private edgeCrossingCount: number;
     private totalBending;
 
-    constructor(treemapData: TreemapData|seqeunce_TreemapData, branch: IBranchData[]) {
+    constructor(treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData, branch: IBranchData[]) {
         this.treemapData = treemapData;
         this.branch = branch;
         this.edgeList = new Array<EdgeInfo>();

@@ -11,6 +11,8 @@ import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-list
 import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
 import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
 import { MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { global_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/global-random-treemap-data';
+import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/local-random-treemap-data';
 
 
 @Component({
@@ -39,7 +41,7 @@ export class TreemapComponent implements OnInit {
     this.selectDataNum = 1062;
     this.measurement = [];
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
-    this.toggle="Z_Layout";
+    this.toggle="Global_Layout";
   }
 
   ngAfterViewInit(): void {
@@ -118,13 +120,17 @@ export class TreemapComponent implements OnInit {
     // 그룹
     const root = svg.append("g")
       .attr("class", "container")
-    let treemapData! : TreemapData|seqeunce_TreemapData;
+    let treemapData! : TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
     
     console.log('chan2',this.toggle);
     if(this.toggle=="Z_Layout")
       treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
-    else if(this.toggle=="Sequence")
+    else if (this.toggle == "Sequence")
       treemapData = new seqeunce_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    else if (this.toggle == "Local_Layout")
+      treemapData = new local_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    else if (this.toggle == "Global_Layout")
+      treemapData = new global_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     
     treemapData.setZNodePosition();
 

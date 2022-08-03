@@ -335,7 +335,8 @@ export class TreemapData {
       const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
 
       const children = clustersWithNodes[i].children;
-      // console.log('children', children);
+      console.log('nodecount',nodeCount);
+      console.log('children', children);
 
 
       let x = clusterX0;
