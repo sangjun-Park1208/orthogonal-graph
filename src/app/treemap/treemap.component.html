@@ -10,7 +10,8 @@
       <mat-button-toggle-group (valueChange)="ToggleSelect($event)">
         <mat-button-toggle value="Z_Layout">Z_Layout</mat-button-toggle>
         <mat-button-toggle value="Sequence">Sequence</mat-button-toggle>
-        <mat-button-toggle value="Random">Random</mat-button-toggle>
+        <mat-button-toggle value="Local_Random">Random</mat-button-toggle>
+        <mat-button-toggle value="Global_Random">Random</mat-button-toggle>
       </mat-button-toggle-group>
     </p>
     
@@ -37,7 +38,20 @@
         <mat-card-title>Total Bending</mat-card-title>
         <mat-card-content>{{measurement[2]}}</mat-card-content>
       </mat-card>
+      <br>
     </div>
+
+    <mat-list>
+      <h1>random measurement</h1>
+      <mat-list-item>Item 1</mat-list-item>
+      <mat-divider></mat-divider>
+      <mat-list-item>Item 2</mat-list-item>
+      <mat-divider></mat-divider>
+      <mat-list-item>Item 3</mat-list-item>
+      <mat-divider></mat-divider>
+      <mat-list-item>Item 4</mat-list-item>
+      <mat-divider></mat-divider>
+    </mat-list>
   </span>
 
 

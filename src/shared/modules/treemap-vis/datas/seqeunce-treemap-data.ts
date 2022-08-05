@@ -524,11 +524,11 @@ export class seqeunce_TreemapData {
             }
             else if(verticalLineCount == columnCount){ // 마지막 열인 경우 - 무조건 하단에 노드 존재
               if(verticalLineCount > lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
-                console.log('verticalLineCount',verticalLineCount);
-              console.log('lastRowRemain',lastRowRemain);
-              console.log("horizonLineCount",horizonLineCount);
-              console.log('rowCount',rowCount);
-              console.log("j",j);
+              //   console.log('verticalLineCount',verticalLineCount);
+              // console.log('lastRowRemain',lastRowRemain);
+              // console.log("horizonLineCount",horizonLineCount);
+              // console.log('rowCount',rowCount);
+              // console.log("j",j);
                 relativePositionID[0] = +children[j-columnCount-1].data.id;
                 relativePositionID[1] = -1
                 relativePositionID[2] = -1;

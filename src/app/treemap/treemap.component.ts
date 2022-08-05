@@ -31,6 +31,7 @@ export class TreemapComponent implements OnInit {
   measurement: number[]
   mesu_name: String[];
   toggle: String;
+  togglenum: number;
 
 
   ngOnInit(): void {
@@ -41,7 +42,8 @@ export class TreemapComponent implements OnInit {
     this.selectDataNum = 1062;
     this.measurement = [];
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
-    this.toggle="Global_Layout";
+    this.toggle="Z_Layout";
+    this.togglenum=1062;
   }
 
   ngAfterViewInit(): void {
@@ -57,6 +59,7 @@ export class TreemapComponent implements OnInit {
 
   select(num: number){
     console.log(num)
+    this.togglenum=num;
     d3.csv(`./assets/data/bus-${num}.csv`)
       .then((bus: any) => {
         d3.csv(`./assets/data/branch-${num}.csv`)
@@ -70,6 +73,13 @@ export class TreemapComponent implements OnInit {
   ToggleSelect(event: any){
     console.log('chan',event); 
     this.toggle=event;
+    d3.csv(`./assets/data/bus-${this.togglenum}.csv`)
+      .then((bus: any) => {
+        d3.csv(`./assets/data/branch-${this.togglenum}.csv`)
+          .then((branch: any) => {
+            this.renderTreemap(bus, branch);
+          })
+      });
   }
 
   renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{
@@ -127,10 +137,12 @@ export class TreemapComponent implements OnInit {
       treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     else if (this.toggle == "Sequence")
       treemapData = new seqeunce_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
-    else if (this.toggle == "Local_Layout")
+    else if (this.toggle == "Local_Random"){
       treemapData = new local_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
-    else if (this.toggle == "Global_Layout")
+    }
+    else if (this.toggle == "Global_Random"){
       treemapData = new global_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    }
     
     treemapData.setZNodePosition();
 
