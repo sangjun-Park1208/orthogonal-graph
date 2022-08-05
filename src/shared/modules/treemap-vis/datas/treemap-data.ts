@@ -335,8 +335,8 @@ export class TreemapData {
       const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
 
       const children = clustersWithNodes[i].children;
-      console.log('nodecount',nodeCount);
-      console.log('children', children);
+      // console.log('nodecount',nodeCount);
+      // console.log('children', children);
 
 
       let x = clusterX0;
@@ -396,7 +396,7 @@ export class TreemapData {
                 relativePositionID[3] = +children[j].data.id; // j+1
               }
               else{ // 하단에 노드가 존재하는 경우 ***********************************
-                console.log(`j+reverseIdDiff-1(${j+reverseIdDiff-1}), nodeCount(${nodeCount})`)
+                // console.log(`j+reverseIdDiff-1(${j+reverseIdDiff-1}), nodeCount(${nodeCount})`)
                 relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = -1;
                 relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + forwardIDDiff

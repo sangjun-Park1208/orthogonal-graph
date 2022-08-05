@@ -22,8 +22,8 @@ import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/l
 })
 
 export class TreemapComponent implements OnInit {
-  @ViewChild('rootSvg', {static : false}) rootSvg!: ElementRef;
-  @ViewChild('tooltip', {static : false}) tooltip!: ElementRef;
+  @ViewChild('rootSvg', { static: false }) rootSvg!: ElementRef;
+  @ViewChild('tooltip', { static: false }) tooltip!: ElementRef;
 
   nodeGroups: Array<number> = [];
   data: number[];
@@ -32,18 +32,20 @@ export class TreemapComponent implements OnInit {
   mesu_name: String[];
   toggle: String;
   togglenum: number;
+  random_measurement: number[]
 
 
   ngOnInit(): void {
   }
 
-  constructor(){
+  constructor() {
     this.data = [14, 30, 57, 118, 300, 1062];
     this.selectDataNum = 1062;
     this.measurement = [];
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
-    this.toggle="Z_Layout";
-    this.togglenum=1062;
+    this.toggle = "Z_Layout";
+    this.togglenum = 1062;
+    this.random_measurement = [0,0,0];
   }
 
   ngAfterViewInit(): void {
@@ -57,9 +59,9 @@ export class TreemapComponent implements OnInit {
       });
   }
 
-  select(num: number){
+  select(num: number) {
     console.log(num)
-    this.togglenum=num;
+    this.togglenum = num;
     d3.csv(`./assets/data/bus-${num}.csv`)
       .then((bus: any) => {
         d3.csv(`./assets/data/branch-${num}.csv`)
@@ -70,9 +72,9 @@ export class TreemapComponent implements OnInit {
 
   }
 
-  ToggleSelect(event: any){
-    console.log('chan',event); 
-    this.toggle=event;
+  ToggleSelect(event: any) {
+    console.log('chan', event);
+    this.toggle = event;
     d3.csv(`./assets/data/bus-${this.togglenum}.csv`)
       .then((bus: any) => {
         d3.csv(`./assets/data/branch-${this.togglenum}.csv`)
@@ -82,14 +84,14 @@ export class TreemapComponent implements OnInit {
       });
   }
 
-  renderTreemap(bus: IBusData[], branch: IBranchData[]) : void{
-    console.log({bus, branch})
+  renderTreemap(bus: IBusData[], branch: IBranchData[]): void {
+    console.log({ bus, branch })
     const size = {
       width: 1700,
       height: 1000,
-      viewBox: {minX: 20, minY: 20, width: 1700, height: 1000},
-      margin: {left: 20, right: 20, top: 20, bottom: 20},
-      padding: {left: 20, right: 20, top: 20, bottom: 20}
+      viewBox: { minX: 20, minY: 20, width: 1700, height: 1000 },
+      margin: { left: 20, right: 20, top: 20, bottom: 20 },
+      padding: { left: 20, right: 20, top: 20, bottom: 20 }
     };
     const opacity = {
       node: 0.6,
@@ -105,7 +107,7 @@ export class TreemapComponent implements OnInit {
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
-    for(let i=0; i<bus.length; i++){
+    for (let i = 0; i < bus.length; i++) {
       graph.addNode(bus[i].id);
     }
 
@@ -113,7 +115,7 @@ export class TreemapComponent implements OnInit {
       graph.addEdge(branch[i].from, branch[i].to); // 중복 있어서 multi graph로 만듦
     }
 
-    const details = louvain.detailed(graph, {randomWalk: false, resolution: 0.1}); // assign Louvain Algorithm
+    const details = louvain.detailed(graph, { randomWalk: false, resolution: 0.1 }); // assign Louvain Algorithm
 
     console.log("details", details);
 
@@ -130,27 +132,41 @@ export class TreemapComponent implements OnInit {
     // 그룹
     const root = svg.append("g")
       .attr("class", "container")
-    let treemapData! : TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
-    
-    console.log('chan2',this.toggle);
-    if(this.toggle=="Z_Layout")
+    let treemapData!: TreemapData | seqeunce_TreemapData | local_Random_TreemapData | global_Random_TreemapData;
+
+    let edgeMeasurement: EdgeMeasurement;
+    let treemapSelections: TreemapSelections;
+    let treemapEventListeners: TreemapEventListeners;
+    let random_count=1000;
+
+    console.log('chan2', this.toggle);
+    if (this.toggle == "Z_Layout")
       treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     else if (this.toggle == "Sequence")
       treemapData = new seqeunce_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
-    else if (this.toggle == "Local_Random"){
-      treemapData = new local_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    else if (this.toggle == "Local_Random") {
+      for (let i = 0; i < random_count; i++) {
+        treemapData = new local_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+        treemapData.setZNodePosition();
+        edgeMeasurement = new EdgeMeasurement(treemapData, branch);
+        this.random_measurement = this.random_measurement.map((x, y) => +x + +edgeMeasurement.calculateEdgeCrossingCount()[y]);
+        // console.log('random_measuerment',this.random_measurement);
+      }
     }
-    else if (this.toggle == "Global_Random"){
-      treemapData = new global_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+    else if (this.toggle == "Global_Random") {
+      for (let i = 0; i < random_count; i++) {
+        treemapData = new global_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
+        treemapData.setZNodePosition();
+        edgeMeasurement = new EdgeMeasurement(treemapData, branch);
+        this.random_measurement = this.random_measurement.map((x, y) => +x + +edgeMeasurement.calculateEdgeCrossingCount()[y]);
+      }
     }
-    
     treemapData.setZNodePosition();
 
-
-
-    let treemapSelections = new TreemapSelections(treemapData, root);
-    let treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
-    let edgeMeasurement = new EdgeMeasurement(treemapData, branch);
+    this.random_measurement=this.random_measurement.map((x)=>x/random_count)
+    treemapSelections = new TreemapSelections(treemapData, root);
+    treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
+    edgeMeasurement = new EdgeMeasurement(treemapData, branch);
     this.measurement = edgeMeasurement.calculateEdgeCrossingCount();
 
     const edges = treemapSelections.getEdges();
@@ -162,11 +178,11 @@ export class TreemapComponent implements OnInit {
       treemapEventListeners.clusterHighlightOn(event, d);
       // treemapEventListeners.clusterNumberOn(event, d);
     })
-    .on("mouseleave", (event, d) => {
-      // console.log("cluster mouseleave", event, d);
-      treemapEventListeners.clusterHighlightOff(event, d);
-      // treemapEventListeners.clusterNumberOff(event, d);
-    })
+      .on("mouseleave", (event, d) => {
+        // console.log("cluster mouseleave", event, d);
+        treemapEventListeners.clusterHighlightOff(event, d);
+        // treemapEventListeners.clusterNumberOff(event, d);
+      })
 
     nodes.on("mouseover", (event, d) => {
       console.log("node mouseover", event, d);
@@ -177,14 +193,14 @@ export class TreemapComponent implements OnInit {
       tooltipOn(event, d);
     })
       .on("mouseout", (event, d) => {
-      // console.log("node mouseout", event, d);
-      tooltipOff(event, d);
-    })
-    .on("click", (event, d) => {
-      console.log("node click", event, d);
-      treemapEventListeners.magnifyViewBox(event, d);
-      event.stopPropagation();
-    });
+        // console.log("node mouseout", event, d);
+        tooltipOff(event, d);
+      })
+      .on("click", (event, d) => {
+        console.log("node click", event, d);
+        treemapEventListeners.magnifyViewBox(event, d);
+        event.stopPropagation();
+      });
 
     const toolTip = d3.select(this.tooltip.nativeElement)
       .style('opacity', 0)
