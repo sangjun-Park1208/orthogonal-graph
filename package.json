@@ -28,6 +28,7 @@
     "graphology-layout-forceatlas2": "^0.8.2",
     "graphology-operators": "^1.5.1",
     "graphology-types": "^0.24.3",
+    "jstat": "^1.9.5",
     "rxjs": "~6.6.0",
     "zone.js": "~0.11.4"
   },

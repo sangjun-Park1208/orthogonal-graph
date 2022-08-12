@@ -14,7 +14,6 @@ import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calc
 import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
 import { MatButtonToggleGroup } from '@angular/material/button-toggle';
 
-
 @Component({
   selector: 'app-treemap',
   templateUrl: './treemap.component.html',
@@ -32,8 +31,13 @@ export class TreemapComponent implements OnInit {
   mesu_name: String[];
   toggle: String;
   togglenum: number;
-  random_measurement: number[]
-
+  // random_measurement: number[]
+  statistics_toggle: String;
+  random_mean: number[];
+  random_median: number[];
+  random_min: number[];
+  random_max: number[];
+  statistics_index: number;
 
   ngOnInit(): void {
   }
@@ -45,7 +49,13 @@ export class TreemapComponent implements OnInit {
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
     this.toggle = "Z_Layout";
     this.togglenum = 1062;
-    this.random_measurement = [0, 0, 0];
+    // this.random_measurement = [0, 0, 0];
+    this.statistics_toggle="Total_Length";
+    this.statistics_index=0;
+    this.random_mean=[0,0,0];
+    this.random_median=[0,0,0];
+    this.random_min=[0,0,0];
+    this.random_max=[0,0,0];
   }
 
   ngAfterViewInit(): void {
@@ -72,7 +82,6 @@ export class TreemapComponent implements OnInit {
   }
 
   ToggleSelect(event: any) {
-    console.log('chan', event);
     this.toggle = event;
     d3.csv(`./assets/data/bus-${this.togglenum}.csv`)
       .then((bus: any) => {
@@ -83,6 +92,19 @@ export class TreemapComponent implements OnInit {
       });
   }
 
+  StatisticsSelect(event: any){
+    this.statistics_toggle=event;
+    console.log('chan', this.statistics_toggle);
+    if(this.statistics_toggle=="Total_Length"){
+      this.statistics_index=0;
+    }
+    if(this.statistics_toggle=="Edge_Crossing"){
+      this.statistics_index=1;
+    }
+    if(this.statistics_toggle=="Total_Bending"){
+      this.statistics_index=2;
+    }
+  }
 
   renderTreemap(bus: IBusData[], branch: IBranchData[]): void {
     console.log({ bus, branch })
@@ -139,7 +161,12 @@ export class TreemapComponent implements OnInit {
     let treemapEventListeners: TreemapEventListeners;
     let random_count = 3;
 
-    console.log('chan2', this.toggle);
+    var {jStat}=require('jstat');
+    if(jStat.min([1,2,3])===1) console.log('jstat on');;
+    let l_stat=new Array();//total length stat
+    let e_stat=new Array();//edge crossing stat
+    let b_stat=new Array();//total bending stat
+
     if (this.toggle == "Z_Layout")
       treemapData = new TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
     else if (this.toggle == "Sequence")
@@ -149,7 +176,9 @@ export class TreemapComponent implements OnInit {
         treemapData = new local_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
         treemapData.setZNodePosition();
         edgeMeasurement = new EdgeMeasurement(treemapData, branch);
-        this.random_measurement = this.random_measurement.map((x, y) => +x + +edgeMeasurement.calculateEdgeCrossingCount()[y]);
+        l_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[0]);
+        e_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[1]);
+        b_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[2]);
       }
     }
     else if (this.toggle == "Global_Random") {
@@ -157,13 +186,20 @@ export class TreemapComponent implements OnInit {
         treemapData = new global_Random_TreemapData(bus, branch, details, size, nodeSize, strokeWidth, opacity);
         treemapData.setZNodePosition();
         edgeMeasurement = new EdgeMeasurement(treemapData, branch);
-        this.random_measurement = this.random_measurement.map((x, y) => +x + +edgeMeasurement.calculateEdgeCrossingCount()[y]);
+        l_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[0]);
+        e_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[1]);
+        b_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[2]);
       }
     }
     treemapData.setZNodePosition();
 
+    // this.random_mean=[0,0,0];
+    // this.random_median=[0,0,0];
+    // this.random_min=[0,0,0];
+    // this.random_max=[0,0,0];
+    
 
-    this.random_measurement = this.random_measurement.map((x) => x / random_count)
+    // this.random_measurement = this.random_measurement.map((x) => x / random_count)
     treemapSelections = new TreemapSelections(treemapData, root);
     treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
     edgeMeasurement = new EdgeMeasurement(treemapData, branch);

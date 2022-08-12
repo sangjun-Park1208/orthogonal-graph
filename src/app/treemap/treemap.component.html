@@ -41,19 +41,31 @@
       <br>
     </div>
 
+    <h1>Random_statistics</h1>
+    <p>
+      <mat-button-toggle-group (valueChange)="StatisticsSelect($event)">
+        <mat-button-toggle value="Total_Length">Total Length</mat-button-toggle>
+        <mat-button-toggle value="Edge_Crossing">Edge Crossing</mat-button-toggle>
+        <mat-button-toggle value="Total_Bending">Total Bending</mat-button-toggle>
+      </mat-button-toggle-group>
+    </p>
+
     <div class="card-list">
-      <h1>Random_statistics</h1>
       <mat-card id="card">
-        <mat-card-title>Total Length</mat-card-title>
-        <mat-card-content>{{random_measurement[0]}}</mat-card-content>
+        <mat-card-title>Mean</mat-card-title>
+        <mat-card-content>{{random_mean[statistics_index]}}</mat-card-content>
       </mat-card>
       <mat-card id="card">
-        <mat-card-title>Edge Crossing</mat-card-title>
-        <mat-card-content>{{random_measurement[1]}}</mat-card-content>
+        <mat-card-title>Median</mat-card-title>
+        <mat-card-content>{{random_median[statistics_index]}}</mat-card-content>
       </mat-card>
       <mat-card id="card">
-        <mat-card-title>Total Bending</mat-card-title>
-        <mat-card-content>{{random_measurement[2]}}</mat-card-content>
+        <mat-card-title>Min</mat-card-title>
+        <mat-card-content>{{random_min[statistics_index]}}</mat-card-content>
+      </mat-card>
+      <mat-card id="card">
+        <mat-card-title>Max</mat-card-title>
+        <mat-card-content>{{random_max[statistics_index]}}</mat-card-content>
       </mat-card>
       <br>
     </div>
