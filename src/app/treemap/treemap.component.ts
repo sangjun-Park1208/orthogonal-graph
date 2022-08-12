@@ -14,6 +14,8 @@ import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calc
 import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
 import { MatButtonToggleGroup } from '@angular/material/button-toggle';
 
+declare var require: any //jStat 쓰기 위해 추가
+
 @Component({
   selector: 'app-treemap',
   templateUrl: './treemap.component.html',
@@ -26,7 +28,6 @@ export class TreemapComponent implements OnInit {
 
   nodeGroups: Array<number> = [];
   data: number[];
-  selectDataNum: number;
   measurement: number[]
   mesu_name: String[];
   toggle: String;
@@ -44,7 +45,6 @@ export class TreemapComponent implements OnInit {
 
   constructor() {
     this.data = [14, 30, 57, 118, 300, 1062];
-    this.selectDataNum = 1062;
     this.measurement = [];
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
     this.toggle = "Z_Layout";
@@ -71,6 +71,7 @@ export class TreemapComponent implements OnInit {
 
   select(num: number) {
     console.log(num)
+    this.togglenum=num;
     d3.csv(`./assets/data/bus-${num}.csv`)
       .then((bus: any) => {
         d3.csv(`./assets/data/branch-${num}.csv`)
@@ -106,12 +107,19 @@ export class TreemapComponent implements OnInit {
     }
   }
 
+  view_ratiio(){
+    let specimen_square=Math.sqrt(this.togglenum);
+    let population_square=Math.sqrt(1062);
+    if(this.togglenum<=30) return 0.18;
+    return specimen_square/population_square;
+  }
+
   renderTreemap(bus: IBusData[], branch: IBranchData[]): void {
     console.log({ bus, branch })
     const size = {
-      width: 1700,
-      height: 1000,
-      viewBox: { minX: 20, minY: 20, width: 1700, height: 1000 },
+      width: 1700*this.view_ratiio(),
+      height: 1000*this.view_ratiio(),
+      viewBox: { minX: 20, minY: 20, width: 1700*this.view_ratiio(), height: 1000*this.view_ratiio() },
       margin: { left: 20, right: 20, top: 20, bottom: 20 },
       padding: { left: 20, right: 20, top: 20, bottom: 20 }
     };
@@ -159,10 +167,9 @@ export class TreemapComponent implements OnInit {
     let edgeMeasurement: EdgeMeasurement;
     let treemapSelections: TreemapSelections;
     let treemapEventListeners: TreemapEventListeners;
-    let random_count = 3;
+    let random_count = 5;
 
     var {jStat}=require('jstat');
-    if(jStat.min([1,2,3])===1) console.log('jstat on');;
     let l_stat=new Array();//total length stat
     let e_stat=new Array();//edge crossing stat
     let b_stat=new Array();//total bending stat
@@ -192,14 +199,20 @@ export class TreemapComponent implements OnInit {
       }
     }
     treemapData.setZNodePosition();
-
-    // this.random_mean=[0,0,0];
-    // this.random_median=[0,0,0];
-    // this.random_min=[0,0,0];
-    // this.random_max=[0,0,0];
     
+    this.random_mean[0]=jStat(l_stat).mean();
+    this.random_mean[1]=jStat(e_stat).mean();
+    this.random_mean[2]=jStat(b_stat).mean();
+    this.random_median[0]=jStat(l_stat).median();
+    this.random_median[1]=jStat(e_stat).median();
+    this.random_median[2]=jStat(b_stat).median();
+    this.random_min[0]=jStat(l_stat).min();
+    this.random_min[1]=jStat(e_stat).min();
+    this.random_min[2]=jStat(b_stat).min();
+    this.random_max[0]=jStat(l_stat).max();
+    this.random_max[1]=jStat(e_stat).max();
+    this.random_max[2]=jStat(b_stat).max();
 
-    // this.random_measurement = this.random_measurement.map((x) => x / random_count)
     treemapSelections = new TreemapSelections(treemapData, root);
     treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
     edgeMeasurement = new EdgeMeasurement(treemapData, branch);
