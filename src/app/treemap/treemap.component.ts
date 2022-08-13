@@ -167,7 +167,7 @@ export class TreemapComponent implements OnInit {
     let edgeMeasurement: EdgeMeasurement;
     let treemapSelections: TreemapSelections;
     let treemapEventListeners: TreemapEventListeners;
-    let random_count = 5;
+    let random_count = 1000;
 
     var {jStat}=require('jstat');
     let l_stat=new Array();//total length stat
@@ -200,18 +200,34 @@ export class TreemapComponent implements OnInit {
     }
     treemapData.setZNodePosition();
     
-    this.random_mean[0]=jStat(l_stat).mean();
-    this.random_mean[1]=jStat(e_stat).mean();
-    this.random_mean[2]=jStat(b_stat).mean();
-    this.random_median[0]=jStat(l_stat).median();
-    this.random_median[1]=jStat(e_stat).median();
-    this.random_median[2]=jStat(b_stat).median();
-    this.random_min[0]=jStat(l_stat).min();
-    this.random_min[1]=jStat(e_stat).min();
-    this.random_min[2]=jStat(b_stat).min();
-    this.random_max[0]=jStat(l_stat).max();
-    this.random_max[1]=jStat(e_stat).max();
-    this.random_max[2]=jStat(b_stat).max();
+    if (this.toggle == "Local_Random" || this.toggle == "Global_Random") {
+      this.random_mean[0] = jStat(l_stat).mean();
+      this.random_mean[1] = jStat(e_stat).mean();
+      this.random_mean[2] = jStat(b_stat).mean();
+      this.random_median[0] = jStat(l_stat).median();
+      this.random_median[1] = jStat(e_stat).median();
+      this.random_median[2] = jStat(b_stat).median();
+      this.random_min[0] = jStat(l_stat).min();
+      this.random_min[1] = jStat(e_stat).min();
+      this.random_min[2] = jStat(b_stat).min();
+      this.random_max[0] = jStat(l_stat).max();
+      this.random_max[1] = jStat(e_stat).max();
+      this.random_max[2] = jStat(b_stat).max();
+    }
+    else{
+      this.random_mean[0] = 0
+      this.random_mean[1] = 0
+      this.random_mean[2] = 0
+      this.random_median[0] = 0
+      this.random_median[1] = 0
+      this.random_median[2] = 0
+      this.random_min[0] = 0
+      this.random_min[1] = 0
+      this.random_min[2] = 0
+      this.random_max[0] = 0
+      this.random_max[1] = 0
+      this.random_max[2] = 0
+    }
 
     treemapSelections = new TreemapSelections(treemapData, root);
     treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
