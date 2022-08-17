@@ -39,6 +39,7 @@ export class TreemapComponent implements OnInit {
   random_min: number[];
   random_max: number[];
   statistics_index: number;
+  iter: string;
 
   ngOnInit(): void {
   }
@@ -56,6 +57,7 @@ export class TreemapComponent implements OnInit {
     this.random_median=[0,0,0];
     this.random_min=[0,0,0];
     this.random_max=[0,0,0];
+    this.iter='1000'
   }
 
   ngAfterViewInit(): void {
@@ -167,7 +169,9 @@ export class TreemapComponent implements OnInit {
     let edgeMeasurement: EdgeMeasurement;
     let treemapSelections: TreemapSelections;
     let treemapEventListeners: TreemapEventListeners;
-    let random_count = 1000;
+    if(this.iter=='') this.iter='1';
+    let random_count = Number(this.iter);
+    console.log('chaskdhfkladsjf',random_count);
 
     var {jStat}=require('jstat');
     let l_stat=new Array();//total length stat

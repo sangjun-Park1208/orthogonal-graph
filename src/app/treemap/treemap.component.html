@@ -6,6 +6,15 @@
   <div #tooltip></div>
 
   <span class="metric">
+
+    <mat-form-field appearance="fill">
+      <mat-label>iter number</mat-label>
+      <input matInput type="text" [(ngModel)]="iter">
+      <button *ngIf="iter" matSuffix mat-icon-button aria-label="Clear" (click)="iter=''">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
     <p>
       <mat-button-toggle-group (valueChange)="ToggleSelect($event)">
         <mat-button-toggle value="Z_Layout">Z_Layout</mat-button-toggle>
