@@ -38,6 +38,7 @@ export class TreemapComponent implements OnInit {
   random_median: number[];
   random_min: number[];
   random_max: number[];
+  random_std: number[];
   statistics_index: number;
   iter: string;
 
@@ -57,6 +58,7 @@ export class TreemapComponent implements OnInit {
     this.random_median=[0,0,0];
     this.random_min=[0,0,0];
     this.random_max=[0,0,0];
+    this.random_std=[0,0,0];
     this.iter='1000'
   }
 
@@ -217,6 +219,9 @@ export class TreemapComponent implements OnInit {
       this.random_max[0] = jStat(l_stat).max();
       this.random_max[1] = jStat(e_stat).max();
       this.random_max[2] = jStat(b_stat).max();
+      this.random_std[0] = jStat(l_stat).stdev();
+      this.random_std[1] = jStat(e_stat).stdev();
+      this.random_std[2] = jStat(b_stat).stdev();
     }
     else{
       this.random_mean[0] = 0
@@ -231,6 +236,9 @@ export class TreemapComponent implements OnInit {
       this.random_max[0] = 0
       this.random_max[1] = 0
       this.random_max[2] = 0
+      this.random_std[0] = 0
+      this.random_std[1] = 0
+      this.random_std[2] = 0
     }
 
     treemapSelections = new TreemapSelections(treemapData, root);
