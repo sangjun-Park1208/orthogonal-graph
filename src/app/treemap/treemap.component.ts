@@ -111,19 +111,20 @@ export class TreemapComponent implements OnInit {
     }
   }
 
-  view_ratiio(){
-    let specimen_square=Math.sqrt(this.togglenum);
-    let population_square=Math.sqrt(1062);
-    if(this.togglenum<=30) return 0.18;
-    return specimen_square/population_square;
-  }
+  // //nodeSize 구하는 함수
+  // view_ratiio(){
+  //   let tn=this.togglenum;
+  //   // return (3.68086+(246.51128-3.68086))/(1+Math.pow((tn/12.21441),0.64459));
+  //   // return 16.72141+103.27859*Math.exp(-(tn-14)/177.16331);
+  //   return 371.13274*Math.pow(tn,-0.42682);
+  // }
 
   renderTreemap(bus: IBusData[], branch: IBranchData[]): void {
     console.log({ bus, branch })
     const size = {
-      width: 1700*this.view_ratiio(),
-      height: 1000*this.view_ratiio(),
-      viewBox: { minX: 20, minY: 20, width: 1700*this.view_ratiio(), height: 1000*this.view_ratiio() },
+      width: 1700,
+      height: 1000,
+      viewBox: { minX: 20, minY: 20, width: 1700, height: 1000 },
       margin: { left: 20, right: 20, top: 20, bottom: 20 },
       padding: { left: 20, right: 20, top: 20, bottom: 20 }
     };
@@ -137,7 +138,8 @@ export class TreemapComponent implements OnInit {
       cluster: 2,
       edge: 1.5
     };
-    const nodeSize = 17;
+    const nodeSize = 371.13274*Math.pow(this.togglenum,-0.42682);
+    console.log('nodeSize',nodeSize);
     const graph = new MultiGraph(); // duplicated edges -> Multi Graph
 
     // 상준형 graphology 코드
