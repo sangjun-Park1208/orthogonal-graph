@@ -6,5 +6,6 @@ export interface IBusData {
     bs: number,
     area: number,
     vang: number,
-    vmag: number
+    vmag: number,
+    degree: number,
 }
