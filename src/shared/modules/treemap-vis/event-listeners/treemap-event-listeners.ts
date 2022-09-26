@@ -12,12 +12,13 @@ import { IClusterData } from 'src/shared/interfaces/icluster-data';
 import { seqeunce_TreemapData } from '../datas/seqeunce-treemap-data';
 import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/local-random-treemap-data';
 import { global_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/global-random-treemap-data';
+import { TreemapSelectionsDevided } from '../selections/treemap-selections-devided';
 
 export class TreemapEventListeners { 
   private treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
-  private treemapSelections: TreemapSelections;
+  private treemapSelections: TreemapSelections|TreemapSelectionsDevided;
 
-  constructor (treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData, treemapSelections: TreemapSelections){
+  constructor (treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData, treemapSelections: TreemapSelections|TreemapSelectionsDevided){
     this.treemapData = treemapData;
     this.treemapSelections = treemapSelections;
   }

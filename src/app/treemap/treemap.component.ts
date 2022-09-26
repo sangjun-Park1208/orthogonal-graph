@@ -9,6 +9,7 @@ import { seqeunce_TreemapData } from 'src/shared/modules/treemap-vis/datas/seqeu
 import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/local-random-treemap-data';
 import { global_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/global-random-treemap-data';
 import { TreemapSelections } from 'src/shared/modules/treemap-vis/selections/treemap-selections';
+import { TreemapSelectionsDevided } from 'src/shared/modules/treemap-vis/selections/treemap-selections-devided';
 import { TreemapEventListeners } from 'src/shared/modules/treemap-vis/event-listeners/treemap-event-listeners';
 import { EdgeCrossingCountCalculator } from 'src/shared/modules/treemap-vis/calculate edge crossing/calculate-edge-crossing';
 import { EdgeMeasurement } from 'src/shared/modules/treemap-vis/calculate edge crossing/edge-measurement';
@@ -171,7 +172,8 @@ export class TreemapComponent implements OnInit {
     let treemapData!: TreemapData | seqeunce_TreemapData | local_Random_TreemapData | global_Random_TreemapData;
 
     let edgeMeasurement: EdgeMeasurement;
-    let treemapSelections: TreemapSelections;
+    // let treemapSelections: TreemapSelections;
+    let treemapSelections: TreemapSelections|TreemapSelectionsDevided; //chan adding
     let treemapEventListeners: TreemapEventListeners;
     if(this.iter=='') this.iter='1';
     let random_count = Number(this.iter);
@@ -243,8 +245,10 @@ export class TreemapComponent implements OnInit {
       this.random_std[2] = 0
     }
 
-    treemapSelections = new TreemapSelections(treemapData, root);
-    treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
+    // treemapSelections = new TreemapSelections(treemapData, root);
+    treemapSelections = new TreemapSelectionsDevided(treemapData, root); //chan adding
+    // treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections);
+    treemapEventListeners = new TreemapEventListeners(treemapData, treemapSelections); //chan adding
     edgeMeasurement = new EdgeMeasurement(treemapData, branch);
     this.measurement = edgeMeasurement.calculateEdgeCrossingCount();
 
