@@ -42,6 +42,7 @@ export class TreemapComponent implements OnInit {
   random_std: number[];
   statistics_index: number;
   iter: string;
+  bind_time: string;
 
   ngOnInit(): void {
   }
@@ -60,7 +61,8 @@ export class TreemapComponent implements OnInit {
     this.random_min=[0,0,0];
     this.random_max=[0,0,0];
     this.random_std=[0,0,0];
-    this.iter='1000'
+    this.iter='1000';
+    this.bind_time=`0`;
   }
 
   ngAfterViewInit(): void {
@@ -69,7 +71,11 @@ export class TreemapComponent implements OnInit {
         d3.csv('./assets/data/branch-1062.csv')
           .then((branch: any) => {
             // console.log("bus, branch", bus, branch);
+            let start= new Date().getTime();
             this.renderTreemap(bus, branch);
+            let end=new Date().getTime();
+            let t=(end-start)/1000;
+            this.bind_time=t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
           })
       });
   }
@@ -81,7 +87,11 @@ export class TreemapComponent implements OnInit {
       .then((bus: any) => {
         d3.csv(`./assets/data/branch-${num}.csv`)
           .then((branch: any) => {
+            let start= new Date().getTime();
             this.renderTreemap(bus, branch);
+            let end=new Date().getTime();
+            let t=(end-start)/1000;            
+            this.bind_time=t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
           })
       });
 
@@ -93,7 +103,11 @@ export class TreemapComponent implements OnInit {
       .then((bus: any) => {
         d3.csv(`./assets/data/branch-${this.togglenum}.csv`)
           .then((branch: any) => {
+            let start= new Date().getTime();
             this.renderTreemap(bus, branch);
+            let end=new Date().getTime();
+            let t=(end-start)/1000;
+            this.bind_time=t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
           })
       });
   }
