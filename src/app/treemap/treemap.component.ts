@@ -242,21 +242,11 @@ export class TreemapComponent implements OnInit {
       this.random_std[2] = jStat(b_stat).stdev();
     }
     else{
-      this.random_mean[0] = 0
-      this.random_mean[1] = 0
-      this.random_mean[2] = 0
-      this.random_median[0] = 0
-      this.random_median[1] = 0
-      this.random_median[2] = 0
-      this.random_min[0] = 0
-      this.random_min[1] = 0
-      this.random_min[2] = 0
-      this.random_max[0] = 0
-      this.random_max[1] = 0
-      this.random_max[2] = 0
-      this.random_std[0] = 0
-      this.random_std[1] = 0
-      this.random_std[2] = 0
+      this.random_mean.fill(0);
+      this.random_median.fill(0);
+      this.random_min.fill(0);
+      this.random_max.fill(0);
+      this.random_std.fill(0);
     }
 
     // treemapSelections = new TreemapSelections(treemapData, root);
