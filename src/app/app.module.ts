@@ -15,6 +15,7 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatInputModule} from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import {MatIconModule} from '@angular/material/icon'
+import {MatGridListModule} from '@angular/material/grid-list';
 
 
 @NgModule({
@@ -36,6 +37,7 @@ import {MatIconModule} from '@angular/material/icon'
     MatInputModule,
     FormsModule,
     MatIconModule,
+    MatGridListModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

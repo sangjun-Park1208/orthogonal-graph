@@ -36,7 +36,16 @@
       </mat-select>
     </mat-form-field>
 
-    <div class="card-list">
+    <mat-form-field appearance="fill">
+      <mat-label>Select Port number</mat-label>
+      <mat-select>
+        <mat-option *ngFor="let d of port" [value]="d" (blur)="port_select(d)">
+          {{d}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- <div class="card-list">
       <mat-card id="card">
         <mat-card-title>Total Length</mat-card-title>
         <mat-card-content>{{measurement[0]}}</mat-card-content>
@@ -50,8 +59,30 @@
         <mat-card-content>{{measurement[2]}}</mat-card-content>
       </mat-card>
       <br>
-    </div>
+    </div> -->
 
+    <!-- <p>Total Length : {{measurement[0]}}</p>
+    <p>Edge Crossing : {{measurement[1]}}</p>
+    <p>Total Bending : {{measurement[2]}}</p> -->
+
+    <table border="1" width ="300" cellspacing="0">
+      <tr>
+        <td>Total Length</td>
+        <td>{{measurement[0]}}</td>
+      </tr>
+      <tr>
+        <td>Edge Crossing</td>
+        <td>{{measurement[1]}}</td>
+      </tr>
+      <tr>
+        <td>Total Bending</td>
+        <td>{{measurement[2]}}</td>
+      </tr>
+    </table>
+
+    <p></p>
+    <hr/>
+    <p></p>
     <h1>Random_statistics</h1>
     <p>
       <mat-button-toggle-group (valueChange)="StatisticsSelect($event)">
@@ -61,7 +92,7 @@
       </mat-button-toggle-group>
     </p>
 
-    <div class="card-list">
+    <!-- <div class="card-list">
       <mat-card id="card">
         <mat-card-title>Mean</mat-card-title>
         <mat-card-content>{{random_mean[statistics_index]}}</mat-card-content>
@@ -83,11 +114,34 @@
         <mat-card-content>{{random_std[statistics_index]}}</mat-card-content>
       </mat-card>
       <br>
-    </div>
+    </div> -->
+
+    <table border="1" width ="300" cellspacing="0">
+      <tr>
+        <td>Mean</td>
+        <td width ="80%">{{random_mean[statistics_index]}}</td>
+      </tr>
+      <tr>
+        <td>Median</td>
+        <td width ="80%">{{random_median[statistics_index]}}</td>
+      </tr>
+      <tr>
+        <td>Min</td>
+        <td width ="80%">{{random_min[statistics_index]}}</td>
+      </tr>
+      <tr>
+        <td>Max</td>
+        <td width ="80%">{{random_max[statistics_index]}}</td>
+      </tr>
+      <tr>
+        <td>std</td>
+        <td width ="80%">{{random_std[statistics_index]}}</td>
+      </tr>
+    </table>
+
+    <p></p>
+    <hr/>
+    <p></p>
 
   </span>
-
-
-
-
 </div>

@@ -29,10 +29,12 @@ export class TreemapComponent implements OnInit {
 
   nodeGroups: Array<number> = [];
   data: number[];
+  port: number[];
   measurement: number[]
   mesu_name: String[];
   toggle: String;
   togglenum: number;
+  portnum: number;
   // random_measurement: number[]
   statistics_toggle: String;
   random_mean: number[];
@@ -50,9 +52,11 @@ export class TreemapComponent implements OnInit {
   constructor() {
     this.data = [14, 30, 57, 118, 300, 1062];
     this.measurement = [];
+    this.port=[4,12];
     this.mesu_name = ["Total Length", "Edge Crossing", "Total Bending"];
     this.toggle = "Z_Layout";
     this.togglenum = 1062;
+    this.portnum=12;
     // this.random_measurement = [0, 0, 0];
     this.statistics_toggle="Total_Length";
     this.statistics_index=0;
@@ -95,6 +99,22 @@ export class TreemapComponent implements OnInit {
           })
       });
 
+  }
+
+  port_select(num: number){
+    this.portnum=num;
+    console.log(`port`,this.portnum);
+    d3.csv(`./assets/data/bus-${this.togglenum}.csv`)
+      .then((bus: any) => {
+        d3.csv(`./assets/data/branch-${this.togglenum}.csv`)
+          .then((branch: any) => {
+            let start= new Date().getTime();
+            this.renderTreemap(bus, branch);
+            let end=new Date().getTime();
+            let t=(end-start)/1000;
+            this.bind_time=t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          })
+      });
   }
 
   ToggleSelect(event: any) {
