@@ -16,7 +16,7 @@ export class TreemapComponent implements AfterViewInit {
   @ViewChild('tooltip', { static: false }) tooltip!: ElementRef;
 
   iter: number=1; //반복 횟수
-  bind_time: string; //걸린 시간
+  bind_time: string='0'; //걸린 시간
   layout: Layout='Z_Layout'; //레이아웃 종류(Z_Layout,Sequence,Local_Random,Global_Random)
   measurement: number[]; //Total Length,Edge Crossing,Total Bending
   statisticdata: IStatisticData; //Random_statistics
@@ -42,7 +42,11 @@ export class TreemapComponent implements AfterViewInit {
     let data;
     this.ds.load_data(this.load_data_num, "louvain").then((value) => {
       data = value;
+      let start=new Date().getTime();
       this.renderTreemap(data);
+      let end=new Date().getTime();
+      let t=(end-start)/1000;
+      this.bind_time=t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     });
   }
 

@@ -121,6 +121,37 @@ export class TreemapSelections{
   }
 
   port_drawEdge_4(d: any): any{
+    const xScale = this.treemapData.xScale;
+    const yScale = this.treemapData.yScale;
+    const nodeXY = this.treemapData.getNodeXY();
+
+    const fromNode = nodeXY.find(function (m) {
+      return d.from == m.id;
+    }) as IBusObjectData;
+    const toNode = nodeXY.find(function (m) {
+      return d.to == m.id;
+    }) as IBusObjectData;
+
+    let k = `M${xScale(fromNode.x)}, ${yScale(fromNode.y)}`; // 'path' starting point
+    let xdif = toNode.x - fromNode.x; // x diff
+    let ydif = toNode.y - fromNode.y; // y diff
+    let absXdif = Math.abs(xdif); // |x diff|
+    let absYdif = Math.abs(ydif); // |y diff|
+
+    let xhalf = xScale((toNode.x + fromNode.x) /2); // x's half point between source & target.
+    let yhalf = yScale((toNode.y + fromNode.y) /2); // y's half point between source & target.
+
+    if(absXdif > absYdif) { // if |x diff| > |y diff|
+      k += `L${xScale(fromNode.x)}, ${yhalf}`; // starts drawing : Vertical.
+      k += `L${xScale(toNode.x)}, ${yhalf}`;
+      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`;
+    }
+    else { // if |x diff| <= |y diff|
+      k += `L${xhalf}, ${yScale(fromNode.y)}`; // starts drawing : Horizontal.
+      k += `L${xhalf}, ${yScale(toNode.y)}`;
+      k += `L${xScale(toNode.x)}, ${yScale(toNode.y)}`; 
+    }
+    return k;
   }
 
   port_devided_drawEdge_12(d: any): any { // 단자 입출력 edge drawing. 12개 port
