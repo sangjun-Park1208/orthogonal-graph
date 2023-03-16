@@ -20,16 +20,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'orthogonal-graph'`, () => {
+  it(`should have as title 'orthogonal-graph-rework'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('orthogonal-graph');
+    expect(app.title).toEqual('orthogonal-graph-rework');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('orthogonal-graph app is running!');
+    expect(compiled.querySelector('.content span')?.textContent).toContain('orthogonal-graph-rework app is running!');
   });
 });
