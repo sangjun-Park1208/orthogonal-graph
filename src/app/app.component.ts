@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'orthogonal-graph';
+  title = 'orthogonal-graph-rework';
 }

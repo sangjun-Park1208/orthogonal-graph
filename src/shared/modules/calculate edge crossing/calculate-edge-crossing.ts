@@ -1,6 +1,6 @@
 import { IBranchData } from "src/shared/interfaces/ibranch-data";
 import { IBusObjectData } from "src/shared/interfaces/ibus-object-data";
-import { TreemapData } from "../datas/treemap-data";
+import { TreemapNode } from "../node-placement/treemap-node.service";
 
 class EdgeInfo {
   private eCase: number;
@@ -57,7 +57,7 @@ class EdgeInfo {
 }
 
 export class EdgeCrossingCountCalculator { 
-  private treemapData: TreemapData;
+  private treemapData: TreemapNode;
   private branch: IBranchData[];
   private edgeList: EdgeInfo[];
   private totalLength;
@@ -65,7 +65,7 @@ export class EdgeCrossingCountCalculator {
   private edgeCrossingCount: number;
   private totalBending;
 
-  constructor(treemapData: TreemapData, branch: IBranchData[]){
+  constructor(treemapData: TreemapNode, branch: IBranchData[]){
     this.treemapData = treemapData;
     this.branch = branch;
     this.edgeList = new Array<EdgeInfo>();

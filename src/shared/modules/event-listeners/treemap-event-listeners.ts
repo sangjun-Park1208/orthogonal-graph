@@ -5,20 +5,16 @@
  * 3. 정점 강조시 진출, 진입 간선 비율 pie chart 형식으로 띄우기
  * 4. 투명도, 간선 크기 등 수치조절 슬라이더, 정점 세부 데이터 표현 및 검색 레이아웃 우측에 만들기
  */
-import * as d3 from 'd3';
-import { TreemapSelections } from '../selections/treemap-selections';
-import { TreemapData } from '../datas/treemap-data';
-import { IClusterData } from 'src/shared/interfaces/icluster-data';
-import { seqeunce_TreemapData } from '../datas/seqeunce-treemap-data';
-import { local_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/local-random-treemap-data';
-import { global_Random_TreemapData } from 'src/shared/modules/treemap-vis/datas/global-random-treemap-data';
-import { TreemapSelectionsDevided } from '../selections/treemap-selections-devided';
+
+import * as d3 from "d3";
+import { TreemapNode } from "../node-placement/treemap-node.service";
+import { TreemapSelections } from "../selections/treemap-selections";
 
 export class TreemapEventListeners { 
-  private treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData;
-  private treemapSelections: TreemapSelections|TreemapSelectionsDevided;
+  private treemapData: TreemapNode;
+  private treemapSelections: TreemapSelections;
 
-  constructor (treemapData: TreemapData|seqeunce_TreemapData|local_Random_TreemapData|global_Random_TreemapData, treemapSelections: TreemapSelections|TreemapSelectionsDevided){
+  constructor (treemapData: TreemapNode, treemapSelections: TreemapSelections){
     this.treemapData = treemapData;
     this.treemapSelections = treemapSelections;
   }

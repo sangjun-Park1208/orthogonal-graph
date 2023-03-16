@@ -11,9 +11,7 @@ describe('TreemapComponent', () => {
       declarations: [ TreemapComponent ]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(TreemapComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
