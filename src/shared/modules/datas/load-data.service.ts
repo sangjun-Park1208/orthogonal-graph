@@ -44,7 +44,7 @@ export class LoadDataService {
     for (let i = 0; i < _branch.length; i++) {
       graph.addEdge(_branch[i].from, _branch[i].to); // 중복 있어서 multi graph로 만듦
     }
-    const details = louvain.detailed(graph, { randomWalk: false, resolution: 0.1 }); // assign Louvain Algorithm
+    const details = louvain.detailed(graph, { randomWalk: false, resolution: 1.5 }); // assign Louvain Algorithm
     return details;
   }
 
