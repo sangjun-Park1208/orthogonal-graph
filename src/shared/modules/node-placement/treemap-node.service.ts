@@ -463,7 +463,7 @@ export class TreemapNode {
       }
       if(lastRowRemain == 0) lastRowRemain = columnCount;
       reverseIdDiff = columnCount*2 - forwardIDDiff;
-      console.log({nodeSize,x,dx,clusterX0,columnCount,rowCount,clusterX1});
+      // console.log({nodeSize,x,dx,clusterX0,columnCount,rowCount,clusterX1});
       // for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행
       for (let j = 1; j <= nodeCount; j++){ // 118회 수행
         /* 각 노드 별 [North, East, South, West] 상대위치 결정 알고리즘 추가 */
@@ -582,6 +582,9 @@ export class TreemapNode {
             }
             else if(horizonLineCount == rowCount){ // 마지막 행인 경우
               if(verticalLineCount == lastRowRemain){
+                if(j==5){
+                  console.log({columnCount,rowCount});
+                }
                 relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
@@ -614,7 +617,7 @@ export class TreemapNode {
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행인 경우
               if(verticalLineCount==1){ // 1열인 경우
-                if(verticalLineCount < lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
+                if(verticalLineCount <= columnCount-lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
                   relativePositionID[0] = +children[j-2].data.id;
                   relativePositionID[1] = +children[j].data.id;
                   relativePositionID[2] = -1;
@@ -735,7 +738,10 @@ export class TreemapNode {
               }
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
-              if(lastRowRemain < verticalLineCount){ // 하단에 노드가 존재하지 않는 경우
+              if(verticalLineCount<= columnCount-lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
+                if(j==5){
+                  console.log({columnCount,rowCount});
+                }
                 relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
