@@ -455,7 +455,7 @@ export class TreemapNode {
             break;
           columnCount++;
         }
-        columnCount--;
+        if(columnCount>1)columnCount--;
         checkColumnCount++;
         rowCount = Math.ceil(nodeCount / columnCount);
         lastRowRemain = nodeCount % columnCount;
@@ -463,13 +463,39 @@ export class TreemapNode {
       }
       if(lastRowRemain == 0) lastRowRemain = columnCount;
       reverseIdDiff = columnCount*2 - forwardIDDiff;
+      console.log({nodeSize,x,dx,clusterX0,columnCount,rowCount,clusterX1});
       // for (let j = i*nodeCount+1; j <= (i+1)*nodeCount; j++){ // 118회 수행
       for (let j = 1; j <= nodeCount; j++){ // 118회 수행
         /* 각 노드 별 [North, East, South, West] 상대위치 결정 알고리즘 추가 */
         // console.log(`(${horizonLineCount}, ${verticalLineCount})`);
         let relativePositionID = [0, 0, 0, 0];
         x += dx;
-        if(dx > 0){ // 방향 : 왼쪽 --> 오른쪽
+        if(columnCount==1){
+          x = clusterX1 - widthInterval;
+          y += heightInterval;
+          if(horizonLineCount==rowCount){
+            relativePositionID[0] = +children[j-2].data.id; // j-1
+            relativePositionID[1] = -1;
+            relativePositionID[2] = -1;
+            relativePositionID[3] = -1; // j+1
+          }
+          else{
+            if(horizonLineCount==1){
+              relativePositionID[0] = -1; // j-1
+              relativePositionID[1] = -1;
+              relativePositionID[2] = +children[j].data.id;
+              relativePositionID[3] = -1; // j+1
+            }
+            else{  
+              relativePositionID[0] = +children[j-2].data.id; // j-1
+              relativePositionID[1] = -1;
+              relativePositionID[2] = +children[j].data.id;
+              relativePositionID[3] = -1; // j+1
+            }
+          }
+          horizonLineCount++;
+        }
+        else if(dx > 0){ // 방향 : 왼쪽 --> 오른쪽
           if(x + nodeSize > clusterX1){ // 오른쪽 초과한 경우
             dx *= -1;
             x = clusterX1 - widthInterval;
@@ -525,7 +551,7 @@ export class TreemapNode {
                 relativePositionID[0] = -1;
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id;
+                (verticalLineCount > columnCount-lastRowRemain)?relativePositionID[2] = +children[j + reverseIdDiff-1].data.id:relativePositionID[2] =-1;
                 relativePositionID[3] = -1;
 
                 forwardIDDiff += 2;
@@ -927,7 +953,7 @@ export class TreemapNode {
             break;
           columnCount++;
         }
-        columnCount--;
+        if(columnCount>1)columnCount--;
         checkColumnCount++;
         rowCount = Math.ceil(nodeCount / columnCount);
         lastRowRemain = nodeCount % columnCount;
@@ -942,7 +968,32 @@ export class TreemapNode {
         let relativePositionID = [0, 0, 0, 0];
         x += dx;
         console.log({children});
-        if(x + nodeSize > clusterX1){
+        if(columnCount==1){
+          x = clusterX1 - widthInterval;
+          y += heightInterval;
+          if(horizonLineCount==rowCount){
+            relativePositionID[0] = +children[j-2].data.id; // j-1
+            relativePositionID[1] = -1;
+            relativePositionID[2] = -1;
+            relativePositionID[3] = -1; // j+1
+          }
+          else{
+            if(horizonLineCount==1){
+              relativePositionID[0] = -1; // j-1
+              relativePositionID[1] = -1;
+              relativePositionID[2] = +children[j].data.id;
+              relativePositionID[3] = -1; // j+1
+            }
+            else{  
+              relativePositionID[0] = +children[j-2].data.id; // j-1
+              relativePositionID[1] = -1;
+              relativePositionID[2] = +children[j].data.id;
+              relativePositionID[3] = -1; // j+1
+            }
+          }
+          horizonLineCount++;
+        }
+        else if(x + nodeSize > clusterX1){
           x=clusterX0+widthInterval;
           y+=heightInterval;
 
@@ -1004,15 +1055,10 @@ export class TreemapNode {
               verticalLineCount++;
             }
             else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-              // console.log('verticalLineCount',verticalLineCount);
-              // console.log('lastRowRemain',lastRowRemain);
-              // console.log("horizonLineCount",horizonLineCount);
-              // console.log('rowCount',rowCount);
-              // console.log("j",j);
+              console.log({j});
               relativePositionID[0] = -1;
               relativePositionID[1] = -1;
-              // relativePositionID[2] = +children[j+1].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id;
+              (columnCount<=lastRowRemain)?relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2] =-1;
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // verticalLineCount=1;
@@ -1234,6 +1280,8 @@ export class TreemapNode {
       const children = clustersWithNodes[i].children;
       shuffle(children);
     //   console.log('children', children);
+      console.log('children', children);
+
 
 
       let x = clusterX0;
@@ -1257,7 +1305,7 @@ export class TreemapNode {
             break;
           columnCount++;
         }
-        columnCount--;
+        if(columnCount>1)columnCount--;
         checkColumnCount++;
         rowCount = Math.ceil(nodeCount / columnCount);
         lastRowRemain = nodeCount % columnCount;
@@ -1271,7 +1319,32 @@ export class TreemapNode {
         // console.log(`(${horizonLineCount}, ${verticalLineCount})`);
         let relativePositionID = [0, 0, 0, 0];
         x += dx;
-        if(x + nodeSize > clusterX1){
+        if(columnCount==1){
+          x = clusterX1 - widthInterval;
+          y += heightInterval;
+          if(horizonLineCount==rowCount){
+            relativePositionID[0] = +children[j-2].data.id; // j-1
+            relativePositionID[1] = -1;
+            relativePositionID[2] = -1;
+            relativePositionID[3] = -1; // j+1
+          }
+          else{
+            if(horizonLineCount==1){
+              relativePositionID[0] = -1; // j-1
+              relativePositionID[1] = -1;
+              relativePositionID[2] = +children[j].data.id;
+              relativePositionID[3] = -1; // j+1
+            }
+            else{  
+              relativePositionID[0] = +children[j-2].data.id; // j-1
+              relativePositionID[1] = -1;
+              relativePositionID[2] = +children[j].data.id;
+              relativePositionID[3] = -1; // j+1
+            }
+          }
+          horizonLineCount++;
+        }
+        else if(x + nodeSize > clusterX1){
           x=clusterX0+widthInterval;
           y+=heightInterval;
 
@@ -1333,15 +1406,10 @@ export class TreemapNode {
               verticalLineCount++;
             }
             else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-              // console.log('verticalLineCount',verticalLineCount);
-              // console.log('lastRowRemain',lastRowRemain);
-              // console.log("horizonLineCount",horizonLineCount);
-              // console.log('rowCount',rowCount);
-              // console.log("j",j);
               relativePositionID[0] = -1;
               relativePositionID[1] = -1;
               // relativePositionID[2] = +children[j+1].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id;
+              (verticalLineCount<=lastRowRemain)?relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2]=-1;
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // verticalLineCount=1;
