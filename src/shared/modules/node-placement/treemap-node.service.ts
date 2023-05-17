@@ -13,6 +13,7 @@ import { EdgeMeasurement } from '../calculate edge crossing/edge-measurement';
 import { RandomStatisticsService } from '../statistics/random-statistics.service';
 import { TreemapEventListeners } from '../event-listeners/treemap-event-listeners';
 import { TreemapSelections } from '../selections/treemap-selections';
+import { INodeData } from 'src/shared/interfaces/inode-data';
 
 export type Layout = 'Z_Layout'|'Sequence'|'Local_Random'|'Global_Random'
 
@@ -23,7 +24,7 @@ export type Layout = 'Z_Layout'|'Sequence'|'Local_Random'|'Global_Random'
 export class TreemapNode {
   private _bus: IBusData[];
   private _branch: IBranchData[];
-  private _details: DetailedLouvainOutput;
+  private _details: INodeData;
 
   private _size: ISize;
   private _nodeSize: number;
@@ -51,7 +52,7 @@ export class TreemapNode {
   d3_root: d3.Selection<SVGGElement, unknown, null, undefined>;
   treemapSelections: TreemapSelections;
   treemapEventListeners: TreemapEventListeners;
-  init(_bus: IBusData[], _branch: IBranchData[], _details: DetailedLouvainOutput, _size: ISize, _nodeSize: number, _strokeWidth: IConstant, _opacity: IConstant){
+  init(_bus: IBusData[], _branch: IBranchData[], _details: INodeData, _size: ISize, _nodeSize: number, _strokeWidth: IConstant, _opacity: IConstant){
     this._bus = _bus;
     this._branch = _branch;
     this._details = _details;
@@ -227,7 +228,7 @@ export class TreemapNode {
     return this._branch;
   }
 
-  public set details(details: DetailedLouvainOutput){
+  public set details(details: INodeData){
     this._details = details;
   }
 
@@ -431,7 +432,7 @@ export class TreemapNode {
       const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
 
       const children = clustersWithNodes[i].children;
-      console.log('children', children);
+      // console.log('children', children);
 
 
       let x = clusterX0;
@@ -582,16 +583,16 @@ export class TreemapNode {
             }
             else if(horizonLineCount == rowCount){ // 마지막 행인 경우
               if(verticalLineCount == lastRowRemain){
-                if(j==5){
-                  console.log({columnCount,rowCount});
-                }
+                // if(j==5){
+                //   console.log({columnCount,rowCount});
+                // }
                 relativePositionID[0] = +children[j - forwardIDDiff-1].data.id; // j - forwardIDDiff
                 relativePositionID[1] = -1;
                 relativePositionID[2] = -1;
                 relativePositionID[3] = +children[j-2].data.id; // j-1
               }
               else if(verticalLineCount == 1){ // 1열인 경우
-                console.log('asdfjdkasfj',{j,forwardIDDiff,reverseIdDiff,verticalLineCount});
+                // console.log('asdfjdkasfj',{j,forwardIDDiff,reverseIdDiff,verticalLineCount});
                 relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
@@ -603,7 +604,7 @@ export class TreemapNode {
                 verticalLineCount++;
               }
               else{ // 1열 || 마지막 노드가 아닌 경우
-                console.log({j,forwardIDDiff,reverseIdDiff,verticalLineCount});
+                // console.log({j,forwardIDDiff,reverseIdDiff,verticalLineCount});
                 relativePositionID[0] = +children[j-forwardIDDiff-1].data.id; // j-forwardIDDiff
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
@@ -719,7 +720,7 @@ export class TreemapNode {
             x =  clusterX0 + widthInterval;
             y += heightInterval; // 바로 아래에 배치
 
-            console.log({j,verticalLineCount,horizonLineCount,forwardIDDiff});
+            // console.log({j,verticalLineCount,horizonLineCount,forwardIDDiff});
 
             horizonLineCount++;
 
@@ -739,9 +740,6 @@ export class TreemapNode {
             }
             else if(horizonLineCount == rowCount-1){ // 밑에서 두 번째 행일 때
               if(verticalLineCount<= columnCount-lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
-                if(j==5){
-                  console.log({columnCount,rowCount});
-                }
                 relativePositionID[0] = +children[j-2].data.id; // j-1
                 relativePositionID[1] = +children[j].data.id; // j+1
                 relativePositionID[2] = -1;
@@ -768,7 +766,7 @@ export class TreemapNode {
           }
           else{ // 아직 초과하지 않은 경우
             if(horizonLineCount == rowCount){ // 마지막 행인 경우
-              if(verticalLineCount == lastRowRemain){
+              if(verticalLineCount <= columnCount-lastRowRemain+1){
                 relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j -reverseIdDiff
                 relativePositionID[1] = +children[j-2].data.id; // j-1
                 relativePositionID[2] = -1;
@@ -800,7 +798,7 @@ export class TreemapNode {
                   relativePositionID[3] = +children[nodeCount-1].data.id; // j+1
                 }
                 else{
-                  console.log({j,verticalLineCount,horizonLineCount,forwardIDDiff,reverseIdDiff});
+                  // console.log({columnCount,j,verticalLineCount,horizonLineCount,forwardIDDiff,reverseIdDiff,lastRowRemain});
                   relativePositionID[0] = +children[j - reverseIdDiff-1].data.id; // j - reverseIdDiff
                   relativePositionID[1] = +children[j-2].data.id; // j-1
                   relativePositionID[2] = -1;
@@ -1061,7 +1059,7 @@ export class TreemapNode {
               verticalLineCount++;
             }
             else if(verticalLineCount == columnCount){ // 마지막 열인 경우
-              console.log({j});
+              // console.log({j});
               relativePositionID[0] = -1;
               relativePositionID[1] = -1;
               (columnCount<=lastRowRemain)?relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2] =-1;
@@ -1152,11 +1150,11 @@ export class TreemapNode {
             }
             else if(verticalLineCount == columnCount){ // 마지막 열인 경우 - 무조건 하단에 노드 존재
               if(verticalLineCount > lastRowRemain){ // 하단에 노드가 존재하지 않는 경우
-                console.log('verticalLineCount',verticalLineCount);
-              console.log('lastRowRemain',lastRowRemain);
-              console.log("horizonLineCount",horizonLineCount);
-              console.log('rowCount',rowCount);
-              console.log("j",j);
+                // console.log('verticalLineCount',verticalLineCount);
+              // console.log('lastRowRemain',lastRowRemain);
+              // console.log("horizonLineCount",horizonLineCount);
+              // console.log('rowCount',rowCount);
+              // console.log("j",j);
                 relativePositionID[0] = +children[j-columnCount-1].data.id;
                 relativePositionID[1] = -1
                 relativePositionID[2] = -1;

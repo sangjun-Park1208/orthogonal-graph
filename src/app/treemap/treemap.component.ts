@@ -40,7 +40,7 @@ export class TreemapComponent implements AfterViewInit {
 
   apply(){
     let data;
-    this.ds.load_data(this.load_data_num, "louvain").then((value) => {
+    this.ds.load_data(this.load_data_num, "leidon").then((value) => {
       data = value;
       let start=new Date().getTime();
       this.renderTreemap(data);
