@@ -5,7 +5,7 @@ import louvain from 'graphology-communities-louvain';
 import { HttpClient } from '@angular/common/http';
 import { INodeData } from 'src/shared/interfaces/inode-data';
 
-type clusteringAlgo = "louvain" | "girvan-newman" | "leidon";
+type clusteringAlgo = "louvain" | "girvan_newman" | "leidon";
 type clustering = (_bus, _branch) => any;
 
 @Injectable({
@@ -17,7 +17,7 @@ export class LoadDataService {
     console.log(http);
     this.clusteringMap = new Map([
       ["louvain", this.load_clustering_result('http://203.253.21.193:8000/louvain/?resolution=0.1&threshold=0.0000001&seed=0')],
-      ["girvan-newman", this.load_clustering_result('http://203.253.21.193:8000/girvan-newman/?iter=8')],
+      ["girvan_newman", this.load_clustering_result('http://203.253.21.193:8000/girvan-newman/?iter=8')],
       ["leidon", this.load_clustering_result('http://203.253.21.193:8000/leidon/')],
     ])
   }

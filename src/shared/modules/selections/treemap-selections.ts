@@ -28,7 +28,7 @@ export class TreemapSelections{
       .selectAll("path")
       .data(this.treemapData.branch)
       .join("path")
-      .attr("d", (d: any) => port==12?this.port_devided_drawEdge_12(d):this.port_drawEdge_4(d))
+      .attr("d", (d: any) => port==12?this.port_devided_drawEdge_12(d): port==8?this.port_devided_drawEdge_8(d):this.port_drawEdge_4(d))
       .attr("stroke", "steelblue")
       .attr("stroke-width", this.treemapData.strokeWidth.edge)
       .attr("fill", "none")
@@ -442,6 +442,355 @@ export class TreemapSelections{
       }
     }
     
+    return k;
+  }
+
+  port_devided_drawEdge_8(d: any): any {
+    const xScale = this.treemapData.xScale;
+    const yScale = this.treemapData.yScale;
+    const nodeXY = this.treemapData.getNodeXY();
+
+    const fromNode = nodeXY.find(function (m) {
+      return d.from == m.id;
+    }) as IBusObjectData;
+    const toNode = nodeXY.find(function (m) {
+      return d.to == m.id;
+    }) as IBusObjectData;
+
+    let k = ''; // 'path' starting point
+    let xdif = Math.floor(toNode.x - fromNode.x); // x diff
+    let ydif = Math.floor(toNode.y - fromNode.y); // y diff
+    let absXdif = Math.abs(xdif); // |x diff|
+    let absYdif = Math.abs(ydif); // |y diff|
+
+    const nodesize = this.treemapData.nodeSize;
+    // console.log(fromNode);
+    // console.log('nodeXY', nodeXY)
+    // console.log(`fromNode.id(${fromNode.id}), fromNode.relativePosition(${fromNode.relativePosition})`)
+
+
+    if(fromNode.relativePosition.includes(toNode.id)){
+      console.log({fromNode});
+      console.log({toNode});
+      if(Math.ceil(fromNode.x)==Math.ceil(toNode.x)){
+        if(fromNode.y>toNode.y){
+          k += `M${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1])}`;
+          k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1])}`;
+        }
+        else{
+          console.log('tttt',{fromNode});
+          console.log('tttt',{toNode});  
+          k += `M${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1])}`;
+          k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1])}`;
+        }
+      }
+      else{
+        if(fromNode.x>toNode.x){
+          k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`;
+          k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+        }
+        else{
+          k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`;
+          k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+        }
+      }
+      
+    }
+    else{
+      if(xdif > 1 && ydif > 1){
+        if(absXdif < absYdif){
+
+          k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[1] == -1){ // 우측에 Node가 없는 경우
+            k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(toNode.p9[1])}`;
+            k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+          }
+          else {
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[1] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p5[0] + toNode.p11[0]) / 2 < blockNode.p9[0]){ // Node Overlap 없는 상황
+              k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+              k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(toNode.p9[1])}`;
+              k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회 : edge bending 횟수 증가
+              k += `L${xScale((fromNode.p5[0] + blockNode.p9[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+              k += `L${xScale((fromNode.p5[0] + blockNode.p9[0]) / 2)}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+            }
+          }
+        }
+        else{
+
+          k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[2] == -1){ // 하단에 노드가 없는 경우
+            k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[2] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p6[1] + toNode.p0[1]) / 2 < blockNode.p2[1]){ // Node overlap 없는 상황
+              k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회
+
+              k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + blockNode.p2[1]) / 2)}`;
+              k += `L${xScale(toNode.x - (nodesize / 3)*2)}, ${yScale((fromNode.p8[1] + blockNode.p2[1]) / 2)}`;
+              k += `L${xScale(toNode.x - (nodesize / 3)*2)}, ${yScale(toNode.p11[1])}`;
+              k += `L${xScale(toNode.p11[0])}, ${yScale(toNode.p11[1])}`;
+            }
+          }
+        }
+      }
+      else if(xdif > 1 && ydif < -1){
+
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[1] == -1){ // 우측에 노드가 없는 경우
+            k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(toNode.p9[1])}`;
+            k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[1] == m.id;
+            }) as IBusObjectData;
+
+
+            if((fromNode.p3[0] + toNode.p9[0]) / 2 < blockNode.p11[0]){ // Node overlap 없는 상황
+              k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+              k += `L${xScale((fromNode.p5[0] + toNode.p9[0]) / 2)}, ${yScale(toNode.p9[1])}`;
+              k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회
+
+
+              k += `L${xScale((fromNode.p5[0] + blockNode.p11[0]) / 2)}, ${yScale(fromNode.p5[1])}`;
+              k += `L${xScale((fromNode.p5[0] + blockNode.p11[0]) / 2)}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+            }
+          }
+        }
+        else{
+          k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[0] == -1){ // 상단에 노드가 없는 경우
+            k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[0] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p2[1] + toNode.p8[1]) / 2 > blockNode.p6[1]){ // Node overlap 없는 경우
+              k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회
+
+              k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + blockNode.p6[1]) / 2)}`;
+              k += `L${xScale(toNode.x - (nodesize / 3)*2)}, ${yScale((fromNode.p2[1] + blockNode.p6[1]) / 2)}`;
+              k += `L${xScale(toNode.x - (nodesize / 3)*2)}, ${yScale(toNode.p9[1])}`;
+              k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`;
+            }
+          }
+        }
+      }
+      else if(xdif < -1 && ydif > 1){
+
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`; // 출발 지점
+          if(fromNode.relativePosition[3] == -1){ // 좌측에 노드가 없는 경우
+            k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(toNode.p3[1])}`;
+            k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[3] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p9[0] + toNode.p3[0]) / 2 > blockNode.p5[0]){ // Node overlap 없는 경우
+              k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+              k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(toNode.p3[1])}`;
+              k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회
+
+              k += `L${xScale((fromNode.p11[0] + blockNode.p5[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+              k += `L${xScale((fromNode.p11[0] + blockNode.p5[0]) / 2)}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.y - (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+            }
+          }
+        }
+        else{
+          k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[2] == -1){ // 하단에 노드가 없는 경우
+            k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[2] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p8[1] + toNode.p2[1]) / 2 < blockNode.p0[1]){ // Node overlap 없는 경우
+              k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale((fromNode.p8[1] + toNode.p0[1]) / 2)}`;
+              k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회
+
+              k += `L${xScale(fromNode.p8[0])}, ${yScale((fromNode.p8[1] + blockNode.p0[1]) / 2)}`;
+              k += `L${xScale(toNode.p3[0] + (nodesize / 3)*2)}, ${yScale((fromNode.p8[1] + blockNode.p0[1]) / 2)}`;
+              k += `L${xScale(toNode.p3[0] + (nodesize / 3)*2)}, ${yScale(toNode.p3[1])}`;
+              k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+            }
+          }
+        }
+      }
+      else if(xdif < -1 && ydif < -1){
+        if(absXdif < absYdif){
+          k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[3] == -1){
+            k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(toNode.p3[1])}`;
+            k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[3] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p11[0] + toNode.p5[0]) / 2 > blockNode.p3[0]){ // Node overlap 없는 경우
+              k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+              k += `L${xScale((fromNode.p11[0] + toNode.p3[0]) / 2)}, ${yScale(toNode.p3[1])}`;
+              k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+            }
+            else{ // Node overlap 발생 -> 우회
+
+              k += `L${xScale((fromNode.p11[0] + blockNode.p3[0]) / 2)}, ${yScale(fromNode.p11[1])}`;
+              k += `L${xScale((fromNode.p11[0] + blockNode.p3[0]) / 2)}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.y + (nodesize / 3)*2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+            }
+          }
+        }
+        else{
+          k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`; // 출발 지점
+
+          if(fromNode.relativePosition[0] == -1){
+            k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+          }
+          else{
+            let blockNode = nodeXY.find(function (m) {
+              return fromNode.relativePosition[0] == m.id;
+            }) as IBusObjectData;
+
+            if((fromNode.p2[1] + toNode.p6[1]) / 2 > blockNode.p8[1]){
+              k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale((fromNode.p2[1] + toNode.p6[1]) / 2)}`;
+              k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+            }
+            else{
+
+              k += `L${xScale(fromNode.p2[0])}, ${yScale((fromNode.p2[1] + blockNode.p8[1]) / 2)}`;
+              k += `L${xScale(toNode.x - (nodesize / 3)*2)}, ${yScale((fromNode.p2[1] + blockNode.p8[1]) / 2)}`;
+              k += `L${xScale(toNode.x - (nodesize / 3)*2)}, ${yScale(toNode.p3[1])}`;
+              k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`;
+            }
+          }
+
+        }
+      }
+      else if(xdif == 0){
+        // let rd = Math.floor(Math.random()*2);
+        let rd = d.from%2;
+        if(ydif > 0){
+          if(rd == 0){
+            k += `M${xScale(fromNode.p9[0])}, ${yScale(fromNode.p9[1])}`;
+            k += `L${xScale(fromNode.p9[0] - (nodesize / 5)*1)}, ${yScale(fromNode.p9[1])}`;
+            k += `L${xScale(fromNode.p9[0] - (nodesize / 5)*1)}, ${yScale(toNode.p11[1])}`;
+            k += `L${xScale(toNode.p11[0])}, ${yScale(toNode.p11[1])}`
+          }
+          else{
+            k += `M${xScale(fromNode.p5[0])}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale(fromNode.p5[0] + (nodesize / 5)*1)}, ${yScale(fromNode.p5[1])}`;
+            k += `L${xScale(fromNode.p5[0] + (nodesize / 5)*1)}, ${yScale(toNode.p3[1])}`;
+            k += `L${xScale(toNode.p3[0])}, ${yScale(toNode.p3[1])}`
+          }
+        }
+        else{
+          if(rd == 0){
+            k += `M${xScale(fromNode.p11[0])}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale(fromNode.p11[0] - (nodesize / 5)*1)}, ${yScale(fromNode.p11[1])}`;
+            k += `L${xScale(fromNode.p11[0] - (nodesize / 5)*1)}, ${yScale(toNode.p9[1])}`;
+            k += `L${xScale(toNode.p9[0])}, ${yScale(toNode.p9[1])}`
+          }
+          else{
+            k += `M${xScale(fromNode.p3[0])}, ${yScale(fromNode.p3[1])}`;
+            k += `L${xScale(fromNode.p3[0] + (nodesize / 5)*1)}, ${yScale(fromNode.p3[1])}`;
+            k += `L${xScale(fromNode.p3[0] + (nodesize / 5)*1)}, ${yScale(toNode.p5[1])}`;
+            k += `L${xScale(toNode.p5[0])}, ${yScale(toNode.p5[1])}`
+          }
+        }
+      }
+      else if(ydif == 0){
+        // let rd = Math.floor(Math.random()*2);
+        let rd = d.from%2;
+        if(xdif > 0){
+          if(rd == 0){
+            k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;
+            k += `L${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1] - (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1] - (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+          }
+          else{
+            k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`;
+            k += `L${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1] + (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1] + (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+          }
+        }
+        else{
+          if(rd == 0){
+            k += `M${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1])}`;
+            k += `L${xScale(fromNode.p2[0])}, ${yScale(fromNode.p2[1] - (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1] - (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p0[0])}, ${yScale(toNode.p0[1])}`;
+          }
+          else{
+            k += `M${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1])}`;
+            k += `L${xScale(fromNode.p8[0])}, ${yScale(fromNode.p8[1] + (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1] + (nodesize / 5)*1)}`;
+            k += `L${xScale(toNode.p6[0])}, ${yScale(toNode.p6[1])}`;
+          }
+        }
+      }
+    }
     return k;
   }
 
