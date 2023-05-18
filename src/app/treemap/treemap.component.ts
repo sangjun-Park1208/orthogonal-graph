@@ -6,6 +6,8 @@ import { RandomStatisticsService } from 'src/shared/modules/statistics/random-st
 import { LoadDataService } from 'src/shared/modules/datas/load-data.service';
 import { Layout, TreemapNode } from 'src/shared/modules/node-placement/treemap-node.service';
 
+type clusteringAlgo = "louvain" | "girvan_newman" | "leidon";
+
 @Component({
   selector: 'app-treemap',
   templateUrl: './treemap.component.html',
@@ -23,9 +25,10 @@ export class TreemapComponent implements AfterViewInit {
   statistics_index: number;
   load_datas = [14, 30, 57, 118, 300, 1062]; //load data 개수
   load_data_num = 1062;
-  ports = [4, 12]; //port 개수
+  ports = [4, 8, 12]; //port 개수
   port = 12;
-  statistics_toggle="Total_Length"
+  statistics_toggle="Total_Length";
+  clustering_algorithm : clusteringAlgo="leidon";
 
   constructor(private ds: LoadDataService, private rs: RandomStatisticsService, private tn: TreemapNode) {
     this.measurement=rs.measurement;
@@ -40,7 +43,7 @@ export class TreemapComponent implements AfterViewInit {
 
   apply(){
     let data;
-    this.ds.load_data(this.load_data_num, "leidon").then((value) => {
+    this.ds.load_data(this.load_data_num, this.clustering_algorithm).then((value) => {
       data = value;
       let start=new Date().getTime();
       this.renderTreemap(data);
