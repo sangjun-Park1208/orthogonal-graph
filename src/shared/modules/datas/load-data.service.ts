@@ -14,9 +14,8 @@ type clustering = (_bus, _branch) => any;
 export class LoadDataService {
   private clusteringMap: Map<string | clusteringAlgo, (_bus: any, _branch: any) => Promise<INodeData>>;
   constructor(private http: HttpClient) { 
-    console.log(http);
     this.clusteringMap = new Map([
-      ["louvain", this.load_clustering_result('http://203.253.21.193:8000/louvain/?resolution=0.1&threshold=0.0000001&seed=0')],
+      ["louvain", this.louvain()],
       ["girvan_newman", this.load_clustering_result('http://203.253.21.193:8000/girvan-newman/?iter=8')],
       ["leidon", this.load_clustering_result('http://203.253.21.193:8000/leidon/')],
     ])
@@ -38,24 +37,26 @@ export class LoadDataService {
     return ret;
   }
 
-  // private louvain(_bus, _branch) {
-  //   const graph = new MultiGraph(); // duplicated edges -> Multi Graph
-  //   for (let i = 0; i < _bus.length; i++) {
-  //     graph.addNode(_bus[i].id);
-  //   }
-  //   for (let i = 0; i < _branch.length; i++) {
-  //     graph.addEdge(_branch[i].from, _branch[i].to); // 중복 있어서 multi graph로 만듦
-  //   }
-  //   const details = louvain.detailed(graph, { randomWalk: false, resolution: 1.5 }); // assign Louvain Algorithm
-  //   console.log({details});
-  //   const res:INodeData={
-  //     bus:_bus,
-  //     branch:_branch,
-  //     communities:details.communities,
-  //     count:details.count
-  //   }
-  //   return res;
-  // }
+  private louvain() {
+    return async (_bus, _branch) => {
+      const graph = new MultiGraph(); // duplicated edges -> Multi Graph
+      for (let i = 0; i < _bus.length; i++) {
+        graph.addNode(_bus[i].id);
+      }
+      for (let i = 0; i < _branch.length; i++) {
+        graph.addEdge(_branch[i].from, _branch[i].to); // 중복 있어서 multi graph로 만듦
+      }
+      const details = louvain.detailed(graph, { randomWalk: false, resolution: 1.5 }); // assign Louvain Algorithm
+      const res: INodeData = {
+        bus: _bus,
+        branch: _branch,
+        communities: details.communities,
+        count: details.count
+      }
+      return res;
+    }
+  }
+
   private load_clustering_result(url: string){
 
     return async (_bus, _branch) => {
