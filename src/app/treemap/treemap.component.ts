@@ -28,7 +28,7 @@ export class TreemapComponent implements AfterViewInit {
   ports = [4, 8, 12]; //port 개수
   port = 12;
   statistics_toggle="Total_Length";
-  clustering_algorithm : clusteringAlgo="leidon";
+  clustering_algorithm : clusteringAlgo="louvain";
 
   constructor(private ds: LoadDataService, private rs: RandomStatisticsService, private tn: TreemapNode) {
     this.measurement=rs.measurement;
