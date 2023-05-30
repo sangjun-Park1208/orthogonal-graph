@@ -13,11 +13,13 @@ type clustering = (_bus, _branch) => any;
 })
 export class LoadDataService {
   private clusteringMap: Map<string | clusteringAlgo, (_bus: any, _branch: any) => Promise<INodeData>>;
-  constructor(private http: HttpClient) { 
+  public iter;
+  constructor(private http: HttpClient) {
+    console.log(this.iter); 
     this.clusteringMap = new Map([
       ["louvain", this.louvain()],
-      ["girvan_newman", this.load_clustering_result('http://203.253.21.193:8000/girvan-newman/?iter=8')],
-      ["leidon", this.load_clustering_result('http://203.253.21.193:8000/leidon/')],
+      ["girvan_newman", this.load_clustering_result(`http://203.253.21.193:5000/girvan-newman/?iter=11`)],
+      ["leidon", this.load_clustering_result('http://203.253.21.193:5000/leiden/')],
     ])
   }
 
