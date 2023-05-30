@@ -394,7 +394,7 @@ export class TreemapNode {
     else if(this.layout=="Local_Random"){
       for(let i=0;i<this.iter;i++){
         this.setLocalNodePosition();
-        edgeMeasurement=new EdgeMeasurement(this,this.branch);
+        edgeMeasurement=new EdgeMeasurement(this,this.branch,this.port);
         this.rs.l_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[0]);
         this.rs.c_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[1]);
         this.rs.b_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[2]);
@@ -403,7 +403,7 @@ export class TreemapNode {
     else if (this.layout == "Global_Random") {
       for (let i = 0; i < this.iter; i++) {
         this.setGlobalNodePosition();
-        edgeMeasurement=new EdgeMeasurement(this,this.branch);
+        edgeMeasurement=new EdgeMeasurement(this,this.branch,this.port);
         this.rs.l_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[0]);
         this.rs.c_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[1]);
         this.rs.b_stat.push(edgeMeasurement.calculateEdgeCrossingCount()[2]);
@@ -411,7 +411,7 @@ export class TreemapNode {
     }
     this.treemapSelections=new TreemapSelections(this,this.d3_root,this.port);
     this.treemapEventListeners=new TreemapEventListeners(this,this.treemapSelections);
-    edgeMeasurement=new EdgeMeasurement(this,this.branch);
+    edgeMeasurement=new EdgeMeasurement(this,this.branch,this.port);
     this.rs.edgeMeasurement=edgeMeasurement;
     this.rs.measurement=edgeMeasurement.calculateEdgeCrossingCount();
     this.rs.statistic_measurement();

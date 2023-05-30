@@ -163,7 +163,6 @@ export class TreemapSelections{
             let blockNode = nodeXY.find(function (m) {
               return fromNode.relativePosition[1] == m.id;
             }) as IBusObjectData;
-            console.log({blockNode});
 
             if((fromNode.p5[0] + toNode.p11[0]) / 2 < blockNode.p9[0]){ // Node Overlap 없는 상황
               k += `L${xScale((fromNode.p4[0] + toNode.p10[0]) / 2)}, ${yScale(fromNode.p4[1])}`;
@@ -376,7 +375,7 @@ export class TreemapSelections{
 
         }
       }
-      else if(xdif == 0){
+      else if(xdif < Number.EPSILON){
         // let rd = Math.floor(Math.random()*2);
         let rd = d.from%2;
         if(ydif > 0){
@@ -408,7 +407,7 @@ export class TreemapSelections{
           }
         }
       }
-      else if(ydif == 0){
+      else if(ydif < Number.EPSILON){
         // let rd = Math.floor(Math.random()*2);
         let rd = d.from%2;
         if(xdif > 0){
@@ -470,16 +469,12 @@ export class TreemapSelections{
 
 
     if(fromNode.relativePosition.includes(toNode.id)){
-      console.log({fromNode});
-      console.log({toNode});
       if(Math.ceil(fromNode.x)==Math.ceil(toNode.x)){
         if(fromNode.y>toNode.y){
           k += `M${xScale(fromNode.p0[0])}, ${yScale(fromNode.p0[1])}`;
           k += `L${xScale(toNode.p8[0])}, ${yScale(toNode.p8[1])}`;
         }
         else{
-          console.log('tttt',{fromNode});
-          console.log('tttt',{toNode});  
           k += `M${xScale(fromNode.p6[0])}, ${yScale(fromNode.p6[1])}`;
           k += `L${xScale(toNode.p2[0])}, ${yScale(toNode.p2[1])}`;
         }
