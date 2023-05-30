@@ -17,6 +17,7 @@ export class TreemapComponent implements AfterViewInit {
   @ViewChild('rootSvg', { static: false }) rootSvg!: ElementRef;
   @ViewChild('tooltip', { static: false }) tooltip!: ElementRef;
 
+  girvan_newman_iter: number=8;
   iter: number=1; //반복 횟수
   bind_time: string='0'; //걸린 시간
   layout: Layout='Z_Layout'; //레이아웃 종류(Z_Layout,Sequence,Local_Random,Global_Random)
@@ -43,6 +44,7 @@ export class TreemapComponent implements AfterViewInit {
 
   apply(){
     let data;
+    this.ds.iter=this.girvan_newman_iter;
     this.ds.load_data(this.load_data_num, this.clustering_algorithm).then((value) => {
       data = value;
       let start=new Date().getTime();

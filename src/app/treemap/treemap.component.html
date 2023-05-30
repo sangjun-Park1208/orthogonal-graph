@@ -21,6 +21,13 @@
           <mat-icon>close</mat-icon>
         </button>
       </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>girvan_newman_iter number</mat-label>
+        <input matInput type="number" [(ngModel)]="girvan_newman_iter">
+        <button *ngIf="girvan_newman_iter" matSuffix mat-icon-button aria-label="Clear" (click)="girvan_newman_iter=0">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
   
       <p>time : {{bind_time}} (sec)</p>
   
