@@ -6,7 +6,7 @@ import { RandomStatisticsService } from 'src/shared/modules/statistics/random-st
 import { LoadDataService } from 'src/shared/modules/datas/load-data.service';
 import { Layout, TreemapNode } from 'src/shared/modules/node-placement/treemap-node.service';
 
-type clusteringAlgo = "louvain" | "girvan_newman" | "leidon";
+type clusteringAlgo = "louvain" | "girvan_newman" | "leiden";
 
 @Component({
   selector: 'app-treemap',
