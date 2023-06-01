@@ -92,7 +92,6 @@ export class EdgeMeasurement {
         const xScale = this.treemapData.xScale;
         const yScale = this.treemapData.yScale;
         const nodeXY = this.treemapData.getNodeXY();
-        let edgeList = this.edgeList;
         let edgeInfo : EdgeInfo;
 
         const fromNode = nodeXY.find(function (m) {
@@ -782,7 +781,7 @@ export class EdgeMeasurement {
             }
             this.totalBending += 2;
         }
-        edgeList.push(edgeInfo!);
+        this.edgeList.push(edgeInfo!);
         this.totalLength += length_x + length_y;
     }
 
@@ -790,7 +789,6 @@ export class EdgeMeasurement {
         const xScale = this.treemapData.xScale;
         const yScale = this.treemapData.yScale;
         const nodeXY = this.treemapData.getNodeXY();
-        let edgeList = this.edgeList;
         let edgeInfo : EdgeInfo;
 
         const fromNode = nodeXY.find(function (m) {
@@ -1513,7 +1511,7 @@ export class EdgeMeasurement {
             }
             this.totalBending += 2;
         }
-        edgeList.push(edgeInfo!);
+        this.edgeList.push(edgeInfo!);
         this.totalLength += length_x + length_y;
     }
 
@@ -1521,7 +1519,6 @@ export class EdgeMeasurement {
         const xScale = this.treemapData.xScale;
         const yScale = this.treemapData.yScale;
         const nodeXY = this.treemapData.getNodeXY();
-        let edgeList = this.edgeList;
         let edgeInfo : EdgeInfo;
 
         const fromNode = nodeXY.find(function (m) {
@@ -2211,7 +2208,7 @@ export class EdgeMeasurement {
             }
             this.totalBending += 2;
         }
-        edgeList.push(edgeInfo!);
+        this.edgeList.push(edgeInfo!);
         this.totalLength += length_x + length_y;
     }
 
