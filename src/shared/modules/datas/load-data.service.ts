@@ -14,12 +14,12 @@ type clustering = (_bus, _branch) => any;
 export class LoadDataService {
   private clusteringMap: Map<string | clusteringAlgo, (_bus: any, _branch: any) => Promise<INodeData>>;
   public iter;
+  public load_data_num;
   constructor(private http: HttpClient) {
-    console.log(this.iter); 
     this.clusteringMap = new Map([
       ["louvain", this.louvain()],
-      ["girvan_newman", this.load_clustering_result(`http://203.253.21.193:5000/girvan-newman/?iter=11`)],
-      ["leiden", this.load_clustering_result('http://203.253.21.193:5000/leiden/')],
+      ["girvan_newman", this.load_clustering_result(`http://203.253.21.193:5000/girvan-newman/`,true)],
+      ["leiden", this.load_clustering_result('http://203.253.21.193:5000/leiden/',false)],
     ])
   }
 
@@ -59,10 +59,11 @@ export class LoadDataService {
     }
   }
 
-  private load_clustering_result(url: string){
+  private load_clustering_result(url: string, is_iter:boolean){
 
     return async (_bus, _branch) => {
       // Request data from the server
+      is_iter==true?url=url+`?data=${this.load_data_num}&iter=${this.iter}`:url=url+`?data=${this.load_data_num}`;
       let response:any = await this.http.get(url, {responseType: 'text'}).toPromise();
       response = response.replaceAll("\'", '\"');
       

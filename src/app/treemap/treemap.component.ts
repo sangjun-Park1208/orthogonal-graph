@@ -45,6 +45,7 @@ export class TreemapComponent implements AfterViewInit {
   apply(){
     let data;
     this.ds.iter=this.girvan_newman_iter;
+    this.ds.load_data_num=this.load_data_num;
     this.ds.load_data(this.load_data_num, this.clustering_algorithm).then((value) => {
       data = value;
       let start=new Date().getTime();
