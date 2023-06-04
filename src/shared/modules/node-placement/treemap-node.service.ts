@@ -1284,7 +1284,7 @@ export class TreemapNode {
       const children = clustersWithNodes[i].children;
       shuffle(children);
     //   console.log('children', children);
-      console.log('children', children);
+      // console.log('children', children);
 
 
 
