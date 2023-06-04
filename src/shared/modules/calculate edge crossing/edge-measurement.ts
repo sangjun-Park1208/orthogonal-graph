@@ -56,6 +56,8 @@ export class EdgeMeasurement {
         else if(this.port==8) branch.forEach(d => this.initializeEdgeList_8port(d));
         else if(this.port==12) branch.forEach(d => this.initializeEdgeList_12port(d));
 
+        let edgeList = this.edgeList;
+
         for (let i = 0; i < branch.length; i++) {
             let temp = 0;
             for (let k = 0; k < i; k++) {
@@ -63,17 +65,17 @@ export class EdgeMeasurement {
             }
             for (let j = 0; j < i; j++) {
                 this.sameCount.push(0);
-                if ((this.edgeList[i].xy[0][0] == this.edgeList[j].xy[0][0] && this.edgeList[i].xy[0][1] == this.edgeList[j].xy[0][1])
-                    || (this.edgeList[i].xy[0][0] == this.edgeList[j].xy[3][2] && this.edgeList[i].xy[0][1] == this.edgeList[j].xy[3][3])
-                    || (this.edgeList[i].xy[3][2] == this.edgeList[j].xy[0][0] && this.edgeList[i].xy[3][3] == this.edgeList[j].xy[0][1])
-                    || (this.edgeList[i].xy[3][2] == this.edgeList[j].xy[3][2] && this.edgeList[i].xy[3][3] == this.edgeList[j].xy[3][3])) {
+                if ((edgeList[i].xy[0][0] == edgeList[j].xy[0][0] && edgeList[i].xy[0][1] == edgeList[j].xy[0][1])
+                    || (edgeList[i].xy[0][0] == edgeList[j].xy[3][2] && edgeList[i].xy[0][1] == edgeList[j].xy[3][3])
+                    || (edgeList[i].xy[3][2] == edgeList[j].xy[0][0] && edgeList[i].xy[3][3] == edgeList[j].xy[0][1])
+                    || (edgeList[i].xy[3][2] == edgeList[j].xy[3][2] && edgeList[i].xy[3][3] == edgeList[j].xy[3][3])) {
                     this.sameCount[temp + j]--;
                 }
             }
         }
 
         for (let i = 0; i < branch.length; i++) {//branch.length  까지
-            this.edgeList[i].e_sort();
+            edgeList[i].e_sort();
             for (let j = 0; j < i; j++) {
                 if (i == j) continue;
                 this.Edge_cross(i, j);
