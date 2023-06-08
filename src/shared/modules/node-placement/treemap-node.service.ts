@@ -473,7 +473,8 @@ export class TreemapNode {
         x += dx;
         if(columnCount==1){
           x = clusterX1 - widthInterval;
-          y += heightInterval;
+          if(horizonLineCount>1)
+            y += heightInterval;
           if(horizonLineCount==rowCount){
             columnCount==1?relativePositionID[0] =-1: relativePositionID[0] = +children[j-2].data.id; // j-1
             relativePositionID[1] = -1;
@@ -974,7 +975,8 @@ export class TreemapNode {
         console.log({children});
         if(columnCount==1){
           x = clusterX1 - widthInterval;
-          y += heightInterval;
+          if(horizonLineCount>1)
+            y += heightInterval;
           if(horizonLineCount==rowCount){
             columnCount==1?relativePositionID[0] =-1:relativePositionID[0] = +children[j-2].data.id; // j-1
             relativePositionID[1] = -1;
@@ -1325,7 +1327,8 @@ export class TreemapNode {
         x += dx;
         if(columnCount==1){
           x = clusterX1 - widthInterval;
-          y += heightInterval;
+          if(horizonLineCount>1)
+            y += heightInterval;
           if(horizonLineCount==rowCount){
             rowCount==1?relativePositionID[0]=-1: relativePositionID[0] = +children[j-2].data.id; // j-1
             relativePositionID[1] = -1;
