@@ -432,7 +432,7 @@ export class TreemapNode {
       const heightInterval = this.clusterInterval[i][1]; // 각 클러스터 별 children node들 간의 높이 간격
 
       const children = clustersWithNodes[i].children;
-      // console.log('children', children);
+      console.log('children', children);
 
 
       let x = clusterX0;
@@ -473,9 +473,10 @@ export class TreemapNode {
         x += dx;
         if(columnCount==1){
           x = clusterX1 - widthInterval;
-          y += heightInterval;
+          if(horizonLineCount>1)
+            y += heightInterval;
           if(horizonLineCount==rowCount){
-            relativePositionID[0] = +children[j-2].data.id; // j-1
+            columnCount==1?relativePositionID[0] =-1: relativePositionID[0] = +children[j-2].data.id; // j-1
             relativePositionID[1] = -1;
             relativePositionID[2] = -1;
             relativePositionID[3] = -1; // j+1
@@ -552,7 +553,7 @@ export class TreemapNode {
                 relativePositionID[0] = -1;
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                (verticalLineCount > columnCount-lastRowRemain)?relativePositionID[2] = +children[j + reverseIdDiff-1].data.id:relativePositionID[2] =-1;
+                (verticalLineCount > columnCount-lastRowRemain)?rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + reverseIdDiff-1].data.id:relativePositionID[2] =-1;
                 relativePositionID[3] = -1;
 
                 forwardIDDiff += 2;
@@ -564,7 +565,7 @@ export class TreemapNode {
                 relativePositionID[0] = -1;
                 relativePositionID[1] = -1;
                 // relativePositionID[2] = +children[j+1].data.id; // j+1
-                relativePositionID[2] = +children[j].data.id; // j+1
+                rowCount==1?relativePositionID[2]=-1: relativePositionID[2] = +children[j].data.id; // j+1
                 relativePositionID[3] = +children[j-2].data.id; // j-1
 
               }
@@ -572,7 +573,7 @@ export class TreemapNode {
                 relativePositionID[0] = -1;
                 // relativePositionID[1] = +children[j+1].data.id; // j+1
                 relativePositionID[1] = +children[j].data.id; // j+1
-                relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
+                rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + reverseIdDiff-1].data.id; // j + reverseIdDiff-2
                 relativePositionID[3] = +children[j-2].data.id; // j-1
 
                 forwardIDDiff += 2;
@@ -974,9 +975,10 @@ export class TreemapNode {
         console.log({children});
         if(columnCount==1){
           x = clusterX1 - widthInterval;
-          y += heightInterval;
+          if(horizonLineCount>1)
+            y += heightInterval;
           if(horizonLineCount==rowCount){
-            relativePositionID[0] = +children[j-2].data.id; // j-1
+            columnCount==1?relativePositionID[0] =-1:relativePositionID[0] = +children[j-2].data.id; // j-1
             relativePositionID[1] = -1;
             relativePositionID[2] = -1;
             relativePositionID[3] = -1; // j+1
@@ -1050,7 +1052,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               // relativePositionID[1] = +children[j+1].data.id; // j+1
               relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id;
+              rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id;
               relativePositionID[3] = -1;
 
               // forwardIDDiff += 2;
@@ -1062,7 +1064,7 @@ export class TreemapNode {
               // console.log({j});
               relativePositionID[0] = -1;
               relativePositionID[1] = -1;
-              (columnCount<=lastRowRemain)?relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2] =-1;
+              (columnCount<=lastRowRemain)?rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2] =-1;
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // verticalLineCount=1;
@@ -1076,7 +1078,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               // relativePositionID[1] = +children[j+1].data.id; // j+1
               relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id; // j + reverseIdDiff-2
+              rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id; // j + reverseIdDiff-2
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // forwardIDDiff += 2;
@@ -1284,7 +1286,7 @@ export class TreemapNode {
       const children = clustersWithNodes[i].children;
       shuffle(children);
     //   console.log('children', children);
-      console.log('children', children);
+      // console.log('children', children);
 
 
 
@@ -1325,9 +1327,10 @@ export class TreemapNode {
         x += dx;
         if(columnCount==1){
           x = clusterX1 - widthInterval;
-          y += heightInterval;
+          if(horizonLineCount>1)
+            y += heightInterval;
           if(horizonLineCount==rowCount){
-            relativePositionID[0] = +children[j-2].data.id; // j-1
+            rowCount==1?relativePositionID[0]=-1: relativePositionID[0] = +children[j-2].data.id; // j-1
             relativePositionID[1] = -1;
             relativePositionID[2] = -1;
             relativePositionID[3] = -1; // j+1
@@ -1401,7 +1404,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               // relativePositionID[1] = +children[j+1].data.id; // j+1
               relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id;
+              rowCount==1?relativePositionID[2]=-1: relativePositionID[2] = +children[j + columnCount-1].data.id;
               relativePositionID[3] = -1;
 
               // forwardIDDiff += 2;
@@ -1413,7 +1416,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               relativePositionID[1] = -1;
               // relativePositionID[2] = +children[j+1].data.id; // j+1
-              (verticalLineCount<=lastRowRemain)?relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2]=-1;
+              (verticalLineCount<=lastRowRemain)?rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id:relativePositionID[2]=-1;
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // verticalLineCount=1;
@@ -1427,7 +1430,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               // relativePositionID[1] = +children[j+1].data.id; // j+1
               relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id; // j + reverseIdDiff-2
+              rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id; // j + reverseIdDiff-2
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // forwardIDDiff += 2;
@@ -1714,8 +1717,8 @@ export class TreemapNode {
             if(verticalLineCount == 1){ // 1열인 경우 (= Cluster의 첫 번째 노드인 경우)
               relativePositionID[0] = -1;
               // relativePositionID[1] = +children[j+1].data.id; // j+1
-              relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id;
+              columnCount==1?relativePositionID[1]=-1: relativePositionID[1] = +children[j].data.id; // j+1
+              rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id;
               relativePositionID[3] = -1;
 
               // forwardIDDiff += 2;
@@ -1732,7 +1735,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               relativePositionID[1] = -1;
               // relativePositionID[2] = +children[j+1].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id;
+              rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id;
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // verticalLineCount=1;
@@ -1746,7 +1749,7 @@ export class TreemapNode {
               relativePositionID[0] = -1;
               // relativePositionID[1] = +children[j+1].data.id; // j+1
               relativePositionID[1] = +children[j].data.id; // j+1
-              relativePositionID[2] = +children[j + columnCount-1].data.id; // j + reverseIdDiff-2
+              rowCount==1?relativePositionID[2]=-1:relativePositionID[2] = +children[j + columnCount-1].data.id; // j + reverseIdDiff-2
               relativePositionID[3] = +children[j-2].data.id; // j-1
 
               // forwardIDDiff += 2;
