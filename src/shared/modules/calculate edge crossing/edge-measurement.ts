@@ -1549,7 +1549,7 @@ export class EdgeMeasurement {
                 edgeInfo.eType[0] = w;
         }
         else {
-            if (xdif > 1 && ydif > 1) {
+            if (xdif >= 1 && ydif >= 1) {
                 if (absXdif < absYdif) {
                     if (fromNode.relativePosition[1] == -1) { // 우측에 Node가 없는 경우
                         edgeInfo = new EdgeInfo(fromNode.p5[0], fromNode.p5[1], toNode.p11[0], toNode.p11[1]);
@@ -1677,7 +1677,7 @@ export class EdgeMeasurement {
                     }
                 }
             }
-            else if (xdif > 1 && ydif < 1) {
+            else if (xdif >= 1 && ydif <= 1) {
 
                 if (absXdif < absYdif) {
                     if (fromNode.relativePosition[1] == -1) { // 우측에 노드가 없는 경우
@@ -1806,7 +1806,7 @@ export class EdgeMeasurement {
                     }
                 }
             }
-            else if (xdif < 1 && ydif > 1) {
+            else if (xdif <= 1 && ydif >= 1) {
                 if (absXdif < absYdif) {
                     if (fromNode.relativePosition[3] == -1) { // 좌측에 노드가 없는 경우
                         edgeInfo = new EdgeInfo(fromNode.p9[0], fromNode.p9[1], toNode.p3[0], toNode.p3[1]);
@@ -1934,7 +1934,7 @@ export class EdgeMeasurement {
                     }
                 }
             }
-            else if (xdif < 1 && ydif < 1) {
+            else if (xdif <= 1 && ydif <= 1) {
                 if (absXdif < absYdif) {
                     if (fromNode.relativePosition[3] == -1) {
                         edgeInfo = new EdgeInfo(fromNode.p11[0], fromNode.p11[1], toNode.p5[0], toNode.p5[1]);
@@ -2061,7 +2061,7 @@ export class EdgeMeasurement {
                     }
                 }
             }
-            else if (xdif < Number.EPSILON) {
+            else if (Math.abs(xdif) <= Number.EPSILON) {
                 // let rd = Math.floor(Math.random()*2);
                 let rd = d.from%2;
                 if (ydif > 0) {
@@ -2133,7 +2133,7 @@ export class EdgeMeasurement {
                     }
                 }
             }
-            else if (ydif < Number.EPSILON) {
+            else if (Math.abs(ydif) <= Number.EPSILON) {
                 // let rd = Math.floor(Math.random()*2);
                 let rd = d.from%2;
                 if (xdif > 0) {
@@ -2208,6 +2208,8 @@ export class EdgeMeasurement {
             }
             this.totalBending += 2;
         }
+        if(edgeInfo.xy[0][0]===undefined || edgeInfo.xy[0][1]===undefined||edgeInfo.xy[3][2]===undefined || edgeInfo.xy[3][3]===undefined) 
+              console.log('edgeInfo : ',edgeInfo.xy[0][0] , edgeInfo.xy[0][1], edgeInfo.xy[3][2] , edgeInfo.xy[3][3]);
         this.edgeList.push(edgeInfo!);
         this.totalLength += length_x + length_y;
     }

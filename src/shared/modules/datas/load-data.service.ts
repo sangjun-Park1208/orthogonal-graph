@@ -63,8 +63,9 @@ export class LoadDataService {
 
     return async (_bus, _branch) => {
       // Request data from the server
-      is_iter==true?url=url+`?data=${this.load_data_num}&iter=${this.iter}`:url=url+`?data=${this.load_data_num}`;
-      let response:any = await this.http.get(url, {responseType: 'text'}).toPromise();
+      let request_url;
+      is_iter==true?request_url=url+`?data=${this.load_data_num}&iter=${this.iter}`:request_url=url+`?data=${this.load_data_num}`;
+      let response:any = await this.http.get(request_url, {responseType: 'text'}).toPromise();
       response = response.replaceAll("\'", '\"');
       
       let data = JSON.parse(response);
